@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>JIUMP Admin — Administrar página web</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@600&display=swap" rel="stylesheet">
+<style>
+/* == Pase de diseño (criterios emil-design-eng) == */
+:root{--ease-out:cubic-bezier(.23,1,.32,1);--ease-in-out:cubic-bezier(.77,0,.175,1)}
+html{-webkit-text-size-adjust:100%;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+a,button,input,select,textarea,label,[role=button]{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button{transition:transform 160ms var(--ease-out),background-color .2s ease,border-color .2s ease,color .2s ease,box-shadow .2s ease}
+button:not(:disabled):active,a.btn:active,.heme-btn:active{transform:scale(.97)}
+h1,h2{letter-spacing:-.02em;text-wrap:balance}
+p{text-wrap:pretty}
+.tn,time{font-variant-numeric:tabular-nums}
+@media (pointer:coarse){input,select,textarea{font-size:16px!important}}
+@media (hover:none){[class]:hover:not(:active),[class]:hover:not(:active) img{transform:none!important}}
+
+body{margin:0;background:#F2F4F5}
+a{color:#0073B1}a:hover{color:#062F4A}
+.btn{transition:transform .2s ease,background-color .2s ease}.btn:hover{transform:translateY(-1px)}.btn:active{transform:scale(.97)}
+.card{transition:box-shadow .2s ease,transform .2s ease}.card:hover{box-shadow:0 10px 24px rgba(0,0,0,.12)}
+.mini{width:30px;height:30px;border:none;border-radius:8px;background:#EEF0F2;color:#1C1E21;cursor:pointer;font-size:13px}
+.mini:hover{background:#E3F0F8}
+.fld{min-height:42px;border-radius:10px;border:1px solid #CDD1D6;padding:0 12px;font:inherit;font-size:14px;color:#1C1E21;background:#FFFFFF;box-sizing:border-box;width:100%}
+.fld:focus{outline:2px solid #0073B1;outline-offset:1px}
+@keyframes lb{from{opacity:0}to{opacity:1}}@keyframes pop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+.ov{animation:lb .2s ease both}.ov > div{animation:pop .25s ease both}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</helmet>
+<div style="position:relative;width:100%;min-height:1500px;background:#F2F4F5;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1C1E21;display:flex;flex-wrap:wrap">
+
+  <div style="flex:1 1 240px;max-width:260px;display:flex"><dc-import name="AdminSidebar" activo="inicio" rol="super" hint-size="260px,1500px"></dc-import></div>
+
+  <main style="flex:999 1 560px;min-width:0;padding:28px 36px 56px;box-sizing:border-box;display:flex;flex-direction:column;gap:20px">
+
+    <!-- Encabezado -->
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px">
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <span style="font-size:13px;color:#5F5A60">Sitio web / <strong style="color:#1C1E21">Administrar página web</strong>{{ migaEdicion }}</span>
+        <h1 style="margin:0;font-family:Montserrat,sans-serif;font-size:32px;font-weight:800">{{ tituloPantalla }}</h1>
+      </div>
+      <sc-if value="{{ enLista }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#5F5A60">Página<select class="fld" style="width:auto;min-height:42px"><option>Inicio</option><option>Nosotros</option><option>Eventos</option><option>Artículos</option><option>Galería</option><option>Menú y pie de página</option></select></label>
+          <a class="btn" href="Inicio.dc.html" style="display:inline-flex;align-items:center;min-height:42px;padding:0 16px;border-radius:999px;border:1px solid #CDD1D6;background:#FFFFFF;color:#1C1E21;font-weight:600;font-size:14px;text-decoration:none">Ver página pública</a>
+        </div>
+      </sc-if>
+      <sc-if value="{{ editando }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn" onClick="{{ cancelar }}" style="min-height:44px;padding:0 20px;border-radius:999px;border:1px solid #CDD1D6;background:#FFFFFF;font:inherit;font-weight:600;font-size:14px;cursor:pointer">Cancelar</button>
+          <button class="btn" onClick="{{ guardar }}" style="min-height:44px;padding:0 22px;border-radius:999px;border:none;background:#0073B1;color:#FFFFFF;font-family:'Segoe UI','Open Sans',sans-serif;font-weight:600;font-size:14px;cursor:pointer">Guardar cambios</button>
+        </div>
+      </sc-if>
+    </div>
+
+    <sc-if value="{{ aviso }}" hint-placeholder-val="{{ false }}">
+      <div role="status" style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;background:#E0F5F3;color:#00544E;font-size:14px;font-weight:600"><span>✓ {{ aviso }}</span><button onClick="{{ cerrarAviso }}" aria-label="Cerrar aviso" style="border:none;background:transparent;color:#00544E;font-size:18px;cursor:pointer">×</button></div>
+    </sc-if>
+
+    <!-- ===== LISTA DE SECCIONES ===== -->
+    <sc-if value="{{ enLista }}" hint-placeholder-val="{{ true }}">
+      <p style="margin:0;font-size:15px;color:#5F5A60;max-width:760px">Estas son las secciones de Inicio en el orden en que aparecen. Usa <strong>Editar</strong> para cambiar textos, fotos, tarjetas y botones. El diseño, los colores y las proporciones se mantienen solos.</p>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <sc-for list="{{ lista }}" as="s" hint-placeholder-count="10">
+          <div class="card" style="{{ s.caja }}">
+            <span style="font-family:Montserrat,sans-serif;font-weight:800;font-size:15px;color:#9AA1A8;width:24px;text-align:center">{{ s.num }}</span>
+            <div style="width:120px;height:72px;border-radius:12px;overflow:hidden;background:#062F4A;flex-shrink:0;display:flex;align-items:center;justify-content:center">
+              <sc-if value="{{ s.tieneThumb }}" hint-placeholder-val="{{ true }}"><img src="{{ s.thumb }}" alt="" style="width:100%;height:100%;object-fit:cover"></sc-if>
+              <sc-if value="{{ s.sinThumb }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px;color:#B9D3E6">Sin fotos</span></sc-if>
+            </div>
+            <div style="flex:1 1 220px;min-width:0;display:flex;flex-direction:column;gap:4px">
+              <strong style="font-size:16px">{{ s.nombre }}</strong>
+              <span style="font-size:13px;color:#5F5A60">{{ s.resumen }}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+              <button class="mini" onClick="{{ s.subir }}" aria-label="Subir sección">↑</button>
+              <button class="mini" onClick="{{ s.bajar }}" aria-label="Bajar sección">↓</button>
+              <button onClick="{{ s.ver }}" style="{{ s.ojo }}">{{ s.ojoTxt }}</button>
+              <button class="btn" onClick="{{ s.editar }}" style="min-height:40px;padding:0 18px;border-radius:999px;border:none;background:#0073B1;color:#FFFFFF;font-family:'Segoe UI','Open Sans',sans-serif;font-weight:600;font-size:14px;cursor:pointer">Editar</button>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <!-- ===== EDITOR DE UNA SECCIÓN ===== -->
+    <sc-if value="{{ editando }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+        <div style="flex:3 1 520px;min-width:0;display:flex;flex-direction:column;gap:16px">
+
+          <!-- Textos -->
+          <sc-if value="{{ d.tieneCampos }}" hint-placeholder-val="{{ true }}">
+            <section style="background:#FFFFFF;border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:14px">
+              <h2 style="margin:0;font-family:Montserrat,sans-serif;font-size:18px;font-weight:800">Títulos y textos</h2>
+              <sc-for list="{{ d.campos }}" as="c" hint-placeholder-count="3">
+                <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#5F5A60"><span>{{ c.label }} <span style="font-size:12px">· {{ c.cuenta }}</span></span>
+                  <sc-if value="{{ c.corto }}" hint-placeholder-val="{{ true }}"><input class="fld" type="text" value="{{ c.valor }}" maxlength="{{ c.max }}" onInput="{{ c.set }}"></sc-if>
+                  <sc-if value="{{ c.largo }}" hint-placeholder-val="{{ false }}"><textarea class="fld" rows="3" maxlength="{{ c.max }}" value="{{ c.valor }}" onInput="{{ c.set }}" style="padding:10px 12px;line-height:1.6;resize:vertical"></textarea></sc-if>
+                </label>
+              </sc-for>
+            </section>
+          </sc-if>
+
+          <!-- Botones y enlaces -->
+          <sc-if value="{{ d.tieneBotones }}" hint-placeholder-val="{{ true }}">
+            <section style="background:#FFFFFF;border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:12px">
+              <h2 style="margin:0;font-family:Montserrat,sans-serif;font-size:18px;font-weight:800">Botones y enlaces</h2>
+              <sc-for list="{{ d.botones }}" as="b" hint-placeholder-count="1">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;align-items:end;padding:12px;border-radius:12px;background:#F2F4F5">
+                  <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#5F5A60">Texto del botón · {{ b.cuenta }}<input class="fld" type="text" maxlength="24" value="{{ b.texto }}" onInput="{{ b.setTexto }}"></label>
+                  <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#5F5A60">Lleva a…<select class="fld" value="{{ b.destino }}" onChange="{{ b.setDestino }}"><option>Página: Eventos</option><option>Página: Nosotros</option><option>Página: Artículos</option><option>Página: Galería</option><option>Actividad: Convención Nacional 2026</option><option>Actividad: EMJ 2026</option><option>Actividad: EJZ 2026</option><option>Actividad: FEDI 2026</option><option>Enlace externo…</option></select></label>
+                  <button onClick="{{ b.ver }}" style="{{ b.ojo }}">{{ b.ojoTxt }}</button>
+                </div>
+              </sc-for>
+            </section>
+          </sc-if>
+
+          <!-- Imágenes -->
+          <sc-if value="{{ d.tieneImgs }}" hint-placeholder-val="{{ true }}">
+            <section style="background:#FFFFFF;border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><h2 style="margin:0;font-family:Montserrat,sans-serif;font-size:18px;font-weight:800">Fotografías ({{ d.nImgs }})</h2><span style="font-size:12.5px;color:#5F5A60">{{ d.imgNota }}</span></div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px">
+                <sc-for list="{{ d.imgs }}" as="im" hint-placeholder-count="3">
+                  <div style="{{ im.marco }}">
+                    <div style="position:relative"><img src="{{ im.src }}" alt="{{ im.alt }}" style="{{ im.foto }}"><span style="position:absolute;top:6px;left:6px;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px;background:rgba(6,47,74,.85);color:#FFFFFF">{{ im.pos }}</span></div>
+                    <div style="display:flex;justify-content:space-between;gap:4px;padding:6px">
+                      <button class="mini" onClick="{{ im.izq }}" aria-label="Mover antes">←</button>
+                      <button class="mini" onClick="{{ im.der }}" aria-label="Mover después">→</button>
+                      <button class="mini" onClick="{{ im.cambiar }}" aria-label="Reemplazar foto">⇄</button>
+                      <button class="mini" onClick="{{ im.ver }}" aria-label="Mostrar u ocultar">{{ im.ojoTxt }}</button>
+                      <button class="mini" onClick="{{ im.borrar }}" aria-label="Eliminar foto" style="background:#FBDADC;color:#9E1F1D">×</button>
+                    </div>
+                  </div>
+                </sc-for>
+                <button class="btn" onClick="{{ agregarImg }}" style="min-height:146px;border:2px dashed #9AA1A8;border-radius:12px;background:#F7F9FA;color:#0073B1;font:inherit;font-weight:600;font-size:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><span style="font-size:24px">+</span>Agregar foto</button>
+              </div>
+            </section>
+          </sc-if>
+
+          <!-- Tarjetas -->
+          <sc-if value="{{ d.tieneCards }}" hint-placeholder-val="{{ true }}">
+            <section style="background:#FFFFFF;border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><h2 style="margin:0;font-family:Montserrat,sans-serif;font-size:18px;font-weight:800">Tarjetas ({{ d.nCards }})</h2><button class="btn" onClick="{{ agregarCard }}" style="min-height:38px;padding:0 14px;border-radius:999px;border:1.5px solid #0073B1;background:#FFFFFF;color:#0073B1;font:inherit;font-weight:600;font-size:13px;cursor:pointer">+ Agregar tarjeta</button></div>
+              <sc-for list="{{ d.cards }}" as="k" hint-placeholder-count="4">
+                <div style="{{ k.fila }}">
+                  <div style="display:flex;flex-direction:column;gap:4px"><button class="mini" onClick="{{ k.subir }}" aria-label="Subir tarjeta">↑</button><button class="mini" onClick="{{ k.bajar }}" aria-label="Bajar tarjeta">↓</button></div>
+                  <button onClick="{{ k.cambiar }}" aria-label="Cambiar foto de la tarjeta" style="position:relative;width:96px;height:72px;border-radius:10px;overflow:hidden;border:none;padding:0;background:#062F4A;cursor:pointer;flex-shrink:0">
+                    <sc-if value="{{ k.tieneImg }}" hint-placeholder-val="{{ true }}"><img src="{{ k.src }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></sc-if>
+                    <span style="position:absolute;inset:auto 0 0 0;font-size:11px;font-weight:600;color:#FFFFFF;background:rgba(6,47,74,.8);padding:3px">{{ k.fotoTxt }}</span>
+                  </button>
+                  <div style="flex:1 1 220px;min-width:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px">
+                    <input class="fld" type="text" maxlength="40" value="{{ k.titulo }}" onInput="{{ k.setTitulo }}" aria-label="Título de la tarjeta">
+                    <select class="fld" aria-label="Destino de la tarjeta"><option>{{ k.link }}</option><option>Página: Eventos</option><option>Actividad: Convención Nacional 2026</option><option>Actividad: EMJ 2026</option><option>Actividad: EJZ 2026</option><option>Actividad: FEDI 2026</option><option>Sin enlace</option></select>
+                  </div>
+                  <button onClick="{{ k.ver }}" style="{{ k.ojo }}">{{ k.ojoTxt }}</button>
+                  <button class="mini" onClick="{{ k.borrar }}" aria-label="Eliminar tarjeta" style="background:#FBDADC;color:#9E1F1D">×</button>
+                </div>
+              </sc-for>
+            </section>
+          </sc-if>
+
+          <sc-if value="{{ d.auto }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:16px;border-radius:14px;background:#E3F0F8;color:#005A8C;font-size:14px;line-height:1.5">{{ d.autoTxt }}</div>
+          </sc-if>
+        </div>
+
+        <!-- Vista previa -->
+        <aside style="flex:2 1 340px;min-width:0;display:flex;flex-direction:column;gap:10px;position:sticky;top:20px">
+          <div style="display:flex;justify-content:space-between;align-items:center"><strong style="font-size:14px">Vista previa</strong><span style="font-size:12.5px;color:#7A4B00;background:#FFF1D6;padding:4px 10px;border-radius:999px;font-weight:600">{{ estadoDraft }}</span></div>
+          <div style="border-radius:18px;overflow:hidden;background:#062F4A;color:#FFFFFF;box-shadow:0 18px 36px rgba(0,0,0,.2)">
+            <sc-if value="{{ p.tieneFondo }}" hint-placeholder-val="{{ true }}"><img src="{{ p.fondo }}" alt="" style="width:100%;height:150px;object-fit:cover;display:block"></sc-if>
+            <div style="padding:18px;display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:11.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#00AB9F">{{ p.etiqueta }}</span>
+              <strong style="font-family:Montserrat,sans-serif;font-size:22px;line-height:1.05;font-weight:800">{{ p.titulo }}</strong>
+              <span style="font-size:12px;line-height:1.5;color:#D5E6F2">{{ p.texto }}</span>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px">
+                <sc-for list="{{ p.mini }}" as="m" hint-placeholder-count="2">
+                  <div style="position:relative;height:72px;border-radius:8px;overflow:hidden;background:#0B4A73">
+                    <sc-if value="{{ m.tieneImg }}" hint-placeholder-val="{{ true }}"><img src="{{ m.src }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></sc-if>
+                    <span style="position:absolute;left:6px;bottom:4px;font-size:11.5px;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.6)">{{ m.titulo }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <sc-for list="{{ p.botones }}" as="pb" hint-placeholder-count="1"><span style="align-self:flex-start;font-size:11.5px;font-weight:600;padding:7px 12px;border-radius:999px;background:#00AB9F;color:#062F4A">{{ pb.texto }} →</span></sc-for>
+            </div>
+          </div>
+          <span style="font-size:12.5px;line-height:1.5;color:#5F5A60">Vista simplificada. Las fotos se recortan a la proporción de cada sección (portada 16:9, tarjetas 3:4, collage 4:3) para no deformar el diseño.</span>
+          <a href="Inicio.dc.html" style="font-size:13px;font-weight:600">Ver vista previa completa de la página →</a>
+        </aside>
+      </div>
+    </sc-if>
+  </main>
+
+  <!-- ===== GESTOR DE IMÁGENES ===== -->
+  <sc-if value="{{ picker }}" hint-placeholder-val="{{ false }}">
+    <div class="ov" role="dialog" aria-modal="true" aria-labelledby="t-pick" style="position:absolute;inset:0;z-index:30;background:rgba(6,47,74,.6);display:flex;justify-content:center;align-items:flex-start;padding:80px 20px">
+      <div style="width:100%;max-width:980px;background:#FFFFFF;border-radius:24px;padding:24px;display:flex;flex-direction:column;gap:16px;box-shadow:0 30px 60px rgba(0,0,0,.35)">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h2 id="t-pick" style="margin:0;font-family:Montserrat,sans-serif;font-size:22px;font-weight:800">{{ pickerTitulo }}</h2><button onClick="{{ cerrarPicker }}" aria-label="Cerrar" style="width:40px;height:40px;border-radius:999px;border:1px solid #CDD1D6;background:#FFFFFF;font-size:20px;cursor:pointer">×</button></div>
+        <button class="btn" onClick="{{ simularSubida }}" style="min-height:84px;border:2px dashed #9AA1A8;border-radius:16px;background:#F7F9FA;font:inherit;color:#5F5A60;font-size:14px;cursor:pointer"><strong style="color:#0073B1;font-size:15px">Subir desde el computador</strong><br>JPG, PNG o WebP · hasta 15 MB · se optimiza sola</button>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <sc-for list="{{ albumes }}" as="al" hint-placeholder-count="5"><button onClick="{{ al.elegir }}" style="{{ al.estilo }}">{{ al.nombre }}</button></sc-for>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+          <div style="flex:3 1 420px;display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;max-height:360px;overflow:auto;padding:2px">
+            <sc-for list="{{ biblio }}" as="f" hint-placeholder-count="8"><button onClick="{{ f.elegir }}" aria-label="Elegir: {{ f.alt }}" style="{{ f.marco }}"><img src="{{ f.src }}" alt="" style="width:100%;height:90px;object-fit:cover;display:block"></button></sc-for>
+          </div>
+          <div style="flex:2 1 260px;display:flex;flex-direction:column;gap:10px">
+            <img src="{{ pick.src }}" alt="" style="width:100%;height:170px;object-fit:cover;border-radius:12px">
+            <span style="font-size:12.5px;color:#5F5A60">{{ pick.album }}</span>
+            <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#5F5A60">Descripción de la foto (obligatoria)<input class="fld" type="text" value="{{ pick.alt }}"></label>
+            <button class="btn" onClick="{{ usarFoto }}" style="min-height:46px;border-radius:999px;border:none;background:#0073B1;color:#FFFFFF;font-family:'Segoe UI','Open Sans',sans-serif;font-weight:600;font-size:15px;cursor:pointer">Usar esta foto</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ===== CONFIRMAR ELIMINACIÓN ===== -->
+  <sc-if value="{{ confirmando }}" hint-placeholder-val="{{ false }}">
+    <div class="ov" role="alertdialog" aria-modal="true" aria-labelledby="t-del" style="position:absolute;inset:0;z-index:40;background:rgba(6,47,74,.55);display:flex;justify-content:center;align-items:flex-start;padding:200px 20px">
+      <div style="width:100%;max-width:440px;background:#FFFFFF;border-radius:22px;padding:26px;display:flex;flex-direction:column;gap:12px;box-shadow:0 30px 60px rgba(0,0,0,.35)">
+        <h2 id="t-del" style="margin:0;font-family:Montserrat,sans-serif;font-size:21px;font-weight:800">{{ confirmTitulo }}</h2>
+        <p style="margin:0;font-size:15px;line-height:1.6;color:#43474D">Se quitará de esta sección al guardar. La foto original sigue en la biblioteca y puedes deshacerlo con «Cancelar» antes de guardar.</p>
+        <div style="display:flex;justify-content:flex-end;gap:10px"><button class="btn" onClick="{{ noBorrar }}" style="min-height:44px;padding:0 18px;border-radius:999px;border:1px solid #CDD1D6;background:#FFFFFF;font:inherit;font-weight:600;cursor:pointer">Cancelar</button><button class="btn" onClick="{{ siBorrar }}" style="min-height:44px;padding:0 18px;border-radius:999px;border:none;background:#B42F2D;color:#FFFFFF;font:inherit;font-weight:600;cursor:pointer">Sí, eliminar</button></div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1500}}'>
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    const B = function (id) { return '/_blob/' + id; };
+    this.lib = [
+      { src: B('37b805dcd7dbc8be26f1fab5a2d456b0'), album: 'Portada', alt: 'Jóvenes de JIUMP sonriendo juntos' },
+      { src: B('784625ac3ebfe474ed6261cca016b8df'), album: 'Convención Nacional 2026', alt: 'Escenario con la pantalla Samuel, Heme aquí' },
+      { src: B('25b550f1411f6c261cc0d42a3945ea92'), album: 'Convención Nacional 2026', alt: 'Adoración con las manos levantadas' },
+      { src: B('a61a93fef1f7faeae53ef5f46d380003'), album: 'Convención Nacional 2026', alt: 'Grupo de jóvenes con credenciales' },
+      { src: B('5bde26efb15f98720f914e82247fae6b'), album: 'Convención Nacional 2026', alt: 'Joven en oración' },
+      { src: B('05238004edcc733d035cca963adbfdec'), album: 'Convención Nacional 2026', alt: 'Músico con guitarra' },
+      { src: B('7e76ad743ad9592da3560f06b7aacd24'), album: 'Convención Nacional 2026', alt: 'Equipo de transmisión' },
+      { src: B('41c24f60d5fa1ad39db4a22e0dca3755'), album: 'EMJ 2026', alt: 'Cientos de mujeres en el gimnasio' },
+      { src: B('ca7a6206502cf4c966ab00e8359470cc'), album: 'EMJ 2026', alt: 'Equipo de bienvenida' },
+      { src: B('c812a4cd24f206fc856b063660dee62d'), album: 'EMJ 2026', alt: 'Asistentes frente al escenario' },
+      { src: B('aa8b5bfc6b53aece86afaa5d6c704994'), album: 'EJZ 2026', alt: 'Líderes conversando frente a la congregación' },
+      { src: B('119f54b55111c02604ef19531dcb2361'), album: 'EJZ 2026', alt: 'Expositor con micrófono' },
+      { src: B('e5446b7c014c334fc19b1e7a665d1661'), album: 'EJZ 2026', alt: 'Tres líderes frente al altar' },
+      { src: B('12e708880533fae39418bacf4f5f8bd1'), album: 'FEDI 2026', alt: 'Participante sonríe junto a su maestra' },
+      { src: B('7cf1bbd9172ac149aaa1e22cb312bcf2'), album: 'FEDI 2026', alt: 'Maestras conversando' },
+      { src: B('dff67bd0d51a94d3ac16cf71c5007fb7'), album: 'FEDI 2026', alt: 'Asistentes en oración' }
+    ];
+    const c = function (k, label, max, valor, largo) { return { k: k, label: label, max: max, valor: valor, largo: !!largo }; };
+    const im = function (src, alt) { return { src: B(src), alt: alt, visible: true }; };
+    const cd = function (titulo, src, link) { return { titulo: titulo, src: src ? B(src) : '', link: link, visible: true }; };
+    this.state = {
+      vista: 'lista', ed: -1, draft: null, sucio: false, aviso: '', picker: null, album: 'Todas', pick: 0, confirm: null,
+      secs: [
+        { nombre: 'Barra «Próximo evento»', visible: true, campos: [c('t', 'Texto de la barra', 90, '[Nombre del próximo evento] · [Fecha] · [Lugar]')], botones: [{ texto: 'Ver detalles', destino: 'Página: Eventos', visible: true }], imgs: null, cards: null },
+        { nombre: 'Portada principal', visible: true, campos: [c('e', 'Etiqueta superior', 60, 'Movimiento juvenil · Iglesia Unida Metodista Pentecostal'), c('t', 'Título principal', 60, 'Jóvenes unidos para adorar a Cristo'), c('x', 'Texto', 180, 'Servimos con excelencia, guiados por el Espíritu Santo, capacitándonos para transmitir nuestro legado a las futuras generaciones.', true)], botones: [{ texto: 'Próximos eventos', destino: 'Página: Eventos', visible: true }, { texto: 'Conócenos', destino: 'Página: Nosotros', visible: true }], imgs: [im('37b805dcd7dbc8be26f1fab5a2d456b0', 'Jóvenes de JIUMP sonriendo juntos')], imgMax: 1, imgNota: 'Foto de fondo · 16:9 · mínimo 1920 × 1080 px', cards: [cd('+2.000 · jóvenes en la Convención', '', 'Sin enlace'), cd('50 años · de historia', '', 'Sin enlace'), cd('Chile y Argentina', '', 'Sin enlace')] },
+        { nombre: 'Actividades destacadas 2026', visible: true, campos: [c('e', 'Etiqueta superior', 60, 'Actividades destacadas 2026'), c('t', 'Título', 60, 'Lo que vivimos este año')], botones: [{ texto: 'Todas las actividades', destino: 'Página: Eventos', visible: true }], imgs: null, cards: [cd('«Heme aquí»', '25b550f1411f6c261cc0d42a3945ea92', 'Actividad: Convención Nacional 2026'), cd('Encuentro de Mujeres JIUMP', 'ca7a6206502cf4c966ab00e8359470cc', 'Actividad: EMJ 2026'), cd('Encuentro de Jefaturas', '119f54b55111c02604ef19531dcb2361', 'Actividad: EJZ 2026'), cd('Formación de Maestros de Escuela Dominical Infantil', '12e708880533fae39418bacf4f5f8bd1', 'Actividad: FEDI 2026')] },
+        { nombre: 'Qué hacemos', visible: true, campos: [c('e', 'Etiqueta superior', 60, 'Qué hacemos'), c('t', 'Título', 60, 'Bendecir al pueblo joven de cada iglesia local')], botones: [{ texto: 'Conoce el movimiento', destino: 'Página: Nosotros', visible: true }], imgs: null, cards: [cd('Encuentros', 'aa8b5bfc6b53aece86afaa5d6c704994', 'Actividad: EJZ 2026'), cd('Zonales', '', 'Sin enlace'), cd('Convenciones', '05238004edcc733d035cca963adbfdec', 'Actividad: Convención Nacional 2026'), cd('Encuentro Mujeres JIUMP', 'c812a4cd24f206fc856b063660dee62d', 'Actividad: EMJ 2026')] },
+        { nombre: 'Heme aquí · Convención', visible: true, campos: [c('e', 'Etiqueta superior', 60, 'Convención Nacional 2026'), c('t', 'Título', 30, 'Heme aquí'), c('x', 'Texto', 160, 'Más de 2.000 jóvenes reunidos durante dos días para adorar a Cristo.', true)], botones: [{ texto: 'Revive la convención', destino: 'Actividad: Convención Nacional 2026', visible: true }], imgs: [im('a61a93fef1f7faeae53ef5f46d380003', 'Grupo de jóvenes con credenciales'), im('5bde26efb15f98720f914e82247fae6b', 'Joven en oración'), im('784625ac3ebfe474ed6261cca016b8df', 'Escenario de la Convención')], imgMax: 3, imgNota: 'Collage de 3 fotos · la 3.ª ocupa todo el ancho', cards: null },
+        { nombre: 'Artículos recientes', visible: true, campos: [c('e', 'Etiqueta superior', 60, 'Para crecer en la fe'), c('t', 'Título', 60, 'Artículos recientes'), c('x', 'Texto', 120, 'Nuevo artículo cristiano cada lunes para fortalecer tu fe.', true)], botones: [{ texto: 'Todos los artículos', destino: 'Página: Artículos', visible: true }], imgs: null, cards: null, auto: 'Los artículos de esta sección se muestran solos: aparecen los 4 más recientes publicados. Para cambiarlos, edítalos en «Artículos».' },
+        { nombre: 'Eventos', visible: true, campos: [c('t', 'Título', 60, 'Eventos')], botones: [{ texto: 'Ver calendario', destino: 'Página: Eventos', visible: true }], imgs: null, cards: null, auto: 'Los eventos se muestran solos desde «Eventos y actividades»: los próximos primero y luego los realizados.' },
+        { nombre: 'Momentos JIUMP', visible: true, campos: [c('t', 'Título', 60, 'Momentos JIUMP')], botones: [{ texto: 'Ir a la galería', destino: 'Página: Galería', visible: true }], imgs: [], imgMax: 6, imgNota: 'Collage de hasta 6 fotos · formato 4:3', cards: null },
+        { nombre: 'Qué creemos', visible: true, campos: [c('e', 'Etiqueta superior', 60, 'Qué creemos'), c('t', 'Título', 60, 'Cristo, centro de nuestra fe')], botones: [], imgs: null, cards: [cd('La Santísima Trinidad', '', 'Sin enlace'), cd('Cristo', '', 'Sin enlace'), cd('El Espíritu Santo', '', 'Sin enlace'), cd('Las Escrituras', '', 'Sin enlace')] },
+        { nombre: 'Pie de página', visible: true, campos: [c('x', 'Texto del pie', 160, 'Jóvenes Unidos para Adorar a Cristo. Movimiento juvenil de la Iglesia Unida Metodista Pentecostal.', true)], botones: [{ texto: 'Instagram', destino: 'Enlace externo…', visible: true }, { texto: 'YouTube', destino: 'Enlace externo…', visible: true }, { texto: 'TikTok', destino: 'Enlace externo…', visible: true }, { texto: 'Facebook', destino: 'Enlace externo…', visible: true }, { texto: 'X', destino: 'Enlace externo…', visible: true }], imgs: null, cards: null }
+      ]
+    };
+  }
+  clon(o) { return JSON.parse(JSON.stringify(o)); }
+  mod(fn) { const d = this.clon(this.state.draft); fn(d); this.setState({ draft: d, sucio: true }); }
+  renderVals() {
+    const self = this, st = this.state;
+    const ojo = function (v) { return { ojoTxt: v ? '◉ Visible' : '○ Oculto', ojo: 'min-height:30px;padding:0 10px;border:none;border-radius:8px;cursor:pointer;font:inherit;font-size:12px;font-weight:600;white-space:nowrap;' + (v ? 'background:#E0F5F3;color:#00665F' : 'background:#EEF0F2;color:#5F5A60') }; };
+    const swap = function (arr, i, j) { if (j < 0 || j >= arr.length) return; const t = arr[i]; arr[i] = arr[j]; arr[j] = t; };
+    const thumbOf = function (s) { if (s.imgs && s.imgs.length) return s.imgs[0].src; if (s.cards) { for (let i = 0; i < s.cards.length; i++) if (s.cards[i].src) return s.cards[i].src; } return ''; };
+    const enLista = st.vista === 'lista';
+    const lista = st.secs.map(function (s, i) {
+      const partes = [];
+      if (s.campos && s.campos.length) partes.push(s.campos.length + (s.campos.length === 1 ? ' texto' : ' textos'));
+      if (s.imgs) partes.push(s.imgs.length + (s.imgs.length === 1 ? ' foto' : ' fotos'));
+      if (s.cards) partes.push(s.cards.length + ' tarjetas');
+      if (s.botones && s.botones.length) partes.push(s.botones.length + (s.botones.length === 1 ? ' botón' : ' botones'));
+      if (s.auto) partes.push('contenido automático');
+      const th = thumbOf(s);
+      return Object.assign({ num: i + 1, nombre: s.nombre, resumen: partes.join(' · '), tieneThumb: !!th, sinThumb: !th, thumb: th,
+        caja: 'display:flex;flex-wrap:wrap;align-items:center;gap:16px;background:#FFFFFF;border-radius:16px;padding:12px 16px;' + (s.visible ? '' : 'opacity:.55'),
+        subir: function () { const a = self.clon(st.secs); swap(a, i, i - 1); self.setState({ secs: a, aviso: 'Orden guardado y publicado' }); },
+        bajar: function () { const a = self.clon(st.secs); swap(a, i, i + 1); self.setState({ secs: a, aviso: 'Orden guardado y publicado' }); },
+        ver: function () { const a = self.clon(st.secs); a[i].visible = !a[i].visible; self.setState({ secs: a, aviso: a[i].visible ? 'Sección visible en la web' : 'Sección oculta en la web' }); },
+        editar: function () { self.setState({ vista: 'editar', ed: i, draft: self.clon(s), sucio: false, aviso: '' }); }
+      }, ojo(s.visible));
+    });
+    const dr = st.draft;
+    let d = { tieneCampos: false, campos: [], tieneBotones: false, botones: [], tieneImgs: false, imgs: [], nImgs: 0, imgNota: '', tieneCards: false, cards: [], nCards: 0, auto: false, autoTxt: '' };
+    let p = { tieneFondo: false, fondo: '', etiqueta: '', titulo: '', texto: '', mini: [], botones: [] };
+    if (dr) {
+      d.campos = (dr.campos || []).map(function (c, i) { return { label: c.label, max: c.max, valor: c.valor, corto: !c.largo, largo: c.largo, cuenta: c.valor.length + '/' + c.max, set: function (e) { const v = e.target.value; self.mod(function (x) { x.campos[i].valor = v; }); } }; });
+      d.tieneCampos = d.campos.length > 0;
+      d.botones = (dr.botones || []).map(function (b, i) { return Object.assign({ texto: b.texto, destino: b.destino, cuenta: b.texto.length + '/24',
+        setTexto: function (e) { const v = e.target.value; self.mod(function (x) { x.botones[i].texto = v; }); },
+        setDestino: function (e) { const v = e.target.value; self.mod(function (x) { x.botones[i].destino = v; }); },
+        ver: function () { self.mod(function (x) { x.botones[i].visible = !x.botones[i].visible; }); } }, ojo(b.visible)); });
+      d.tieneBotones = d.botones.length > 0;
+      if (dr.imgs) {
+        d.tieneImgs = true; d.nImgs = dr.imgs.length + ' de ' + dr.imgMax; d.imgNota = dr.imgNota;
+        d.imgs = dr.imgs.map(function (m, i) { const o = ojo(m.visible); return { src: m.src, alt: m.alt, pos: '#' + (i + 1), ojoTxt: m.visible ? '◉' : '○',
+          marco: 'border-radius:12px;overflow:hidden;border:1px solid #E1E3E6;background:#FFFFFF;' + (m.visible ? '' : 'opacity:.5'),
+          foto: 'width:100%;height:100px;object-fit:cover;display:block',
+          izq: function () { self.mod(function (x) { swap(x.imgs, i, i - 1); }); }, der: function () { self.mod(function (x) { swap(x.imgs, i, i + 1); }); },
+          cambiar: function () { self.setState({ picker: { tipo: 'img', i: i }, pick: 0 }); },
+          ver: function () { self.mod(function (x) { x.imgs[i].visible = !x.imgs[i].visible; }); },
+          borrar: function () { self.setState({ confirm: { tipo: 'img', i: i } }); } }; });
+      }
+      if (dr.cards) {
+        d.tieneCards = true; d.nCards = dr.cards.length;
+        d.cards = dr.cards.map(function (k, i) { return Object.assign({ titulo: k.titulo, src: k.src, tieneImg: !!k.src, link: k.link, fotoTxt: k.src ? 'Cambiar' : '+ Foto',
+          fila: 'display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px;border-radius:12px;background:#F2F4F5;' + (k.visible ? '' : 'opacity:.55'),
+          subir: function () { self.mod(function (x) { swap(x.cards, i, i - 1); }); }, bajar: function () { self.mod(function (x) { swap(x.cards, i, i + 1); }); },
+          setTitulo: function (e) { const v = e.target.value; self.mod(function (x) { x.cards[i].titulo = v; }); },
+          cambiar: function () { self.setState({ picker: { tipo: 'card', i: i }, pick: 0 }); },
+          ver: function () { self.mod(function (x) { x.cards[i].visible = !x.cards[i].visible; }); },
+          borrar: function () { self.setState({ confirm: { tipo: 'card', i: i } }); } }, ojo(k.visible)); });
+      }
+      d.auto = !!dr.auto; d.autoTxt = dr.auto || '';
+      const val = function (k) { const f = (dr.campos || []).filter(function (c) { return c.k === k; })[0]; return f ? f.valor : ''; };
+      const imgsV = (dr.imgs || []).filter(function (m) { return m.visible; });
+      p.etiqueta = val('e'); p.titulo = val('t') || dr.nombre; p.texto = val('x');
+      p.tieneFondo = dr.imgMax === 1 && imgsV.length > 0; p.fondo = p.tieneFondo ? imgsV[0].src : '';
+      p.mini = dr.cards ? dr.cards.filter(function (k) { return k.visible; }).map(function (k) { return { titulo: k.titulo, src: k.src, tieneImg: !!k.src }; })
+        : (dr.imgMax > 1 ? imgsV.map(function (m) { return { titulo: '', src: m.src, tieneImg: true }; }) : []);
+      p.botones = (dr.botones || []).filter(function (b) { return b.visible; }).slice(0, 2).map(function (b) { return { texto: b.texto }; });
+    }
+    const albs = ['Todas', 'Portada', 'Convención Nacional 2026', 'EMJ 2026', 'EJZ 2026', 'FEDI 2026'];
+    const vis = this.lib.filter(function (f) { return st.album === 'Todas' || f.album === st.album; });
+    const pk = vis[Math.min(st.pick, vis.length - 1)] || this.lib[0];
+    const pkr = st.picker;
+    return {
+      enLista: enLista, editando: !enLista,
+      tituloPantalla: enLista ? 'Administrar página web' : 'Editar: ' + (dr ? dr.nombre : ''),
+      migaEdicion: enLista ? '' : ' / Inicio / ' + (dr ? dr.nombre : ''),
+      aviso: st.aviso, cerrarAviso: function () { self.setState({ aviso: '' }); },
+      lista: lista, d: d, p: p,
+      estadoDraft: st.sucio ? 'Cambios sin guardar' : 'Sin cambios',
+      cancelar: function () { self.setState({ vista: 'lista', draft: null, ed: -1, sucio: false, aviso: st.sucio ? 'Cambios descartados' : '' }); },
+      guardar: function () { const a = self.clon(st.secs); a[st.ed] = self.clon(st.draft); self.setState({ secs: a, vista: 'lista', draft: null, ed: -1, sucio: false, aviso: 'Cambios guardados y publicados en la web' }); },
+      agregarImg: function () { if (dr && dr.imgs && dr.imgs.length >= dr.imgMax) { self.setState({ aviso: 'Esta sección admite hasta ' + dr.imgMax + ' foto(s). Reemplaza una existente.' }); return; } self.setState({ picker: { tipo: 'addimg' }, pick: 0 }); },
+      agregarCard: function () { self.mod(function (x) { x.cards.push({ titulo: 'Nueva tarjeta', src: '', link: 'Sin enlace', visible: true }); }); },
+      picker: !!pkr,
+      pickerTitulo: pkr && pkr.tipo === 'addimg' ? 'Agregar foto a la sección' : 'Reemplazar foto',
+      cerrarPicker: function () { self.setState({ picker: null }); },
+      simularSubida: function () { self.setState({ album: 'Todas', aviso: 'Al subir, la foto se optimiza y aparece aquí lista para elegir' }); },
+      albumes: albs.map(function (n) { const on = n === st.album; return { nombre: n, elegir: function () { self.setState({ album: n, pick: 0 }); }, estilo: 'min-height:36px;padding:0 12px;border-radius:999px;cursor:pointer;font:inherit;font-size:13px;font-weight:600;' + (on ? 'border:none;background:#062F4A;color:#FFFFFF' : 'border:1px solid #CDD1D6;background:#FFFFFF;color:#1C1E21') }; }),
+      biblio: vis.map(function (f, k) { return { src: f.src, alt: f.alt, elegir: function () { self.setState({ pick: k }); }, marco: 'padding:0;border-radius:10px;overflow:hidden;cursor:pointer;background:#FFFFFF;' + (f === pk ? 'border:3px solid #0073B1' : 'border:1px solid #E1E3E6') }; }),
+      pick: pk,
+      usarFoto: function () {
+        const ch = { src: pk.src, alt: pk.alt, visible: true };
+        self.mod(function (x) {
+          if (pkr.tipo === 'addimg') x.imgs.push(ch);
+          else if (pkr.tipo === 'img') { x.imgs[pkr.i].src = ch.src; x.imgs[pkr.i].alt = ch.alt; }
+          else if (pkr.tipo === 'card') x.cards[pkr.i].src = ch.src;
+        });
+        self.setState({ picker: null });
+      },
+      confirmando: !!st.confirm,
+      confirmTitulo: st.confirm ? (st.confirm.tipo === 'img' ? '¿Eliminar esta foto de la sección?' : '¿Eliminar esta tarjeta?') : '',
+      noBorrar: function () { self.setState({ confirm: null }); },
+      siBorrar: function () { const cf = st.confirm; self.mod(function (x) { if (cf.tipo === 'img') x.imgs.splice(cf.i, 1); else x.cards.splice(cf.i, 1); }); self.setState({ confirm: null }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

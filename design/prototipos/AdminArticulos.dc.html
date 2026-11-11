@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>JIUMP Admin — Artículos</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@600&display=swap" rel="stylesheet">
+<style>
+/* == Pase de diseño (criterios emil-design-eng) == */
+:root{--ease-out:cubic-bezier(.23,1,.32,1);--ease-in-out:cubic-bezier(.77,0,.175,1)}
+html{-webkit-text-size-adjust:100%;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+a,button,input,select,textarea,label,[role=button]{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button{transition:transform 160ms var(--ease-out),background-color .2s ease,border-color .2s ease,color .2s ease,box-shadow .2s ease}
+button:not(:disabled):active,a.btn:active,.heme-btn:active{transform:scale(.97)}
+h1,h2{letter-spacing:-.02em;text-wrap:balance}
+p{text-wrap:pretty}
+.tn,time{font-variant-numeric:tabular-nums}
+@media (pointer:coarse){input,select,textarea{font-size:16px!important}}
+@media (hover:none){[class]:hover:not(:active),[class]:hover:not(:active) img{transform:none!important}}
+
+body{margin:0;background:#F2F4F5}
+a{color:#0073B1}a:hover{color:#062F4A}
+.btn{transition:transform .2s ease}.btn:hover{transform:translateY(-1px)}.btn:active{transform:scale(.97)}
+.row{transition:background-color .15s ease}.row:hover{background:#F7F9FA}
+@keyframes lb{from{opacity:0}to{opacity:1}}@keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+.modal{animation:lb .2s ease both}.modal > div{animation:pop .25s ease both}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</helmet>
+<div style="position:relative;width:100%;min-height:1100px;background:#F2F4F5;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1C1E21;display:flex;flex-wrap:wrap">
+
+  <div style="flex:1 1 240px;max-width:260px;display:flex"><dc-import name="AdminSidebar" activo="articulos" rol="super" hint-size="260px,1100px"></dc-import></div>
+
+  <main style="flex:999 1 560px;min-width:0;padding:32px 40px 48px;box-sizing:border-box;display:flex;flex-direction:column;gap:22px">
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px">
+      <div style="display:flex;flex-direction:column;gap:4px"><h1 style="margin:0;font-family:Montserrat,sans-serif;font-size:32px;font-weight:800">Artículos</h1><span style="font-size:15px;color:#5F5A60">Escribe, revisa y publica sin tocar código.</span></div>
+      <a class="btn" href="AdminEditor.dc.html" style="display:inline-flex;align-items:center;min-height:46px;padding:0 22px;border-radius:999px;background:#0073B1;color:#FFFFFF;font-family:'Segoe UI','Open Sans',sans-serif;font-weight:600;font-size:15px;text-decoration:none">+ Nuevo artículo</a>
+    </div>
+
+    <!-- Buscador y filtros -->
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:#FFFFFF;border-radius:16px;padding:12px">
+      <label style="flex:1 1 280px;display:flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:12px;border:1px solid #CDD1D6"><span aria-hidden="true" style="color:#5F5A60">⌕</span><span style="position:absolute;left:-9999px">Buscar artículos</span><input type="search" value="{{ q }}" onInput="{{ buscar }}" placeholder="Buscar por título…" style="border:none;outline:none;font:inherit;font-size:14px;width:100%;background:transparent"></label>
+      <sc-for list="{{ filtros }}" as="f" hint-placeholder-count="4">
+        <button class="btn" onClick="{{ f.elegir }}" style="{{ f.estilo }}">{{ f.nombre }}</button>
+      </sc-for>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5F5A60">Serie<select style="min-height:44px;border-radius:12px;border:1px solid #CDD1D6;padding:0 10px;font:inherit;font-size:14px;color:#1C1E21"><option>Todas</option><option>Septiembre · Mes de la Biblia</option><option>Octubre · Mes de la Reforma</option><option>Los Atributos de Dios</option><option>Ven y Sígueme</option><option>Nehemías: Un espíritu encendido</option><option>Pactos de Dios</option></select></label>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+      <!-- Lista -->
+      <section style="flex:3 1 560px;min-width:0;background:#FFFFFF;border-radius:20px;padding:8px 8px 16px">
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:14px;min-width:620px">
+            <thead><tr style="text-align:left;color:#5F5A60"><th style="padding:14px 12px;font-weight:600">Artículo</th><th style="padding:14px 12px;font-weight:600">Estado</th><th style="padding:14px 12px;font-weight:600">Fecha</th><th style="padding:14px 12px;font-weight:600;text-align:right">Acciones</th></tr></thead>
+            <tbody>
+              <sc-for list="{{ lista }}" as="a" hint-placeholder-count="6">
+                <tr class="row" style="border-top:1px solid #E7E9EC">
+                  <td style="padding:12px"><div style="display:flex;align-items:center;gap:12px"><div style="width:64px;height:46px;border-radius:10px;background:#0B4A73;flex-shrink:0"></div><div style="display:flex;flex-direction:column;gap:2px"><strong style="font-size:15px">{{ a.titulo }}</strong><span style="font-size:12.5px;color:#5F5A60">{{ a.serie }}</span></div></div></td>
+                  <td style="padding:12px"><span style="{{ a.chip }}">{{ a.estado }}</span></td>
+                  <td style="padding:12px;color:#5F5A60">{{ a.fecha }}</td>
+                  <td style="padding:12px;text-align:right;white-space:nowrap">
+                    <a href="AdminEditor.dc.html" style="display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border-radius:10px;background:#E3F0F8;color:#005A8C;font-weight:600;font-size:13px;text-decoration:none">Editar</a>
+                    <a href="Articulos.dc.html" style="display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border-radius:10px;color:#43474D;font-weight:600;font-size:13px;text-decoration:none">Vista previa</a>
+                    <button onClick="{{ a.borrar }}" aria-label="Eliminar {{ a.titulo }}" style="min-height:36px;padding:0 12px;border-radius:10px;border:none;background:#FBDADC;color:#9E1F1D;font:inherit;font-weight:600;font-size:13px;cursor:pointer">Eliminar</button>
+                  </td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+        <sc-if value="{{ vacio }}" hint-placeholder-val="{{ false }}"><p style="margin:0;padding:24px;text-align:center;color:#5F5A60">No hay artículos que coincidan con la búsqueda.</p></sc-if>
+        <p style="margin:12px 12px 0;font-size:13px;color:#5F5A60">Mostrando {{ total }} artículos · cada serie mensual tiene color, ícono y orden de partes propios.</p>
+      </section>
+
+      <!-- Series y categorías -->
+      <aside style="flex:1 1 280px;min-width:0;background:#FFFFFF;border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0;font-family:Montserrat,sans-serif;font-size:18px;font-weight:800">Series y categorías</h2><button class="btn" style="min-height:36px;padding:0 12px;border-radius:999px;border:1.5px solid #0073B1;background:#FFFFFF;color:#0073B1;font:inherit;font-weight:600;font-size:13px;cursor:pointer">+ Agregar</button></div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid #E7E9EC;font-size:14px"><span><span aria-hidden="true" style="display:inline-block;width:10px;height:10px;border-radius:999px;background:#0073B1;margin-right:8px"></span>Septiembre · Mes de la Biblia</span><span style="color:#5F5A60">4</span></div><div style="display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid #E7E9EC;font-size:14px"><span><span aria-hidden="true" style="display:inline-block;width:10px;height:10px;border-radius:999px;background:#DA3A38;margin-right:8px"></span>Octubre · Mes de la Reforma</span><span style="color:#5F5A60">3</span></div><div style="display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid #E7E9EC;font-size:14px"><span>Los Atributos de Dios</span><span style="color:#5F5A60">[n]</span></div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid #E7E9EC;font-size:14px"><span>Ven y Sígueme</span><span style="color:#5F5A60">[n]</span></div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid #E7E9EC;font-size:14px"><span>Nehemías: Un espíritu encendido</span><span style="color:#5F5A60">[n]</span></div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid #E7E9EC;font-size:14px"><span>Pactos de Dios</span><span style="color:#5F5A60">[n]</span></div>
+        <span style="font-size:13px;color:#5F5A60">Temas: Ansiedad, preocupación y temor · Teología para todos · Problemáticas juveniles · Oración…</span>
+        <span style="font-size:12.5px;line-height:1.5;color:#5F5A60;background:#F2F4F5;border-radius:10px;padding:10px">Una serie con artículos no se puede borrar: primero hay que moverlos a otra.</span>
+      </aside>
+    </div>
+  </main>
+
+  <!-- Confirmación antes de eliminar -->
+  <sc-if value="{{ confirmando }}" hint-placeholder-val="{{ false }}">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="t-borrar" style="position:absolute;inset:0;z-index:20;background:rgba(6,47,74,.55);display:flex;align-items:flex-start;justify-content:center;padding:160px 20px">
+      <div style="width:100%;max-width:460px;background:#FFFFFF;border-radius:22px;padding:28px;display:flex;flex-direction:column;gap:14px;box-shadow:0 30px 60px rgba(0,0,0,.35)">
+        <h2 id="t-borrar" style="margin:0;font-family:Montserrat,sans-serif;font-size:22px;font-weight:800">¿Eliminar «{{ porBorrar }}»?</h2>
+        <p style="margin:0;font-size:15px;line-height:1.6;color:#43474D">El artículo dejará de verse en la web y pasará a la papelera. Podrás recuperarlo durante 30 días.</p>
+        <div style="display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap">
+          <button class="btn" onClick="{{ cancelar }}" style="min-height:44px;padding:0 18px;border-radius:999px;border:1px solid #CDD1D6;background:#FFFFFF;font:inherit;font-weight:600;cursor:pointer">Cancelar</button>
+          <button class="btn" onClick="{{ confirmar }}" style="min-height:44px;padding:0 18px;border-radius:999px;border:none;background:#B42F2D;color:#FFFFFF;font:inherit;font-weight:600;cursor:pointer">Sí, eliminar</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    this.state = { q: '', filtro: 'Todos', borrar: -1, items: [
+      { titulo: 'Una Reforma que todavía nos habla', serie: 'Octubre · Mes de la Reforma · Parte 3', estado: 'Publicado', fecha: 'Octubre' },
+      { titulo: 'Cuando la verdad tuvo un precio', serie: 'Octubre · Mes de la Reforma · Parte 2', estado: 'Publicado', fecha: 'Octubre' },
+      { titulo: '¿Por qué fue necesaria la Reforma?', serie: 'Octubre · Mes de la Reforma · Parte 1', estado: 'Publicado', fecha: 'Octubre' },
+      { titulo: 'De Jerusalén a nuestro idioma', serie: 'Septiembre · Mes de la Biblia · Parte 4', estado: 'Publicado', fecha: 'Septiembre' },
+      { titulo: 'De los rollos a la imprenta', serie: 'Septiembre · Mes de la Biblia · Parte 3', estado: 'Publicado', fecha: 'Septiembre' },
+      { titulo: 'El nacimiento del canon bíblico', serie: 'Septiembre · Mes de la Biblia · Parte 2', estado: 'Publicado', fecha: 'Septiembre' },
+      { titulo: '¿Cómo comenzó la Biblia?', serie: 'Septiembre · Mes de la Biblia · Parte 1', estado: 'Publicado', fecha: 'Septiembre' },
+      { titulo: 'La pureza de Dios', serie: 'Los Atributos de Dios', estado: 'Publicado', fecha: '25 nov 2024' },
+      { titulo: 'La santidad de Dios', serie: 'Los Atributos de Dios', estado: 'Publicado', fecha: '—' },
+      { titulo: 'El soberano Alfarero', serie: 'Sin serie', estado: 'Publicado', fecha: '7 oct 2024' }
+    ] };
+  }
+  renderVals() {
+    const self = this, st = this.state;
+    const chips = { 'Publicado': 'background:#E0F5F3;color:#00665F', 'Borrador': 'background:#EEF0F2;color:#43474D', 'En revisión': 'background:#FFF1D6;color:#7A4B00', 'Programado': 'background:#E3F0F8;color:#005A8C' };
+    const q = st.q.toLowerCase();
+    const lista = st.items.map(function (a, k) { return { a: a, k: k }; }).filter(function (x) {
+      return (st.filtro === 'Todos' || x.a.estado === st.filtro) && x.a.titulo.toLowerCase().indexOf(q) >= 0;
+    }).map(function (x) {
+      return Object.assign({}, x.a, { chip: 'padding:4px 10px;border-radius:999px;font-weight:600;font-size:12px;' + chips[x.a.estado], borrar: function () { self.setState({ borrar: x.k }); } });
+    });
+    const filtros = ['Todos', 'Publicado', 'Borrador', 'En revisión', 'Programado'].map(function (n) {
+      const on = n === st.filtro;
+      return { nombre: n, elegir: function () { self.setState({ filtro: n }); }, estilo: 'min-height:40px;padding:0 14px;border-radius:999px;cursor:pointer;font:inherit;font-size:13px;font-weight:600;' + (on ? 'border:none;background:#062F4A;color:#FFFFFF' : 'border:1px solid #CDD1D6;background:#FFFFFF;color:#1C1E21') };
+    });
+    return {
+      q: st.q, buscar: function (e) { self.setState({ q: e.target.value }); },
+      filtros: filtros, lista: lista, total: lista.length, vacio: lista.length === 0,
+      confirmando: st.borrar >= 0, porBorrar: st.borrar >= 0 ? st.items[st.borrar].titulo : '',
+      cancelar: function () { self.setState({ borrar: -1 }); },
+      confirmar: function () { const it = st.items.slice(); it.splice(st.borrar, 1); self.setState({ items: it, borrar: -1 }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

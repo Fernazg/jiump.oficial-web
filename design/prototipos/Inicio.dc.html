@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>JIUMP — Inicio</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@600&display=swap" rel="stylesheet">
+<style>
+/* == Pase de diseño (criterios emil-design-eng) == */
+:root{--ease-out:cubic-bezier(.23,1,.32,1);--ease-in-out:cubic-bezier(.77,0,.175,1)}
+html{-webkit-text-size-adjust:100%;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+a,button,input,select,textarea,label,[role=button]{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button{transition:transform 160ms var(--ease-out),background-color .2s ease,border-color .2s ease,color .2s ease,box-shadow .2s ease}
+button:not(:disabled):active,a.btn:active,.heme-btn:active{transform:scale(.97)}
+h1,h2{letter-spacing:-.02em;text-wrap:balance}
+p{text-wrap:pretty}
+.tn,time{font-variant-numeric:tabular-nums}
+@media (pointer:coarse){input,select,textarea{font-size:16px!important}}
+@media (hover:none){[class]:hover:not(:active),[class]:hover:not(:active) img{transform:none!important}}
+
+body{margin:0;background:#FFFFFF}
+a{color:#0073B1}a:hover{color:#062F4A}
+/* Movimiento: sutil, rápido y desactivable */
+@view-transition{navigation:auto}
+@keyframes fi{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+section h1,section h1 ~ *{animation:fi .6s var(--ease-out) both}
+section h1 ~ *{animation-delay:.18s}
+a[style*="border-radius:999px"],button{transition:transform .2s ease,background-color .2s ease,box-shadow .2s ease}
+a[style*="border-radius:999px"]:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.18)}
+a[style*="border-radius:999px"]:active{transform:scale(.97)}
+a[style*="border-radius:20px"],a[style*="border-radius:24px"]{transition:transform .3s ease,box-shadow .3s ease}
+a[style*="border-radius:20px"]:hover,a[style*="border-radius:24px"]:hover{transform:translateY(-2px);box-shadow:0 18px 36px rgba(0,0,0,.18)}
+.zm{overflow:hidden}.zm img{transition:transform .5s var(--ease-out)}.zm:hover img{transform:scale(1.06)}
+.heme-btn{transition:transform .25s ease,box-shadow .3s ease!important}
+.heme-btn:hover{transform:translateY(-2px)!important;box-shadow:0 14px 30px -10px rgba(0,0,0,.45)!important}
+.heme-arrow{display:inline-block;transition:transform .25s ease}.heme-btn:hover .heme-arrow{transform:translateX(4px)}
+@media (max-width:760px){.heme > div[style*="padding:120px"]{padding:80px 20px!important;gap:48px!important}.heme-wm{bottom:-30px!important}}
+@media (max-width:760px){section [style*="grid-column:span"]{grid-column:1/-1!important}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition-property:opacity,color,background-color,border-color,box-shadow!important}}
+/* == Inicio responsive == */
+@media (max-width:900px){.hero{min-height:640px!important}.que-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media (max-width:640px){
+  .hero{min-height:560px!important}
+  .hero>div{padding-bottom:40px!important}
+  .hero-cta>a{flex:1 1 100%}
+  .act-grid{display:flex!important;gap:12px!important;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;margin:0 -20px;padding:0 20px 6px;scroll-padding:0 20px;scrollbar-width:none}
+  .act-grid::-webkit-scrollbar{display:none}
+  .act-grid>a{flex:0 0 calc(100% - 64px);width:calc(100% - 64px);height:440px!important;min-height:0!important;box-sizing:border-box;scroll-snap-align:start;scroll-snap-stop:always}
+  .act-grid>a>div[style*="padding:"]{padding:22px!important;width:100%;box-sizing:border-box}
+  .act-grid>a strong{font-size:28px!important;line-height:1.08!important;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:5;overflow:hidden}
+  .act-grid>a strong+span{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+  .que-grid{display:flex!important;gap:12px!important;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;touch-action:pan-x pan-y;margin:0 -20px;padding:0 20px 6px;scroll-padding:0 20px;scrollbar-width:none}
+  .que-grid::-webkit-scrollbar{display:none}
+  .que-grid>a{flex:0 0 280px;height:360px!important;box-sizing:border-box;scroll-snap-align:start}
+}
+/* == fin Inicio responsive == */
+@media (max-width:640px){.hero h1,section[style*="min-height:6"] h1,section[style*="min-height:7"] h1{font-size:clamp(38px,11.4vw,44px)!important}}
+/* == Responsive == */
+img{max-width:100%}
+.mnav{display:none;position:relative}
+.mnav>summary{list-style:none;cursor:pointer;width:48px;height:48px;border-radius:999px;border:1px solid #CDD1D6;background:#FFFFFF;color:#1C1E21;display:flex;align-items:center;justify-content:center}
+.mnav>summary::-webkit-details-marker{display:none}
+.mnav[open]>summary{background:#E3F0F8;border-color:#0073B1;color:#0073B1}
+.mnav-panel{position:absolute;right:0;top:58px;z-index:60;width:min(86vw,320px);background:#FFFFFF;border-radius:20px;box-shadow:0 0 0 1px rgba(0,0,0,.06),0 24px 48px -12px rgba(0,0,0,.28);padding:8px;display:flex;flex-direction:column;animation:mnav .2s var(--ease-out,ease-out) both;transform-origin:top right}
+@keyframes mnav{from{opacity:0;transform:scale(.97) translateY(-4px)}to{opacity:1;transform:none}}
+.mnav-panel a{display:flex;align-items:center;min-height:52px;padding:0 16px;border-radius:12px;font-family:'Segoe UI','Open Sans',sans-serif;font-size:17px;font-weight:600;color:#1C1E21;text-decoration:none}
+.mnav-panel a:hover{background:#F2F4F5}
+.mnav-panel a[aria-current]{color:#0073B1;background:#E3F0F8}
+@media (max-width:1024px){
+  [style*="max-width:1280px"],[style*="max-width:1200px"]{padding-left:32px!important;padding-right:32px!important}
+  .hnav{padding-left:32px!important;padding-right:32px!important}
+}
+@media (max-width:900px){
+  .nl-desk,.hcenter{display:none!important}
+  .mnav{display:block}
+  .hlogo{height:48px!important}
+}
+@media (max-width:640px){
+  [style*="max-width:1280px"],[style*="max-width:1200px"],[style*="max-width:900px"],[style*="max-width:760px"]{padding-left:20px!important;padding-right:20px!important}
+  .hnav{padding:8px 16px!important}
+  .hlogo{height:44px!important}
+  section[style*="padding:10"],section[style*="padding:11"],section[style*="padding:12"],section[style*="padding:9"],section[style*="padding:8"],section[style*="padding:7"],
+  section>div[style*="padding:10"],section>div[style*="padding:11"],section>div[style*="padding:12"],section>div[style*="padding:9"],section>div[style*="padding:8"],section>div[style*="padding:7"]{padding-top:56px!important;padding-bottom:56px!important}
+  h1{font-size:clamp(34px,9.8vw,38px)!important;line-height:1.04!important}
+  h2{font-size:clamp(28px,8.2vw,32px)!important;line-height:1.1!important}
+  [style*="repeat(12"]{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  [style*="repeat(12"][style*="grid-auto-rows"]{grid-auto-rows:150px!important}
+  [style*="grid-column:span 7"],[style*="grid-column:span 5"],[style*="grid-column:span 2;grid-row:span 2"]{grid-column:1/-1!important}
+  [style*="grid-column:span 4"],[style*="grid-column:span 6"],[style*="grid-column:span 3"]{grid-column:span 1!important}
+  [style*="grid-row:span 3"]{grid-row:span 2!important}
+  [style*="repeat(4,minmax(0,1fr))"]{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  [style*="column-width"]{column-width:150px!important;column-gap:10px!important}
+  footer [style*="grid-column:span 2"]{grid-column:1/-1!important}
+  footer [style*="minmax(220px,1fr)"]{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:28px!important}
+  [style*="min-height:46px"][style*="border-radius:999px"],[style*="min-height:48px"][style*="border-radius:999px"],[style*="min-height:52px"][style*="border-radius:999px"]{justify-content:center}
+}
+@media (max-width:900px){
+  .lay{grid-template-columns:minmax(0,1fr)!important}
+  .side,.side>div,.toc{min-width:0;max-width:100%}
+  .side{gap:18px!important}
+  .side>div:nth-child(2){display:none}
+  .side h2{font-size:12px!important;line-height:1.3!important;letter-spacing:.12em!important}
+  .toc{display:flex;gap:8px;overflow-x:auto;border-left:none!important;padding-bottom:6px;scrollbar-width:none}
+  .toc li{flex:0 0 auto}
+  .toc a{margin:0!important;border:1px solid #E1E3E6!important;border-radius:999px;padding:8px 14px!important;white-space:nowrap;background:#FFFFFF}
+  #mes-de-la-reforma figure{max-width:260px!important;margin:0 auto!important}
+}
+@media (max-width:640px){
+  .side h2{font-size:12px!important}
+  section figure[style*="max-width:320px"],section div[aria-hidden="true"][style*="aspect-ratio:3/4"]{display:none!important}
+  [style*="min-height:420px"]{min-height:200px!important}
+}
+</style>
+</helmet>
+<div style="width:100%;background:#FFFFFF;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1C1E21">
+
+  <!-- Barra próximo evento: se muestra automáticamente cuando exista un evento publicado -->
+
+  <!-- Menú: logo a color sobre blanco, como indica el manual -->
+  <header style="position:relative;z-index:30;background:#FFFFFF;border-bottom:1px solid #E1E3E6">
+    <nav class="hnav" style="max-width:1280px;margin:0 auto;padding:10px 40px;display:flex;align-items:center;justify-content:space-between;gap:16px">
+      <a href="Inicio.dc.html" aria-label="JIUMP, ir al inicio" style="display:flex;flex-shrink:0"><img class="hlogo" src="/_blob/1b16c658d676a48f9564e3144cfa63aa" alt="JIUMP" style="height:56px;width:auto;display:block"></a>
+      <div class="nl-desk" style="display:flex;align-items:center;gap:8px 28px;font-family:'Segoe UI','Open Sans',sans-serif;font-size:15px;font-weight:600"><a href="Nosotros.dc.html" style="color:#1C1E21;text-decoration:none">Nosotros</a><a href="Eventos.dc.html" style="color:#1C1E21;text-decoration:none">Eventos</a><a href="Articulos.dc.html" style="color:#1C1E21;text-decoration:none">Artículos</a><a href="Galeria.dc.html" style="color:#1C1E21;text-decoration:none">Galería</a></div>
+      <details class="mnav"><summary aria-label="Abrir menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></summary><div class="mnav-panel"><a href="Inicio.dc.html">Inicio</a><a href="Nosotros.dc.html">Nosotros</a><a href="Eventos.dc.html">Eventos</a><a href="Articulos.dc.html">Artículos</a><a href="Galeria.dc.html">Galería</a></div></details>
+    </nav>
+  </header>
+
+  <!-- Portada: fotografía real protagonista -->
+  <section class="hero" style="position:relative;min-height:760px;background:#062F4A;color:#FFFFFF;overflow:hidden;display:flex;align-items:flex-end">
+    <img src="/_blob/37b805dcd7dbc8be26f1fab5a2d456b0" alt="Jóvenes de JIUMP sonriendo juntos en un encuentro" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%">
+    <div aria-hidden="true" style="position:absolute;inset:0;background:linear-gradient(to top,rgba(6,47,74,.9) 0%,rgba(6,47,74,.5) 30%,rgba(6,47,74,0) 60%),linear-gradient(90deg,rgba(6,47,74,.5) 0%,rgba(6,47,74,0) 55%)"></div>
+    <div style="position:relative;width:100%;max-width:1280px;margin:0 auto;padding:0 40px 72px;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+      <div aria-hidden="true" style="display:flex;height:6px;width:150px"><div style="flex:2;background:#00AB9F"></div><div style="flex:1;background:#0073B1"></div></div>
+      <h1 style="margin:0;max-width:880px;font-family:Montserrat,sans-serif;font-size:clamp(44px,6.2vw,88px);line-height:.98;font-weight:800;letter-spacing:-.025em;text-shadow:0 2px 24px rgba(0,0,0,.25)">Jóvenes unidos para adorar a Cristo</h1>
+      <div class="hero-cta" style="display:flex;flex-wrap:wrap;gap:14px">
+        <a href="Eventos.dc.html" style="display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 28px;border-radius:999px;background:#0073B1;color:#FFFFFF;font-family:'Segoe UI','Open Sans',sans-serif;font-weight:600;font-size:16px;text-decoration:none">Próximos eventos →</a>
+        <a href="Nosotros.dc.html" style="display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 28px;border-radius:999px;border:1.5px solid #FFFFFF;color:#FFFFFF;font-family:'Segoe UI','Open Sans',sans-serif;font-weight:600;font-size:16px;text-decoration:none">Conócenos</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Presentación: identidad y cifras (fuera de la foto) -->
+  <section style="max-width:1280px;margin:0 auto;padding:72px 40px 8px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:40px 64px;align-items:end">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <span style="font-family:'Segoe UI','Open Sans',sans-serif;font-size:15px;font-weight:600;color:#0073B1">Movimiento juvenil · Iglesia Unida Metodista Pentecostal</span>
+      <p style="margin:0;font-family:Montserrat,sans-serif;font-size:clamp(22px,2.2vw,28px);line-height:1.4;font-weight:600;color:#1C1E21">Servimos con excelencia, guiados por el Espíritu Santo, capacitándonos para transmitir nuestro legado a las futuras generaciones.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:20px;padding-top:20px;border-top:1px solid #E1E3E6">
+      <div><strong style="display:block;font-family:Montserrat,sans-serif;font-size:34px;font-weight:800;color:#0073B1">+2.000</strong><span style="font-size:14px;color:#5F5A60">jóvenes en la Convención Nacional 2026</span></div>
+      <div><strong style="display:block;font-family:Montserrat,sans-serif;font-size:34px;font-weight:800;color:#0073B1">50 años</strong><span style="font-size:14px;color:#5F5A60">de historia del movimiento</span></div>
+      <div><strong style="display:block;font-family:Montserrat,sans-serif;font-size:34px;font-weight:800;color:#0073B1">Chile y Argentina</strong><span style="font-size:14px;color:#5F5A60">zonas y jefaturas en todo el territorio</span></div>
+    </div>
+  </section>
+
+  <!-- Qué hacemos -->
+  <section style="max-width:1280px;margin:0 auto;padding:112px 40px 96px;display:flex;flex-direction:column;gap:40px">
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:24px">
+      <div style="display:flex;flex-direction:column;gap:12px;max-width:640px">
+        <span style="font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#0073B1;font-family:'Segoe UI','Open Sans',sans-serif">Qué hacemos</span>
+        <h2 style="margin:0;font-family:Montserrat,sans-serif;font-size:clamp(32px,3.4vw,48px);line-height:1.05;font-weight:800;letter-spacing:-.02em">Bendecir al pueblo joven de cada iglesia local</h2>
+      </div>
+      <a href="#" style="font-weight:600;font-size:16px">Conoce el movimiento →</a>
+    </div>
+    <div class="que-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:20px">
+      <a href="ActividadJefaturas.dc.html" class="zm" style="position:relative;overflow:hidden;text-decoration:none;color:#FFFFFF;border-radius:20px;height:400px;background:#062F4A;display:flex;flex-direction:column;justify-content:flex-end;padding:24px">
+        <img src="/_blob/aa8b5bfc6b53aece86afaa5d6c704994" alt="Líderes conversando frente a la congregación en un encuentro de JIUMP" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:45% 30%">
+        <div aria-hidden="true" style="position:absolute;inset:0;background:linear-gradient(to top,rgba(6,47,74,.92) 0%,rgba(6,47,74,.55) 30%,rgba(6,47,74,0) 58%)"></div>
+        <strong style="position:relative;font-family:Montserrat,sans-serif;font-size:24px;font-weight:700">Encuentros</strong>
+      </a>
+      <a href="#" class="zm" style="position:relative;overflow:hidden;text-decoration:none;color:#FFFFFF;border-radius:20px;height:400px;background:#062F4A;display:flex;flex-direction:column;justify-content:flex-end;padding:24px">
+        <img src="/_blob/333848e15e3839fcb0ce7ef26568f8f7" alt="Joven sonriendo junto a otros jóvenes durante una actividad de JIUMP" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:48% 30%">
+        <div aria-hidden="true" style="position:absolute;inset:0;background:linear-gradient(to top,rgba(6,47,74,.92) 0%,rgba(6,47,74,.55) 30%,rgba(6,47,74,0) 58%)"></div>
+        <strong style="position:relative;font-family:Montserrat,sans-serif;font-size:24px;font-weight:700">Zonales</strong>
+      </a>
+      <a href="ActividadConvencion.dc.html" class="zm" style="position:relative;overflow:hidden;text-decoration:none;color:#FFFFFF;border-radius:20px;height:400px;background:#062F4A;display:flex;flex-direction:column;justify-content:flex-end;padding:24px">
+        <img src="/_blob/05238004edcc733d035cca963adbfdec" alt="Músico tocando guitarra en la Convención Nacional JIUMP 2026" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:40% 40%">
+        <div aria-hidden="true" style="position:absolute;inset:0;background:linear-gradient(to top,rgba(6,47,74,.92) 0%,rgba(6,47,74,.55) 30%,rgba(6,47,74,0) 58%)"></div>
+        <strong style="position:relative;font-family:Montserrat,sans-serif;font-size:24px;font-weight:700">Convenciones</strong>
+      </a>
+      <a href="ActividadEMJ.dc.html" class="zm" style="position:relative;overflow:hidden;text-decoration:none;color:#FFFFFF;border-radius:20px;height:400px;background:#062F4A;display:flex;flex-direction:column;justify-content:flex-end;padding:24px">
+        <img src="/_blob/c812a4cd24f206fc856b063660dee62d" alt="Asistentes del Encuentro de Mujeres JIUMP 2026 frente al escenario" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:60% 50%">
+        <div aria-hidden="true" style="position:absolute;inset:0;background:linear-gradient(to top,rgba(6,47,74,.92) 0%,rgba(6,47,74,.55) 30%,rgba(6,47,74,0) 58%)"></div>
+        <strong style="position:relative;font-family:Montserrat,sans-serif;font-size:24px;line-height:1.1;font-weight:700">Encuentro Mujeres JIUMP</strong>
+      </a>
+    </div>
+  </section>
+
+
+  <!-- Lema -->
+  <section class="heme" style="position:relative;overflow:hidden;color:#FFFFFF;background:radial-gradient(ellipse 60% 70% at 12% 18%,rgba(0,171,159,.22) 0%,rgba(0,171,159,0) 60%),radial-gradient(ellipse 55% 65% at 90% 85%,rgba(0,115,177,.38) 0%,rgba(0,115,177,0) 65%),linear-gradient(135deg,#041F31 0%,#062F4A 35%,#0A4268 70%,#062F4A 100%)">
+    <!-- capas decorativas -->
+    <div aria-hidden="true" style="position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1.2px);background-size:22px 22px;-webkit-mask-image:linear-gradient(to right,#000 0%,transparent 55%);mask-image:linear-gradient(to right,#000 0%,transparent 55%)"></div>
+    <svg aria-hidden="true" viewBox="0 0 1440 720" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%">
+      <g fill="none" stroke="#00AB9F" stroke-width="1">
+        <circle cx="170" cy="150" r="140" opacity=".18"/>
+        <circle cx="170" cy="150" r="230" opacity=".12"/>
+        <circle cx="170" cy="150" r="330" opacity=".07"/>
+      </g>
+      <g stroke="#FFFFFF" stroke-width="1" opacity=".06"><line x1="760" y1="0" x2="1180" y2="720"/><line x1="820" y1="0" x2="1240" y2="720"/><line x1="880" y1="0" x2="1300" y2="720"/></g>
+      <g fill="#00AB9F"><circle cx="640" cy="120" r="2.5" opacity=".7"/><circle cx="700" cy="610" r="2" opacity=".5"/><circle cx="1360" cy="90" r="3" opacity=".6"/><circle cx="95" cy="560" r="2" opacity=".5"/></g>
+      <g stroke="#FFFFFF" stroke-width="1.5" opacity=".35" stroke-linecap="round"><path d="M1330 640v18M1321 649h18"/><path d="M600 470v12M594 476h12"/></g>
+    </svg>
+    <span aria-hidden="true" class="heme-wm" style="position:absolute;right:-24px;bottom:-60px;font-family:Montserrat,sans-serif;font-weight:800;font-size:clamp(160px,24vw,340px);line-height:1;letter-spacing:-.02em;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.07);pointer-events:none;user-select:none">2026</span>
+    <div aria-hidden="true" style="position:absolute;top:0;left:0;right:0;display:flex;height:4px"><div style="width:232px;background:#00AB9F"></div><div style="width:124px;background:#0073B1"></div></div>
+
+    <div style="position:relative;max-width:1280px;margin:0 auto;padding:120px 40px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:64px;align-items:center">
+      <div style="display:flex;flex-direction:column;gap:24px">
+        <span style="display:inline-flex;align-items:center;gap:12px;font-family:'Segoe UI','Open Sans',sans-serif;font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#A6E9E2"><span aria-hidden="true" style="width:40px;height:2px;background:#00AB9F"></span>Convención Nacional 2026</span>
+        <p style="margin:0;font-family:Montserrat,sans-serif;font-size:clamp(44px,6.2vw,88px);line-height:.88;font-weight:800;letter-spacing:-.025em;text-shadow:0 12px 40px rgba(0,0,0,.35)">Heme aquí</p>
+        <p style="margin:0;font-size:20px;line-height:1.6;color:#D5E6F2;max-width:480px;padding-left:18px;border-left:2px solid rgba(0,171,159,.6)">Más de 2.000 jóvenes reunidos durante dos días para adorar a Cristo.</p>
+        <a href="ActividadConvencion.dc.html" class="heme-btn" style="align-self:flex-start;margin-top:8px;display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 28px;border-radius:999px;background:#0073B1;color:#FFFFFF;font-family:'Segoe UI','Open Sans',sans-serif;font-weight:600;font-size:16px;text-decoration:none">Revive la convención <span class="heme-arrow" aria-hidden="true">→</span></a>
+      </div>
+      <div style="position:relative">
+        <div aria-hidden="true" style="position:absolute;inset:-18px -18px 18px 18px;border:1px solid rgba(0,171,159,.35);border-radius:26px"></div>
+        <div aria-hidden="true" style="position:absolute;inset:10% 10%;background:radial-gradient(circle,rgba(0,171,159,.35) 0%,rgba(0,171,159,0) 70%);filter:blur(40px)"></div>
+        <div style="position:relative;z-index:1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px"><div class="zm" style="height:220px;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,.16);box-shadow:0 24px 48px -16px rgba(0,0,0,.7),0 0 0 6px rgba(255,255,255,.03)"><img src="/_blob/a61a93fef1f7faeae53ef5f46d380003" alt="Grupo de jóvenes con sus credenciales de la Convención" style="width:100%;height:100%;object-fit:cover;display:block"></div><div class="zm" style="height:220px;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,.16);box-shadow:0 24px 48px -16px rgba(0,0,0,.7),0 0 0 6px rgba(255,255,255,.03)"><img src="/_blob/5bde26efb15f98720f914e82247fae6b" alt="Joven en oración durante la Convención" style="width:100%;height:100%;object-fit:cover;display:block"></div><div class="zm" style="grid-column:span 2;height:220px;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,.16);box-shadow:0 24px 48px -16px rgba(0,0,0,.7),0 0 0 6px rgba(255,255,255,.03)"><img src="/_blob/784625ac3ebfe474ed6261cca016b8df" alt="Escenario de la Convención con la pantalla Samuel, Heme aquí" style="width:100%;height:100%;object-fit:cover;display:block"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Actividades destacadas 2026 -->
+  <section style="max-width:1280px;margin:0 auto;padding:104px 40px 40px;display:flex;flex-direction:column;gap:40px">
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:24px">
+      <div style="display:flex;flex-direction:column;gap:12px;max-width:720px">
+        <span style="font-family:'Segoe UI','Open Sans',sans-serif;font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#0073B1">Actividades destacadas 2026</span>
+        <h2 style="margin:0;font-family:Montserrat,sans-serif;font-size:clamp(32px,3.4vw,48px);line-height:1.05;font-weight:800;letter-spacing:-.02em">Lo que vivimos este año</h2>
+      </div>
+      <a href="Eventos.dc.html" style="font-weight:600;font-size:16px">Todas las actividades →</a>
+    </div>
+    <div class="act-grid" style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:20px">
+      <a href="ActividadConvencion.dc.html" class="zm" style="grid-column:span 7;position:relative;min-height:460px;border-radius:24px;overflow:hidden;background:#083C5E;color:#FFFFFF;text-decoration:none;display:flex;align-items:flex-end">
+        <img src="/_blob/25b550f1411f6c261cc0d42a3945ea92" alt="Jóvenes y pastores adorando con las manos levantadas en la Convención" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 40%">
+        <div aria-hidden="true" style="position:absolute;inset:0;background:linear-gradient(to top,rgba(6,47,74,.92) 0%,rgba(6,47,74,.55) 30%,rgba(6,47,74,0) 58%)"></div>
+        <div style="position:relative;padding:32px;display:flex;flex-direction:column;gap:10px">
+          <span style="align-self:flex-start;font-family:'Segoe UI','Open Sans',sans-serif;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:#0073B1;color:#FFFFFF">Convención Nacional JIUMP 2026</span>
+          <strong style="font-family:Montserrat,sans-serif;font-size:30px;line-height:1.15;font-weight:700;letter-spacing:-.01em">«Heme aquí»</strong>
+          <span style="font-size:16px;line-height:1.5;color:#E6EFF6;max-width:520px">Más de 2.000 jóvenes respondieron al llamado de Dios en la Convención Nacional JIUMP 2026: “Heme aquí”</span>
+          <span style="font-weight:600;font-size:15px;color:#FFFFFF">Ver actividad →</span>
+        </div>
+      </a>
+      <a href="ActividadEMJ.dc.html" class="zm" style="grid-column:span 5;position:relative;min-height:460px;border-radius:24px;overflow:hidden;background:#0A4268;color:#FFFFFF;text-decoration:none;display:flex;align-items:flex-end">
+        <img src="/_blob/ca7a6206502cf4c966ab00e8359470cc" alt="Equipo de bienvenida del EMJ 2026" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 35%">
+        <div aria-hidden="true" style="position:absolute;inset:0;background:linear-gradient(to top,rgba(6,47,74,.92) 0%,rgba(6,47,74,.55) 30%,rgba(6,47,74,0) 58%)"></div>
+        <div style="position:relative;padding:32px;display:flex;flex-direction:column;gap:10px">
+          <span style="align-self:flex-start;font-family:'Segoe UI','Open Sans',sans-serif;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:#0073B1;color:#FFFFFF">EMJ 2026</span>
+          <strong style="font-family:Montserrat,sans-serif;font-size:32px;line-height:1.05;font-weight:800">Encuentro de Mujeres JIUMP</strong>
+          <span style="font-size:16px;line-height:1.5;color:#E6EFF6">Durante el mes de octubre, señoritas de diversas iglesias de nuestra corporación se dieron cita en la ciudad de Rengo…</span>
+          <span style="font-weight:600;font-size:15px;color:#FFFFFF">Ver actividad →</span>
+        </div>
+      </a>
+      <a href="ActividadJefaturas.dc.html" class="zm" style="grid-column:span 5;position:relative;min-height:460px;border-radius:24px;overflow:hidden;background:#0A4268;color:#FFFFFF;text-decoration:none;display:flex;align-items:flex-end">
+        <img src="/_blob/119f54b55111c02604ef19531dcb2361" alt="Expositor hablando durante el EJZ 2026" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:45% 30%">
+        <div aria-hidden="true" style="position:absolute;inset:0;background:linear-gradient(to top,rgba(6,47,74,.92) 0%,rgba(6,47,74,.55) 30%,rgba(6,47,74,0) 58%)"></div>
+        <div style="position:relative;padding:32px;display:flex;flex-direction:column;gap:10px">
+          <span style="align-self:flex-start;font-family:'Segoe UI','Open Sans',sans-serif;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:#0073B1;color:#FFFFFF">EJZ 2026</span>
+          <strong style="font-family:Montserrat,sans-serif;font-size:32px;line-height:1.05;font-weight:800">Encuentro de Jefaturas</strong>
+          <span style="font-size:16px;line-height:1.5;color:#E6EFF6">¡Así se vivió nuestro Encuentro Anual de Jefaturas Zonales de JIUMP!</span>
+          <span style="font-weight:600;font-size:15px;color:#FFFFFF">Ver actividad →</span>
+        </div>
+      </a>
+      <a href="ActividadFEDI.dc.html" class="zm" style="grid-column:span 7;position:relative;min-height:460px;border-radius:24px;overflow:hidden;background:#062F4A;color:#FFFFFF;text-decoration:none;display:flex;align-items:flex-end">
+        <img src="/_blob/12e708880533fae39418bacf4f5f8bd1" alt="Participante de FEDI sonríe junto a su maestra" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 28%">
+        <div aria-hidden="true" style="position:absolute;inset:0;background:linear-gradient(to top,rgba(6,47,74,.92) 0%,rgba(6,47,74,.55) 30%,rgba(6,47,74,0) 58%)"></div>
+        <div style="position:relative;padding:32px;display:flex;flex-direction:column;gap:10px">
+          <span style="align-self:flex-start;font-family:'Segoe UI','Open Sans',sans-serif;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:#0073B1;color:#FFFFFF">FEDI · Nuevo en 2026</span>
+          <strong style="font-family:Montserrat,sans-serif;font-size:32px;line-height:1.05;font-weight:800">Formación de Maestros de Escuela Dominical Infantil</strong>
+          <span style="font-size:16px;line-height:1.5;color:#E6EFF6;max-width:560px">Con el propósito de fortalecer el ministerio de Escuela Dominical Infantil…</span>
+          <span style="font-weight:600;font-size:15px;color:#FFFFFF">Ver actividad y galería →</span>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <!-- Eventos -->
+  <section style="background:#F2F4F5">
+    <div style="max-width:1280px;margin:0 auto;padding:96px 40px;display:flex;flex-direction:column;gap:40px">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:24px">
+        <h2 style="margin:0;font-family:Montserrat,sans-serif;font-size:clamp(32px,3.4vw,48px);line-height:1.05;font-weight:800;letter-spacing:-.02em">Eventos</h2>
+        <a href="Eventos.dc.html" style="font-weight:600;font-size:16px">Ver calendario →</a>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:20px">
+        <a href="https://www.instagram.com/jiump.oficial" target="_blank" rel="noopener" style="text-decoration:none;color:#1C1E21;background:#FFFFFF;border-radius:20px;padding:24px;display:flex;gap:20px;align-items:flex-start;box-shadow:inset 0 0 0 1.5px #CFE2EF">
+          <div style="width:72px;height:72px;flex-shrink:0;border-radius:14px;background:#E3F0F8;display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0073B1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600;color:#0073B1">Próximamente</span><strong style="font-family:Montserrat,sans-serif;font-size:22px;font-weight:700;line-height:1.25">Nuevos eventos por anunciar</strong><span style="font-size:14px;color:#5F5A60">Entérate primero en Instagram · @jiump.oficial</span></div>
+        </a>
+        <a href="Eventos.dc.html" style="text-decoration:none;color:#1C1E21;background:#FFFFFF;border-radius:20px;padding:24px;display:flex;gap:20px;align-items:flex-start">
+          <div style="width:72px;flex-shrink:0;text-align:center;border-radius:14px;background:#E3F0F8;color:#005A8C;padding:10px 0"><strong style="display:block;font-family:Montserrat,sans-serif;font-size:30px">2026</strong><span style="font-size:12px;font-weight:600">Realizado</span></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600;color:#0073B1">Convención</span><strong style="font-family:Montserrat,sans-serif;font-size:22px;font-weight:700;line-height:1.25">Convención Nacional 2026</strong><span style="font-size:14px;color:#5F5A60">Resumen, fotos y video</span></div>
+        </a>
+        <a href="Eventos.dc.html" style="text-decoration:none;color:#1C1E21;background:#FFFFFF;border-radius:20px;padding:24px;display:flex;gap:20px;align-items:flex-start">
+          <div style="width:72px;flex-shrink:0;text-align:center;border-radius:14px;background:#E3F0F8;color:#005A8C;padding:10px 0"><strong style="display:block;font-family:Montserrat,sans-serif;font-size:30px">2025</strong><span style="font-size:12px;font-weight:600">Realizado</span></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600;color:#0073B1">Encuentro</span><strong style="font-family:Montserrat,sans-serif;font-size:22px;font-weight:700;line-height:1.25">Encuentro de Jefaturas 2025</strong><span style="font-size:14px;color:#5F5A60">Video de la transmisión</span></div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Artículos (antes «Lo más reciente») -->
+  <section style="max-width:1280px;margin:0 auto;padding:120px 40px 104px;display:flex;flex-direction:column;gap:44px">
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:24px">
+      <div style="display:flex;flex-direction:column;gap:14px;max-width:720px">
+        <span style="display:inline-flex;align-items:center;gap:12px;font-family:'Segoe UI','Open Sans',sans-serif;font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#0073B1"><span aria-hidden="true" style="width:32px;height:2px;background:#00AB9F"></span>Nuevo cada lunes</span>
+        <h2 style="margin:0;font-family:Montserrat,sans-serif;font-size:clamp(32px,3.4vw,48px);line-height:1.05;font-weight:800;letter-spacing:-.02em">Artículos recientes</h2>
+        <p style="margin:0;font-size:17px;line-height:1.7;color:#5F5A60">Nuevo artículo cristiano cada lunes para fortalecer tu fe.</p>
+      </div>
+      <a href="Articulos.dc.html" style="display:inline-flex;align-items:center;min-height:48px;padding:0 24px;border-radius:999px;background:#0073B1;color:#FFFFFF;font-family:'Segoe UI','Open Sans',sans-serif;font-weight:600;font-size:16px;text-decoration:none">Todos los artículos →</a>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:40px">
+      <a href="ArticuloReforma3.dc.html" style="text-decoration:none;color:#1C1E21;display:flex;flex-direction:column;gap:18px">
+        <div style="position:relative;height:420px;border-radius:24px;overflow:hidden;background:#041F31"><img src="/_blob/6c502d4451a163a64c9d0ad86f5b5ae6" alt="Afiche Reforma Protestante, 31 de octubre" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 45%"><span style="position:absolute;left:20px;top:20px;font-family:'Segoe UI','Open Sans',sans-serif;font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:6px 12px;border-radius:999px;background:#DA3A38;color:#FFFFFF">Mes de la Reforma</span></div>
+        <span style="font-size:14px;font-weight:600;color:#DA3A38">Mes de la Reforma · Parte 3 de 3</span>
+        <strong style="font-family:Montserrat,sans-serif;font-size:30px;line-height:1.15;font-weight:700;letter-spacing:-.01em">Una Reforma que todavía nos habla</strong>
+      </a>
+      <div style="display:flex;flex-direction:column">
+        <a href="ArticuloReforma2.dc.html" style="text-decoration:none;color:#1C1E21;display:flex;gap:20px;padding:22px 0;border-bottom:1px solid #E1E3E6">
+          <div style="width:140px;height:100px;border-radius:14px;background:#DA3A38;flex-shrink:0;display:flex;align-items:flex-end;padding:10px;box-sizing:border-box"><span style="font-family:Montserrat,sans-serif;font-size:40px;line-height:.8;font-weight:800;color:transparent;-webkit-text-stroke:1.2px rgba(255,255,255,.6)">02</span></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600;color:#DA3A38">Mes de la Reforma · Parte 2</span><strong style="font-family:Montserrat,sans-serif;font-size:22px;font-weight:700;line-height:1.25">Cuando la verdad tuvo un precio</strong></div>
+        </a>
+        <a href="ArticuloReforma1.dc.html" style="text-decoration:none;color:#1C1E21;display:flex;gap:20px;padding:22px 0;border-bottom:1px solid #E1E3E6">
+          <div style="width:140px;height:100px;border-radius:14px;background:#DA3A38;flex-shrink:0;display:flex;align-items:flex-end;padding:10px;box-sizing:border-box"><span style="font-family:Montserrat,sans-serif;font-size:40px;line-height:.8;font-weight:800;color:transparent;-webkit-text-stroke:1.2px rgba(255,255,255,.6)">01</span></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600;color:#DA3A38">Mes de la Reforma · Parte 1</span><strong style="font-family:Montserrat,sans-serif;font-size:22px;font-weight:700;line-height:1.25">¿Por qué fue necesaria la Reforma?</strong></div>
+        </a>
+        <a href="ArticuloBiblia4.dc.html" style="text-decoration:none;color:#1C1E21;display:flex;gap:20px;padding:22px 0;border-bottom:1px solid #E1E3E6">
+          <div style="width:140px;height:100px;border-radius:14px;background:#0073B1;flex-shrink:0;display:flex;align-items:flex-end;padding:10px;box-sizing:border-box"><span style="font-family:Montserrat,sans-serif;font-size:40px;line-height:.8;font-weight:800;color:transparent;-webkit-text-stroke:1.2px rgba(255,255,255,.6)">04</span></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600;color:#0073B1">Mes de la Biblia · Parte 4</span><strong style="font-family:Montserrat,sans-serif;font-size:22px;font-weight:700;line-height:1.25">De Jerusalén a nuestro idioma</strong></div>
+        </a>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:28px">
+          <span style="font-family:'Segoe UI','Open Sans',sans-serif;font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#5F5A60">Series del mes</span>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <a href="Articulos.dc.html" style="display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:999px;background:#E3F0F8;color:#005A8C;font-size:14px;font-weight:600;text-decoration:none;font-family:'Segoe UI','Open Sans',sans-serif"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.5C4.5 4 8 4 12 6c4-2 7.5-2 10-.5V19c-2.5-1.5-6-1.5-10 .5-4-2-7.5-2-10-.5z"/><path d="M12 6v13.5"/></svg>Septiembre · Mes de la Biblia (4)</a>
+            <a href="Articulos.dc.html" style="display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:999px;background:#FBDADC;color:#9E1F1D;font-size:14px;font-weight:600;text-decoration:none;font-family:'Segoe UI','Open Sans',sans-serif"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1 3 4 4.5 4 8.5a4 4 0 0 1-8 0c0-2 1-3 1.5-4 .5 1.5 1.5 2 2.5 2C12 6 11.5 4 12 2z"/><path d="M10 15h4l-1 7h-2z"/></svg>Octubre · Mes de la Reforma (3)</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Videos + Galería -->
+  <section style="max-width:1280px;margin:0 auto;padding:112px 40px 96px;border-top:1px solid #E1E3E6;display:flex;flex-direction:column;gap:40px">
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:24px">
+      <h2 style="margin:0;font-family:Montserrat,sans-serif;font-size:clamp(32px,3.4vw,48px);line-height:1.05;font-weight:800;letter-spacing:-.02em">Momentos JIUMP</h2>
+      <a href="Galeria.dc.html" style="font-weight:600;font-size:16px">Ir a la galería →</a>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:180px;gap:12px"><a href="Galeria.dc.html" class="zm" style="grid-column:span 2;grid-row:span 2;position:relative;border-radius:20px;overflow:hidden;display:flex;align-items:flex-end;padding:18px;box-sizing:border-box;color:#FFFFFF;text-decoration:none;background:#062F4A"><img src="/_blob/7e76ad743ad9592da3560f06b7aacd24" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%"><span aria-hidden="true" style="position:absolute;inset:0;background:linear-gradient(to top,rgba(6,47,74,.88) 0%,rgba(6,47,74,0) 60%)"></span><span style="position:relative;display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;color:#A6E9E2;font-weight:600">Álbum</span><strong style="font-family:Montserrat,sans-serif;font-size:24px;font-weight:700">Convención Nacional 2026</strong></span></a><a href="Galeria.dc.html" class="zm" style="position:relative;border-radius:20px;overflow:hidden;display:flex;align-items:flex-end;padding:18px;box-sizing:border-box;color:#FFFFFF;text-decoration:none;background:#062F4A"><img src="/_blob/41c24f60d5fa1ad39db4a22e0dca3755" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 45%"><span aria-hidden="true" style="position:absolute;inset:0;background:linear-gradient(to top,rgba(6,47,74,.88) 0%,rgba(6,47,74,0) 60%)"></span><span style="position:relative;display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;color:#A6E9E2;font-weight:600">Álbum</span><strong style="font-family:Montserrat,sans-serif;font-size:18px">EMJ 2026</strong></span></a><a href="Galeria.dc.html" class="zm" style="position:relative;border-radius:20px;overflow:hidden;display:flex;align-items:flex-end;padding:18px;box-sizing:border-box;color:#FFFFFF;text-decoration:none;background:#062F4A"><img src="/_blob/e5446b7c014c334fc19b1e7a665d1661" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%"><span aria-hidden="true" style="position:absolute;inset:0;background:linear-gradient(to top,rgba(6,47,74,.88) 0%,rgba(6,47,74,0) 60%)"></span><span style="position:relative;display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;color:#A6E9E2;font-weight:600">Álbum</span><strong style="font-family:Montserrat,sans-serif;font-size:18px">EJZ 2026</strong></span></a><a href="Galeria.dc.html" class="zm" style="position:relative;border-radius:20px;overflow:hidden;display:flex;align-items:flex-end;padding:18px;box-sizing:border-box;color:#FFFFFF;text-decoration:none;background:#062F4A"><img src="/_blob/6eebca653ff6c5f7ec503ead1f64b43d" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 55%"><span aria-hidden="true" style="position:absolute;inset:0;background:linear-gradient(to top,rgba(6,47,74,.88) 0%,rgba(6,47,74,0) 60%)"></span><span style="position:relative;display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;color:#A6E9E2;font-weight:600">Álbum</span><strong style="font-family:Montserrat,sans-serif;font-size:18px">EMJ Argentina</strong></span></a><a href="Galeria.dc.html" class="zm" style="position:relative;border-radius:20px;overflow:hidden;display:flex;align-items:flex-end;padding:18px;box-sizing:border-box;color:#FFFFFF;text-decoration:none;background:#062F4A"><img src="/_blob/7cf1bbd9172ac149aaa1e22cb312bcf2" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 40%"><span aria-hidden="true" style="position:absolute;inset:0;background:linear-gradient(to top,rgba(6,47,74,.88) 0%,rgba(6,47,74,0) 60%)"></span><span style="position:relative;display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;color:#A6E9E2;font-weight:600">Álbum</span><strong style="font-family:Montserrat,sans-serif;font-size:18px">FEDI 2026</strong></span></a></div>
+  </section>
+
+  <!-- Footer -->
+  <footer style="background:#FFFFFF;color:#1C1E21;border-top:1px solid #E1E3E6">
+    <div aria-hidden="true" style="display:flex;height:4px"><div style="flex:2;background:#00AB9F"></div><div style="flex:1;background:#0073B1"></div></div>
+    <div style="max-width:1280px;margin:0 auto;padding:80px 40px 40px;display:flex;flex-direction:column;gap:56px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:40px">
+        <div style="display:flex;flex-direction:column;gap:14px;grid-column:span 2">
+          <img src="/_blob/1b16c658d676a48f9564e3144cfa63aa" alt="JIUMP" style="height:96px;width:auto;align-self:flex-start">
+          <p style="margin:0;font-size:17px;line-height:1.7;color:#5F5A60;max-width:440px">Jóvenes Unidos para Adorar a Cristo. Movimiento juvenil de la Iglesia Unida Metodista Pentecostal.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:15px"><strong style="color:#0073B1;font-size:13px;letter-spacing:.12em;text-transform:uppercase;font-family:'Segoe UI','Open Sans',sans-serif;font-weight:600">Explora</strong><a href="Nosotros.dc.html" style="color:#1C1E21;text-decoration:none">Nosotros</a><a href="Eventos.dc.html" style="color:#1C1E21;text-decoration:none">Eventos</a><a href="Articulos.dc.html" style="color:#1C1E21;text-decoration:none">Artículos</a><a href="Galeria.dc.html" style="color:#1C1E21;text-decoration:none">Galería</a></div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:15px"><strong style="color:#0073B1;font-size:13px;letter-spacing:.12em;text-transform:uppercase;font-family:'Segoe UI','Open Sans',sans-serif;font-weight:600">Síguenos</strong><a href="https://www.instagram.com/jiump.oficial" target="_blank" rel="noopener" style="color:#1C1E21;text-decoration:none;display:inline-flex;align-items:center;gap:8px"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/></svg>Instagram · @jiump.oficial</a></div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px;padding-top:24px;border-top:1px solid #E1E3E6;font-size:13px;color:#5F5A60">
+        <span>© JIUMP 2026</span>
+        <span><a href="#" style="color:#5F5A60">Iglesia Unida Metodista Pentecostal</a> · <a href="#" style="color:#5F5A60">Privacidad</a></span>
+      </div>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":4300}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

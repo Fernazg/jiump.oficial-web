@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>JIUMP Admin — Editor de artículo</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@600&display=swap" rel="stylesheet">
+<style>
+/* == Pase de diseño (criterios emil-design-eng) == */
+:root{--ease-out:cubic-bezier(.23,1,.32,1);--ease-in-out:cubic-bezier(.77,0,.175,1)}
+html{-webkit-text-size-adjust:100%;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+a,button,input,select,textarea,label,[role=button]{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button{transition:transform 160ms var(--ease-out),background-color .2s ease,border-color .2s ease,color .2s ease,box-shadow .2s ease}
+button:not(:disabled):active,a.btn:active,.heme-btn:active{transform:scale(.97)}
+h1,h2{letter-spacing:-.02em;text-wrap:balance}
+p{text-wrap:pretty}
+.tn,time{font-variant-numeric:tabular-nums}
+@media (pointer:coarse){input,select,textarea{font-size:16px!important}}
+@media (hover:none){[class]:hover:not(:active),[class]:hover:not(:active) img{transform:none!important}}
+
+body{margin:0;background:#F2F4F5}
+a{color:#0073B1}a:hover{color:#062F4A}
+</style>
+</helmet>
+<div style="width:100%;min-height:1000px;background:#F2F4F5;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1C1E21;display:flex;flex-direction:column">
+
+  <header style="background:#FFFFFF;border-bottom:1px solid #E1E3E6">
+    <div style="padding:14px 32px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <a href="Admin.dc.html" style="font-weight:600;font-size:14px;text-decoration:none">← Artículos</a>
+        <span style="padding:4px 10px;border-radius:999px;background:#EEF0F2;color:#43474D;font-weight:600;font-size:12px">Borrador</span>
+        <span style="font-size:13px;color:#5F5A60">Guardado automáticamente hace [n] s</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        <a href="#" style="display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:999px;border:1px solid #CDD1D6;color:#1C1E21;font-weight:600;font-size:14px;text-decoration:none">Vista previa</a>
+        <a href="#" style="display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:999px;border:1px solid #CDD1D6;color:#1C1E21;font-weight:600;font-size:14px;text-decoration:none">Enviar a revisión</a>
+        <a href="#" style="display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:999px;background:#0073B1;color:#FFFFFF;font-weight:600;font-size:14px;text-decoration:none">Publicar ▾</a>
+      </div>
+    </div>
+    <div style="padding:10px 32px;background:#FFF6E0;color:#6B4A00;font-size:13px;border-top:1px solid #F1E2B8">[Nombre] también tiene abierto este artículo. Tus cambios no sobrescribirán los suyos: verás un aviso si ambos editan el mismo bloque.</div>
+  </header>
+
+  <div style="flex:1;display:flex;flex-wrap:wrap;gap:24px;padding:28px 32px">
+    <main style="flex:999 1 560px;min-width:0;background:#FFFFFF;border-radius:20px;padding:40px 56px;box-sizing:border-box;display:flex;flex-direction:column;gap:20px">
+      <div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px;box-shadow:0 0 0 1px rgba(0,0,0,.08),0 1px 3px rgba(0,0,0,.06);border-radius:12px;align-self:flex-start">
+        <button aria-label="Negrita" style="width:40px;height:40px;border:none;background:transparent;border-radius:8px;font:inherit;font-weight:800">B</button>
+        <button aria-label="Cursiva" style="width:40px;height:40px;border:none;background:transparent;border-radius:8px;font:inherit;font-style:italic">I</button>
+        <button style="height:40px;padding:0 10px;border:none;background:transparent;border-radius:8px;font:inherit;font-size:14px">Título</button>
+        <button style="height:40px;padding:0 10px;border:none;background:transparent;border-radius:8px;font:inherit;font-size:14px">Lista</button>
+        <button style="height:40px;padding:0 10px;border:none;background:#E3F0F8;color:#005A8C;border-radius:8px;font:inherit;font-size:14px;font-weight:600">Versículo</button>
+        <button style="height:40px;padding:0 10px;border:none;background:transparent;border-radius:8px;font:inherit;font-size:14px">Imagen</button>
+        <button style="height:40px;padding:0 10px;border:none;background:transparent;border-radius:8px;font:inherit;font-size:14px">Video</button>
+        <button style="height:40px;padding:0 10px;border:none;background:transparent;border-radius:8px;font:inherit;font-size:14px">Enlace</button>
+      </div>
+      <div style="height:220px;border-radius:16px;border:1.5px dashed #9AA1A8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#5F5A60;font-size:14px"><strong style="color:#1C1E21">Arrastra la imagen de portada</strong>JPG, PNG o WebP · se optimiza automáticamente</div>
+      <p style="margin:0;font-family:Montserrat,sans-serif;font-size:44px;line-height:1.05;font-weight:800;color:#1C1E21">[Título del artículo]</p>
+      <p style="margin:0;font-size:18px;line-height:1.7;color:#5F5A60">[Escribe aquí el contenido. El editor funciona como un documento: sin código.]</p>
+      <blockquote style="margin:0;padding:24px 28px;border-radius:16px;background:#062F4A;color:#FFFFFF;font-family:Montserrat,sans-serif;font-size:24px;line-height:1.3;font-weight:600">[Versículo destacado]<span style="display:block;margin-top:10px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;color:#00AB9F">[Referencia]</span></blockquote>
+    </main>
+
+    <aside style="flex:1 1 300px;max-width:360px;display:flex;flex-direction:column;gap:16px">
+      <div style="background:#FFFFFF;border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:14px">
+        <h2 style="margin:0;font-size:15px;font-weight:600">Publicación</h2>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#5F5A60">Estado<select style="min-height:44px;border-radius:10px;border:1px solid #CDD1D6;padding:0 12px;font:inherit;font-size:14px;color:#1C1E21"><option>Borrador</option><option>En revisión</option><option>Programado</option><option>Publicado</option></select></label>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#5F5A60">Publicar el<input type="datetime-local" style="min-height:44px;border-radius:10px;border:1px solid #CDD1D6;padding:0 12px;font:inherit;font-size:14px;color:#1C1E21"></label>
+        <label style="display:flex;align-items:center;gap:10px;font-size:14px"><input type="checkbox" style="width:20px;height:20px"> Destacar en la portada</label>
+      </div>
+      <div style="background:#FFFFFF;border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:14px">
+        <h2 style="margin:0;font-size:15px;font-weight:600">Clasificación</h2>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#5F5A60">Serie<select style="min-height:44px;border-radius:10px;border:1px solid #CDD1D6;padding:0 12px;font:inherit;font-size:14px;color:#1C1E21"><option>Los Atributos de Dios</option><option>Ven y Sígueme</option><option>Pactos de Dios</option></select></label>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#5F5A60">Temas<div style="display:flex;flex-wrap:wrap;gap:6px"><span style="padding:6px 10px;border-radius:999px;background:#E3F0F8;color:#005A8C;font-weight:600;font-size:12px">Teología para todos ×</span><span style="padding:6px 10px;border-radius:999px;border:1px dashed #9AA1A8;font-size:12px">+ Agregar</span></div></div>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#5F5A60">Autor<input type="text" placeholder="[Autor]" style="min-height:44px;border-radius:10px;border:1px solid #CDD1D6;padding:0 12px;font:inherit;font-size:14px"></label>
+      </div>
+      <div style="background:#FFFFFF;border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:10px;font-size:14px">
+        <h2 style="margin:0;font-size:15px;font-weight:600">Historial</h2>
+        <span style="color:#5F5A60">[Fecha, hora] · [Nombre] — versión anterior</span>
+        <a href="#" style="font-weight:600">Restaurar una versión</a>
+      </div>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

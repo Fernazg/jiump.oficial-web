@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>JIUMP — Una Reforma que todavía nos habla</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@600&display=swap" rel="stylesheet">
+<style>
+/* == Pase de diseño (criterios emil-design-eng) == */
+:root{--ease-out:cubic-bezier(.23,1,.32,1);--ease-in-out:cubic-bezier(.77,0,.175,1)}
+html{-webkit-text-size-adjust:100%;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+a,button,input,select,textarea,label,[role=button]{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button{transition:transform 160ms var(--ease-out),background-color .2s ease,border-color .2s ease,color .2s ease,box-shadow .2s ease}
+button:not(:disabled):active,a.btn:active,.heme-btn:active{transform:scale(.97)}
+h1,h2{letter-spacing:-.02em;text-wrap:balance}
+p{text-wrap:pretty}
+.tn,time{font-variant-numeric:tabular-nums}
+@media (pointer:coarse){input,select,textarea{font-size:16px!important}}
+@media (hover:none){[class]:hover:not(:active),[class]:hover:not(:active) img{transform:none!important}}
+
+body{margin:0;background:#FFFFFF}
+a{color:var(--ac)}
+.hd{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-bottom:1px solid #E1E3E6}
+.prog{height:3px;background:var(--ac);transform-origin:0 50%;transform:scaleX(.08)}
+@supports (animation-timeline:scroll()){.prog{transform:scaleX(0);animation:grow linear both;animation-timeline:scroll(root)}}
+@keyframes grow{to{transform:scaleX(1)}}
+.lay{max-width:1200px;margin:0 auto;padding:64px 40px 40px;display:grid;grid-template-columns:260px minmax(0,1fr);gap:64px;align-items:start}
+.side{position:sticky;top:96px;display:flex;flex-direction:column;gap:28px;font-size:14px}
+.side h2{margin:0 0 10px;font-family:Montserrat,sans-serif;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#5F5A60}
+.toc{list-style:none;margin:0;padding:0;border-left:2px solid #E1E3E6}
+.toc a{display:flex;gap:10px;padding:8px 0 8px 16px;margin-left:-2px;border-left:2px solid transparent;color:#41454B;text-decoration:none;line-height:1.35;transition:color .2s,border-color .2s}
+.toc a:hover{color:var(--ac);border-left-color:var(--ac)}
+.toc a b{font-family:Montserrat,sans-serif;font-size:12px;color:var(--ac);min-width:18px}
+.ser{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.ser a{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;text-decoration:none;color:#41454B;line-height:1.3}
+.ser a:hover{background:#F2F4F5}
+.ser a.on{background:var(--tint);color:#1C1E21;font-weight:600}
+.ser .c{flex-shrink:0;width:26px;height:26px;border-radius:999px;border:1.5px solid var(--tintb);display:flex;align-items:center;justify-content:center;font-family:Montserrat,sans-serif;font-size:12px;font-weight:700;color:var(--ac)}
+.ser a.on .c{background:var(--ac);border-color:var(--ac);color:#FFFFFF}
+.fs{display:flex;gap:6px}
+.fs button{min-width:44px;min-height:40px;border-radius:10px;border:1px solid #CDD1D6;background:#FFFFFF;font:inherit;font-weight:700;cursor:pointer;color:#1C1E21}
+.fs button:hover{border-color:var(--ac);color:var(--ac)}
+.body{max-width:720px;display:flex;flex-direction:column;gap:26px;font-size:var(--fs,19px)}
+.body p{margin:0;line-height:1.85;color:#2B2E33;text-wrap:pretty}
+.body strong{font-weight:700;color:#1C1E21}
+.lead{font-size:1.18em;line-height:1.7 !important;color:#1C1E21 !important}
+.lead::first-letter{float:left;font-family:Montserrat,sans-serif;font-weight:800;font-size:3.6em;line-height:.82;margin:6px 12px 0 0;color:var(--ac)}
+.sec{margin:30px 0 -4px;scroll-margin-top:96px;font-family:Montserrat,sans-serif;font-size:30px;line-height:1.18;font-weight:800;color:#1C1E21;display:flex;flex-direction:column;gap:10px;text-wrap:balance}
+.sn{display:inline-flex;align-items:center;gap:10px;font-size:13px;letter-spacing:.12em;color:var(--acd)}
+.sn::after{content:"";width:40px;height:2px;background:var(--ac2);border-radius:2px}
+.ref{white-space:nowrap;padding:1px 9px;border-radius:999px;background:var(--tint);color:var(--acd);font-weight:600;font-size:max(12px,.82em)}
+.term{font-style:italic;font-weight:700;color:var(--ac)}
+.cita{font-style:italic;color:#1C1E21;background:linear-gradient(transparent 62%,var(--hl) 62%)}
+.key{padding:6px 0 6px 26px;border-left:4px solid var(--ac);display:flex;flex-direction:column;gap:10px}
+.key p{font-family:Montserrat,sans-serif;font-size:1.08em;line-height:1.6 !important;font-weight:600;color:#062F4A !important}
+.lbl{font-family:'Segoe UI','Open Sans',sans-serif;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--acd)}
+.preg{padding:24px 28px;border-radius:20px;background:var(--tint);font-family:Montserrat,sans-serif;font-size:1.3em;line-height:1.3 !important;font-weight:700;color:#062F4A !important;text-align:center}
+.vq{margin:6px 0;padding:34px 38px;border-radius:24px;background:#E3F0F8;color:#062F4A;border-left:5px solid var(--ac);display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden}
+.vq::before{content:"\201C";position:absolute;right:24px;top:-24px;font-family:Montserrat,sans-serif;font-size:180px;font-weight:800;color:rgba(0,115,177,.12)}
+.qlbl,.qref{font-family:'Segoe UI','Open Sans',sans-serif;font-size:13px;font-weight:600;color:var(--acd)}
+.qlbl{text-transform:uppercase;letter-spacing:.08em}
+.qref{letter-spacing:.02em}
+.qtx{font-family:Montserrat,sans-serif;font-size:1.32em;line-height:1.45;font-weight:600;position:relative}
+.cierre{padding:32px 36px;border-radius:24px;background:var(--ac);display:flex;flex-direction:column;gap:12px}
+.cierre .lbl::before{content:"";display:block;width:32px;height:3px;border-radius:2px;background:rgba(255,255,255,.6);margin-bottom:12px}
+.cierre .cita{color:#FFFFFF;background:none;text-decoration:underline;text-decoration-color:rgba(255,255,255,.7);text-underline-offset:4px}
+.cierre .lbl{color:#FFFFFF}
+.cierre p{font-family:Montserrat,sans-serif;font-size:1.12em;line-height:1.6 !important;font-weight:600;color:#FFFFFF !important}
+.cierre strong{color:#FFFFFF}
+.nl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.nl.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr))}
+.nl li{display:flex;gap:14px;align-items:flex-start;padding:18px 20px;border-radius:16px;background:var(--tint);border:1px solid var(--tintb);line-height:1.6;color:#2B2E33}
+.nl.cols li{font-family:Montserrat,sans-serif;font-weight:700;color:#1C1E21;line-height:1.4}
+.nl .n{flex-shrink:0;width:30px;height:30px;border-radius:999px;background:var(--ac);color:#FFFFFF;font-family:Montserrat,sans-serif;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center}
+.fig{margin:6px 0;padding:26px;border-radius:22px;background:#F7F9FB;border:1px solid #E1E3E6;display:flex;flex-direction:column;gap:18px}
+.fig figcaption{font-family:'Segoe UI','Open Sans',sans-serif;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#5F5A60}
+.fcg{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px}
+.fc{padding:18px;border-radius:16px;background:#FFFFFF;box-shadow:0 0 0 1px rgba(0,0,0,.08),0 1px 3px rgba(0,0,0,.06);display:flex;flex-direction:column;gap:6px;transition:transform .25s ease,box-shadow .25s ease}
+.fc:hover{transform:translateY(-2px);box-shadow:0 0 0 1px rgba(0,0,0,.08),0 12px 24px rgba(0,0,0,.12)}
+.fc::before{content:"";width:28px;height:3px;border-radius:2px;background:var(--ac);margin-bottom:6px}
+.fc strong{font-family:Montserrat,sans-serif;font-size:17px;color:#1C1E21}
+.fc span{font-size:14px;line-height:1.45;color:#5F5A60}
+.tl{list-style:none;margin:0;padding:0;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:12px;position:relative}
+.tl::before{content:"";position:absolute;left:8px;right:8px;top:8px;height:2px;background:linear-gradient(90deg,var(--ac2),var(--ac))}
+.tl li{position:relative;display:flex;flex-direction:column;gap:6px;padding-top:28px}
+.tl .dot{position:absolute;top:0;left:0;width:18px;height:18px;border-radius:999px;background:#FFFFFF;border:3px solid var(--ac);box-sizing:border-box}
+.tl strong{font-family:Montserrat,sans-serif;font-size:16px;color:#1C1E21}
+.tl span{font-size:13.5px;line-height:1.45;color:#5F5A60}
+.stg{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:12px}
+.st{padding:20px;border-radius:16px;background:#FFFFFF;box-shadow:0 0 0 1px rgba(0,0,0,.08),0 1px 3px rgba(0,0,0,.06);display:flex;flex-direction:column;gap:6px}
+.st strong{font-family:Montserrat,sans-serif;font-size:30px;line-height:1.05;font-weight:800;color:var(--ac)}
+.st span{font-size:14px;line-height:1.45;color:#5F5A60}
+.nx{transition:transform .25s ease,box-shadow .25s ease}.nx:hover{transform:translateY(-2px);box-shadow:0 20px 40px rgba(0,0,0,.2)}
+@media (max-width:900px){.lay{grid-template-columns:1fr;gap:32px;padding:40px 20px}.side{position:static}.tl{grid-auto-flow:row}.tl::before{display:none}}
+@media (prefers-reduced-motion:reduce){.rv,.prog,.nx,.fc,.toc a{animation:none;transition:none}}
+/* == Responsive == */
+img{max-width:100%}
+.mnav{display:none;position:relative}
+.mnav>summary{list-style:none;cursor:pointer;width:48px;height:48px;border-radius:999px;border:1px solid #CDD1D6;background:#FFFFFF;color:#1C1E21;display:flex;align-items:center;justify-content:center}
+.mnav>summary::-webkit-details-marker{display:none}
+.mnav[open]>summary{background:#E3F0F8;border-color:#0073B1;color:#0073B1}
+.mnav-panel{position:absolute;right:0;top:58px;z-index:60;width:min(86vw,320px);background:#FFFFFF;border-radius:20px;box-shadow:0 0 0 1px rgba(0,0,0,.06),0 24px 48px -12px rgba(0,0,0,.28);padding:8px;display:flex;flex-direction:column;animation:mnav .2s var(--ease-out,ease-out) both;transform-origin:top right}
+@keyframes mnav{from{opacity:0;transform:scale(.97) translateY(-4px)}to{opacity:1;transform:none}}
+.mnav-panel a{display:flex;align-items:center;min-height:52px;padding:0 16px;border-radius:12px;font-family:'Segoe UI','Open Sans',sans-serif;font-size:17px;font-weight:600;color:#1C1E21;text-decoration:none}
+.mnav-panel a:hover{background:#F2F4F5}
+.mnav-panel a[aria-current]{color:#0073B1;background:#E3F0F8}
+@media (max-width:1024px){
+  [style*="max-width:1280px"],[style*="max-width:1200px"]{padding-left:32px!important;padding-right:32px!important}
+  .hnav{padding-left:32px!important;padding-right:32px!important}
+}
+@media (max-width:900px){
+  .nl-desk,.hcenter{display:none!important}
+  .mnav{display:block}
+  .hlogo{height:48px!important}
+}
+@media (max-width:640px){
+  [style*="max-width:1280px"],[style*="max-width:1200px"],[style*="max-width:900px"],[style*="max-width:760px"]{padding-left:20px!important;padding-right:20px!important}
+  .hnav{padding:8px 16px!important}
+  .hlogo{height:44px!important}
+  section[style*="padding:10"],section[style*="padding:11"],section[style*="padding:12"],section[style*="padding:9"],section[style*="padding:8"],section[style*="padding:7"],
+  section>div[style*="padding:10"],section>div[style*="padding:11"],section>div[style*="padding:12"],section>div[style*="padding:9"],section>div[style*="padding:8"],section>div[style*="padding:7"]{padding-top:56px!important;padding-bottom:56px!important}
+  h1{font-size:clamp(34px,9.8vw,38px)!important;line-height:1.04!important}
+  h2{font-size:clamp(28px,8.2vw,32px)!important;line-height:1.1!important}
+  [style*="repeat(12"]{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  [style*="repeat(12"][style*="grid-auto-rows"]{grid-auto-rows:150px!important}
+  [style*="grid-column:span 7"],[style*="grid-column:span 5"],[style*="grid-column:span 2;grid-row:span 2"]{grid-column:1/-1!important}
+  [style*="grid-column:span 4"],[style*="grid-column:span 6"],[style*="grid-column:span 3"]{grid-column:span 1!important}
+  [style*="grid-row:span 3"]{grid-row:span 2!important}
+  [style*="repeat(4,minmax(0,1fr))"]{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  [style*="column-width"]{column-width:150px!important;column-gap:10px!important}
+  footer [style*="grid-column:span 2"]{grid-column:1/-1!important}
+  footer [style*="minmax(220px,1fr)"]{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:28px!important}
+  [style*="min-height:46px"][style*="border-radius:999px"],[style*="min-height:48px"][style*="border-radius:999px"],[style*="min-height:52px"][style*="border-radius:999px"]{justify-content:center}
+}
+@media (max-width:900px){
+  .lay{grid-template-columns:minmax(0,1fr)!important}
+  .side,.side>div,.toc{min-width:0;max-width:100%}
+  .side{gap:18px!important}
+  .side>div:nth-child(2){display:none}
+  .side h2{font-size:12px!important;line-height:1.3!important;letter-spacing:.12em!important}
+  .toc{display:flex;gap:8px;overflow-x:auto;border-left:none!important;padding-bottom:6px;scrollbar-width:none}
+  .toc li{flex:0 0 auto}
+  .toc a{margin:0!important;border:1px solid #E1E3E6!important;border-radius:999px;padding:8px 14px!important;white-space:nowrap;background:#FFFFFF}
+  #mes-de-la-reforma figure{max-width:260px!important;margin:0 auto!important}
+}
+@media (max-width:640px){
+  .side h2{font-size:12px!important}
+  section figure[style*="max-width:320px"],section div[aria-hidden="true"][style*="aspect-ratio:3/4"]{display:none!important}
+  [style*="min-height:420px"]{min-height:200px!important}
+}
+</style>
+</helmet>
+<div id="top" style="width:100%;background:#FFFFFF;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1C1E21;--ac:#DA3A38;--acd:#B42F2D;--ac2:#DA3A38;--soft:#F4868F;--tint:#FFF1F1;--tintb:#F7C9CC;--hl:rgba(218,58,56,.16);--qg:radial-gradient(ellipse 80% 70% at 95% 0%,rgba(218,58,56,.35) 0%,rgba(218,58,56,0) 60%),linear-gradient(150deg,#0A4268 0%,#041F31 100%)">
+
+  <header class="hd">
+    <nav class="hnav" style="max-width:1280px;margin:0 auto;padding:10px 40px;display:flex;align-items:center;justify-content:space-between;gap:16px">
+      <a href="Inicio.dc.html" aria-label="JIUMP, ir al inicio" style="display:flex;flex-shrink:0"><img class="hlogo" src="/_blob/1b16c658d676a48f9564e3144cfa63aa" alt="JIUMP" style="height:56px;width:auto;display:block"></a>
+      <div class="nl-desk" style="display:flex;align-items:center;gap:8px 28px;font-family:'Segoe UI','Open Sans',sans-serif;font-size:15px;font-weight:600"><a href="Nosotros.dc.html" style="color:#1C1E21;text-decoration:none">Nosotros</a><a href="Eventos.dc.html" style="color:#1C1E21;text-decoration:none">Eventos</a><a href="Articulos.dc.html" style="color:#0073B1;text-decoration:none" aria-current="page">Artículos</a><a href="Galeria.dc.html" style="color:#1C1E21;text-decoration:none">Galería</a></div>
+      <details class="mnav"><summary aria-label="Abrir menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></summary><div class="mnav-panel"><a href="Inicio.dc.html">Inicio</a><a href="Nosotros.dc.html">Nosotros</a><a href="Eventos.dc.html">Eventos</a><a href="Articulos.dc.html" aria-current="page">Artículos</a><a href="Galeria.dc.html">Galería</a></div></details>
+    </nav>
+    <div class="prog" aria-hidden="true"></div>
+  </header>
+
+  <!-- ===== CABECERA ===== -->
+  <section style="background:#FFFFFF;color:#1C1E21;border-top:4px solid #DA3A38;border-bottom:1px solid #E1E3E6">
+    <div style="max-width:1200px;margin:0 auto;padding:56px 40px 64px;display:flex;flex-wrap:wrap;gap:48px;align-items:center">
+      <div style="flex:3 1 520px;min-width:0;display:flex;flex-direction:column;gap:20px">
+        <nav aria-label="Ruta" style="display:flex;flex-wrap:wrap;gap:8px;font-size:14px;color:#43474D"><a href="Articulos.dc.html" style="color:#43474D">Artículos</a><span aria-hidden="true">/</span><a href="Articulos.dc.html#mes-de-la-reforma" style="color:#43474D">Octubre · Mes de la Reforma</a></nav>
+        <span style="display:inline-flex;align-self:flex-start;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:#FFF1F1;border:1px solid #F7C9CC;color:#B42F2D;font-size:13px;font-weight:600"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B42F2D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1 3 4 4.5 4 8.5a4 4 0 0 1-8 0c0-2 1-3 1.5-4 .5 1.5 1.5 2 2.5 2C12 6 11.5 4 12 2z"/><path d="M10 15h4l-1 7h-2z"/></svg>Parte 3 de 3</span>
+        <h1 style="margin:0;font-family:Montserrat,sans-serif;font-size:clamp(38px,4.6vw,64px);line-height:1.02;font-weight:800;letter-spacing:-.02em;text-wrap:balance">Una Reforma que todavía nos habla</h1>
+        <p style="margin:0;font-family:Montserrat,sans-serif;font-size:24px;line-height:1.35;font-weight:600;color:#43474D;text-wrap:pretty">Cristo en el centro</p>
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;font-size:14px;color:#43474D"><span style="display:inline-flex;align-items:center;gap:10px"><span aria-hidden="true" style="width:36px;height:36px;border-radius:999px;background:linear-gradient(150deg,#00AB9F,#0073B1);border:1px solid rgba(255,255,255,.4)"></span>[Autor pendiente]</span><span aria-hidden="true">·</span><span>Octubre</span><span aria-hidden="true">·</span><span>4 min de lectura</span><span aria-hidden="true">·</span><span>7 secciones</span></div>
+        <div style="display:flex;gap:6px;max-width:320px" aria-label="Progreso en la serie"><a href="ArticuloReforma1.dc.html" title="¿Por qué fue necesaria la Reforma?" style="flex:1;height:6px;border-radius:999px;background:#DA3A38"></a><a href="ArticuloReforma2.dc.html" title="Cuando la verdad tuvo un precio" style="flex:1;height:6px;border-radius:999px;background:#DA3A38"></a><a href="ArticuloReforma3.dc.html" title="Una Reforma que todavía nos habla" style="flex:1;height:6px;border-radius:999px;background:#DA3A38"></a></div>
+      </div>
+      <figure style="flex:1 1 280px;max-width:320px;margin:0"><img src="/_blob/6c502d4451a163a64c9d0ad86f5b5ae6" alt="Afiche Reforma Protestante: 31 de octubre, Día de las Iglesias Evangélicas y Protestantes. «Mas el justo por la fe vivirá», Romanos 1:17" style="width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:22px;display:block;box-shadow:0 24px 48px -24px rgba(0,0,0,.35)"></figure>
+    </div>
+  </section>
+
+  <!-- ===== LECTURA ===== -->
+  <div class="lay">
+    <aside class="side" aria-label="Navegación del artículo">
+      <div><h2>En este artículo</h2><ol class="toc"><li><a href="#sec-1"><b>01</b><span>Las convicciones de la Reforma</span></a></li><li><a href="#sec-2"><b>02</b><span>Sola Scriptura</span></a></li><li><a href="#sec-3"><b>03</b><span>La Escritura apunta a Cristo</span></a></li><li><a href="#sec-4"><b>04</b><span>Sola gratia y sola fide</span></a></li><li><a href="#sec-5"><b>05</b><span>Por qué la Reforma todavía nos habla</span></a></li><li><a href="#sec-6"><b>06</b><span>Volver continuamente a la Palabra</span></a></li><li><a href="#sec-7"><b>07</b><span>Cristo sigue siendo suficiente</span></a></li></ol></div>
+      <div><h2>Serie · Mes de la Reforma</h2><ol class="ser"><li><a href="ArticuloReforma1.dc.html"><span class="c">1</span><span>¿Por qué fue necesaria la Reforma?</span></a></li><li><a href="ArticuloReforma2.dc.html"><span class="c">2</span><span>Cuando la verdad tuvo un precio</span></a></li><li><a href="ArticuloReforma3.dc.html" class="on" aria-current="page"><span class="c">3</span><span>Una Reforma que todavía nos habla</span></a></li></ol></div>
+      <div><h2>Tamaño del texto</h2><div class="fs"><button onClick="{{ menos }}" aria-label="Reducir texto">A−</button><button onClick="{{ mas }}" aria-label="Aumentar texto" style="font-size:18px">A+</button></div></div>
+    </aside>
+    <article class="body" style="{{ estiloTexto }}">
+        <blockquote class="vq rv"><span class="qtx">"Porque nadie puede poner otro fundamento que el que está puesto, el cual es Jesucristo."</span><span class="qref">1 Corintios 3:11</span></blockquote>
+        <p class="lead rv">Cuando escuchamos hablar de la Reforma Protestante, podemos pensar inmediatamente en Martín Lutero, las 95 tesis, las controversias del siglo XVI o la historia de cómo la iglesia llegó a experimentar grandes cambios. Pero la Reforma no es solamente un acontecimiento del pasado. Su llamado todavía nos alcanza porque plantea una pregunta que sigue siendo necesaria para la iglesia de hoy: ¿qué debe ocupar el centro de nuestra fe? La respuesta de la Reforma, al volver a las Escrituras, fue clara: Cristo.</p>
+        <h2 id="sec-1" class="sec rv"><span class="sn">01</span>Las convicciones de la Reforma</h2>
+        <p class="rv">La Reforma surgió en un contexto en el que los reformadores consideraron necesario volver a la autoridad de la Palabra de Dios y recuperar el evangelio de la gracia. Por eso, expresiones como <em class="term">sola scriptura</em> (sola escritura), <em class="term">sola gratia</em> (solo gracia), <em class="term">sola fide</em> (solo fe) y <em class="term">solus Christus</em> (solo Cristo) resumieron convicciones fundamentales de la Reforma. No se trataba simplemente de cambiar algunas prácticas externas, sino de volver a preguntar qué dice Dios y qué significa realmente el evangelio.</p>
+        <figure class="fig rv"><figcaption>Las convicciones que resumieron la Reforma</figcaption><div class="fcg"><div class="fc"><strong>Sola Scriptura</strong><span>sola escritura</span></div><div class="fc"><strong>Sola Gratia</strong><span>solo gracia</span></div><div class="fc"><strong>Sola Fide</strong><span>solo fe</span></div><div class="fc"><strong>Solus Christus</strong><span>solo Cristo</span></div></div></figure>
+        <h2 id="sec-2" class="sec rv"><span class="sn">02</span>Sola Scriptura</h2>
+        <p class="rv"><em class="term">Sola Scriptura</em> nos recuerda que la iglesia no tiene autoridad para reemplazar la Palabra de Dios con tradiciones humanas. La Escritura es la norma que debe gobernar la enseñanza y la vida cristiana. Como dice <span class="ref">2 Timoteo 3:16</span>, toda la Escritura es inspirada por Dios y útil para enseñar, redargüir, corregir e instruir en justicia. Por eso, una iglesia que quiere permanecer fiel no debe preguntarse primero qué es popular, qué funciona mejor o qué piensa la cultura, sino qué, debe poner su atención en lo que Dios ha entregado en su Palabra.</p>
+        <h2 id="sec-3" class="sec rv"><span class="sn">03</span>La Escritura apunta a Cristo</h2>
+        <p class="rv">Pero la Reforma no apuntaba a la Biblia como un fin aislado. La Escritura misma apunta a Cristo. Jesús dijo acerca de las Escrituras: <span class="cita">“ellas son las que dan testimonio de mí”</span> (<span class="ref">Juan 5:39</span>). Desde las promesas del Antiguo Testamento hasta el cumplimiento en los Evangelios, toda la historia de la redención encuentra su centro en Jesucristo. Por eso, defender la Biblia sin mirar a Cristo sería perder precisamente aquello hacia lo cual la Biblia dirige nuestra mirada.</p>
+        <h2 id="sec-4" class="sec rv"><span class="sn">04</span>Sola gratia y sola fide</h2>
+        <p class="rv"><em class="term">Sola gratia</em> y <em class="term">sola fide</em> también nos recuerdan que nuestra salvación no descansa en nuestros méritos. Somos salvados por la gracia de Dios y recibimos la justificación por medio de la fe en Cristo. <span class="ref">Efesios 2:8-9</span> declara que somos salvos por gracia mediante la fe, no por obras. Y <span class="ref">Romanos 3:28</span> enseña que el ser humano es justificado por fe aparte de las obras de la ley. El mensaje sigue siendo profundamente necesario: nuestra esperanza delante de Dios no está en lo que nosotros podemos presentar, sino en lo que Cristo hizo por nosotros.</p>
+        <h2 id="sec-5" class="sec rv"><span class="sn">05</span>Por qué la Reforma todavía nos habla</h2>
+        <p class="rv">Y aquí encontramos por qué la Reforma todavía nos habla. Porque los peligros que enfrentó la iglesia en el pasado no desaparecieron simplemente con el paso de los siglos. Una iglesia puede tener mucha actividad y poco evangelio; puede conocer muchas enseñanzas y perder de vista a Cristo; puede hablar de Dios y, sin embargo, construir su confianza en métodos, líderes, tradiciones o capacidades humanas. El llamado a volver a Cristo sigue siendo necesario.</p>
+        <div class="key rv"><span class="lbl">Idea clave</span><p>Cristo no debe ser solamente una parte de nuestra doctrina. Él es el centro de nuestra predicación, de nuestra adoración, de nuestra santidad y de nuestra esperanza. <span class="ref">Colosenses 1:18</span> declara que Cristo debe tener la preeminencia en todo. La Iglesia no existe para exaltar al hombre, sino para anunciar al Salvador. No seguimos a Cristo porque sea una idea útil para nuestra vida; lo seguimos porque Él es el Señor, el Salvador y la cabeza de su Iglesia.</p></div>
+        <h2 id="sec-6" class="sec rv"><span class="sn">06</span>Volver continuamente a la Palabra</h2>
+        <p class="rv">Por eso, recordar la Reforma no debería producir solamente admiración por los reformadores, porque ellos fueron hombres como nosotros, pero que fueron usados como instrumentos en las manos del Señor para hacer su voluntad. Debe producir en nosotros un deseo renovado de abrir las Escrituras, examinar nuestra vida y preguntarnos si realmente estamos colocando a Cristo en el centro. La Reforma nos recuerda que la Iglesia necesita volver continuamente a la Palabra, no para descubrir un evangelio nuevo, sino para vivir fielmente el evangelio que Dios ya ha revelado.</p>
+        <p class="rv">Hoy tenemos acceso a Biblias, predicaciones, estudios y recursos cristianos como nunca antes. Sin embargo, tener más recursos no garantiza tener más fidelidad. Podemos conocer frases de la Reforma y no vivir por la fe; podemos hablar de <em class="term">sola Scriptura</em> y no leer la Escritura; podemos afirmar <em class="term">solus Christus</em> y, al mismo tiempo, poner nuestra confianza en otras cosas. El desafío no es solamente conocer lo que defendieron los reformadores, sino preguntarnos qué lugar ocupa Cristo realmente en nuestra vida.</p>
+        <h2 id="sec-7" class="sec rv"><span class="sn">07</span>Cristo sigue siendo suficiente</h2>
+        <div class="cierre rv"><span class="lbl">Para recordar</span><p>Al final, la Reforma todavía nos habla porque el evangelio todavía es necesario. Cristo sigue siendo suficiente. Su obra en la cruz sigue siendo nuestra esperanza. Su Palabra sigue siendo nuestra autoridad. Su gracia sigue siendo inmerecida. Y la gloria sigue perteneciendo solamente a Dios. La pregunta para nosotros no es solamente qué ocurrió en el siglo XVI, sino si hoy estamos dispuestos a escuchar nuevamente ese llamado: volver a la Palabra, volver al Evangelio y poner a Jesucristo en el centro.</p></div>
+    </article>
+  </div>
+
+  <!-- ===== CONTINUIDAD ===== -->
+  <section style="max-width:1200px;margin:0 auto;padding:24px 40px 96px">
+    <div style="padding-top:36px;border-top:1px solid #E1E3E6;display:flex;flex-direction:column;gap:20px">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px"><span style="font-family:Montserrat,sans-serif;font-size:22px;font-weight:800">Terminaste la parte 3 de 3</span><a href="#top" style="font-weight:600;text-decoration:none">↑ Volver arriba</a></div>
+      <div style="display:flex;flex-wrap:wrap;gap:16px"><a class="nx" href="ArticuloReforma2.dc.html" style="flex:1 1 220px;padding:24px;border-radius:24px;background:#F2F4F5;color:#1C1E21;text-decoration:none;display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:600;color:#5F5A60">← Parte 2</span><strong style="font-family:Montserrat,sans-serif;font-size:18px;line-height:1.25">Cuando la verdad tuvo un precio</strong></a><a class="nx" href="ArticuloBiblia1.dc.html" style="flex:2 1 360px;padding:30px;border-radius:24px;background:#0073B1;color:#FFFFFF;text-decoration:none;display:flex;flex-direction:column;gap:10px"><span style="font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#FFFFFF;font-family:'Segoe UI','Open Sans',sans-serif">Terminaste la serie · Continúa con Septiembre · Mes de la Biblia</span><strong style="font-family:Montserrat,sans-serif;font-size:30px;line-height:1.15;font-weight:800">¿Cómo comenzó la Biblia?</strong><span style="margin-top:8px;font-weight:600">Comenzar →</span></a></div>
+      <a href="Articulos.dc.html#mes-de-la-reforma" style="align-self:flex-start;font-weight:600">Ver todos los artículos de Mes de la Reforma</a>
+    </div>
+  </section>
+
+  <footer style="background:#FFFFFF;color:#5F5A60;border-top:1px solid #E1E3E6">
+    <span aria-hidden="true" style="display:flex;height:4px"><span style="flex:2;background:#00AB9F"></span><span style="flex:1;background:#0073B1"></span></span>
+    <div style="max-width:1280px;margin:0 auto;padding:32px 40px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px;font-size:14px">
+      <img src="/_blob/1b16c658d676a48f9564e3144cfa63aa" alt="JIUMP" style="height:44px;width:auto;display:block">
+      <span>Jóvenes Unidos para Adorar a Cristo · Iglesia Unida Metodista Pentecostal</span>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":4200}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { fs: 19 }; }
+  renderVals() {
+    const self = this, fs = this.state.fs;
+    return {
+      estiloTexto: '--fs:' + fs + 'px',
+      menos: function () { self.setState({ fs: Math.max(16, fs - 2) }); },
+      mas: function () { self.setState({ fs: Math.min(25, fs + 2) }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

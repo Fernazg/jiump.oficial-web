@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>JIUMP — Propuesta tipográfica</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFFFF}
+.k{padding:22px;border-radius:18px;background:#F2F4F5;display:flex;flex-direction:column;gap:6px}
+.k strong{font-family:Montserrat,sans-serif;font-size:34px;font-weight:800;color:#0073B1;line-height:1}
+.k span{font-size:14px;color:#43474D;line-height:1.45}
+@media (max-width:900px){.tr{grid-template-columns:1fr!important;gap:12px!important}}
+</style>
+</helmet>
+<div style="width:100%;background:#FFFFFF;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1C1E21">
+  <div style="max-width:1280px;margin:0 auto;padding:56px 40px 88px;display:flex;flex-direction:column;gap:48px">
+    <div style="display:flex;flex-direction:column;gap:12px;max-width:860px">
+      <div style="display:flex;height:6px;width:120px"><span style="flex:2;background:#00AB9F"></span><span style="flex:1;background:#0073B1"></span></div>
+      <h1 style="margin:0;font-family:Montserrat,sans-serif;font-size:48px;line-height:1.05;font-weight:800;letter-spacing:-.02em">Propuesta tipográfica</h1>
+      <p style="margin:0;font-size:18px;line-height:1.6;color:#5F5A60">Para aprobar antes de aplicar. Se mantienen las tres familias del manual de identidad —<strong style="color:#1C1E21">Montserrat</strong> para títulos, <strong style="color:#1C1E21">Open Sans</strong> (equivalente web de Segoe UI) para botones y etiquetas, <strong style="color:#1C1E21">Helvetica</strong> para el cuerpo—; solo se ordenan sus tamaños, pesos y espaciados en una escala única.</p>
+    </div>
+
+    <section style="display:flex;flex-direction:column;gap:18px">
+      <h2 style="margin:0;font-family:Montserrat,sans-serif;font-size:26px;font-weight:800;letter-spacing:-.02em">1 · Diagnóstico actual</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:14px">
+        <div class="k"><strong>40</strong><span>tamaños de letra distintos en las páginas públicas</span></div>
+        <div class="k"><strong>7 y 10</strong><span>variantes de tamaño para títulos H1 y H2</span></div>
+        <div class="k"><strong>12</strong><span>valores distintos de espaciado entre letras</span></div>
+        <div class="k"><strong>600 / 700 / 800</strong><span>pesos mezclados sin regla en títulos de tarjetas</span></div>
+      </div>
+      <p style="margin:0;font-size:15px;line-height:1.6;color:#5F5A60">Además: etiquetas en mayúsculas sobre casi cada título, cuerpos de 15 a 19 px según la página y botones en dos familias distintas.</p>
+    </section>
+
+    <section style="display:flex;flex-direction:column;gap:6px">
+      <h2 style="margin:0 0 12px;font-family:Montserrat,sans-serif;font-size:26px;font-weight:800;letter-spacing:-.02em">2 · Escala propuesta (11 niveles)</h2>
+      <div class="tr" style="display:grid;grid-template-columns:240px minmax(0,1fr) 220px;gap:28px;align-items:baseline;padding:26px 0;border-top:1px solid #E1E3E6">
+        <div style="display:flex;flex-direction:column;gap:4px"><strong style="font-family:Montserrat,sans-serif;font-size:15px;font-weight:700;color:#1C1E21">Display</strong><span style="font-size:13px;line-height:1.4;color:#5F5A60">Portada de Inicio y «Heme aquí»</span></div>
+        <div class="ex" style="font-family:Montserrat,sans-serif;font-size:88px;font-weight:800;line-height:.98;letter-spacing:-.025em;min-width:0;overflow-wrap:anywhere">Jóvenes unidos para adorar a Cristo</div>
+        <div class="tk" style="display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:13px;color:#43474D"><span style="color:#5F5A60">Fuente</span><span>Montserrat 800</span><span style="color:#5F5A60">Escritorio</span><span><strong>88 px</strong></span><span style="color:#5F5A60">Celular</span><span><strong>44 px</strong></span><span style="color:#5F5A60">Interlínea</span><span>0,98</span><span style="color:#5F5A60">Espaciado</span><span>−0,025 em</span></div>
+      </div>
+      <div class="tr" style="display:grid;grid-template-columns:240px minmax(0,1fr) 220px;gap:28px;align-items:baseline;padding:26px 0;border-top:1px solid #E1E3E6">
+        <div style="display:flex;flex-direction:column;gap:4px"><strong style="font-family:Montserrat,sans-serif;font-size:15px;font-weight:700;color:#1C1E21">Título de página (H1)</strong><span style="font-size:13px;line-height:1.4;color:#5F5A60">Encabezado principal de cada página</span></div>
+        <div class="ex" style="font-family:Montserrat,sans-serif;font-size:64px;font-weight:800;line-height:1.02;letter-spacing:-.02em;min-width:0;overflow-wrap:anywhere">Momentos JIUMP</div>
+        <div class="tk" style="display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:13px;color:#43474D"><span style="color:#5F5A60">Fuente</span><span>Montserrat 800</span><span style="color:#5F5A60">Escritorio</span><span><strong>64 px</strong></span><span style="color:#5F5A60">Celular</span><span><strong>38 px</strong></span><span style="color:#5F5A60">Interlínea</span><span>1,02</span><span style="color:#5F5A60">Espaciado</span><span>−0,02 em</span></div>
+      </div>
+      <div class="tr" style="display:grid;grid-template-columns:240px minmax(0,1fr) 220px;gap:28px;align-items:baseline;padding:26px 0;border-top:1px solid #E1E3E6">
+        <div style="display:flex;flex-direction:column;gap:4px"><strong style="font-family:Montserrat,sans-serif;font-size:15px;font-weight:700;color:#1C1E21">Título de sección (H2)</strong><span style="font-size:13px;line-height:1.4;color:#5F5A60">«Lo que vivimos este año», «Qué hacemos»…</span></div>
+        <div class="ex" style="font-family:Montserrat,sans-serif;font-size:48px;font-weight:800;line-height:1.05;letter-spacing:-.02em;min-width:0;overflow-wrap:anywhere">Lo que vivimos este año</div>
+        <div class="tk" style="display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:13px;color:#43474D"><span style="color:#5F5A60">Fuente</span><span>Montserrat 800</span><span style="color:#5F5A60">Escritorio</span><span><strong>48 px</strong></span><span style="color:#5F5A60">Celular</span><span><strong>32 px</strong></span><span style="color:#5F5A60">Interlínea</span><span>1,05</span><span style="color:#5F5A60">Espaciado</span><span>−0,02 em</span></div>
+      </div>
+      <div class="tr" style="display:grid;grid-template-columns:240px minmax(0,1fr) 220px;gap:28px;align-items:baseline;padding:26px 0;border-top:1px solid #E1E3E6">
+        <div style="display:flex;flex-direction:column;gap:4px"><strong style="font-family:Montserrat,sans-serif;font-size:15px;font-weight:700;color:#1C1E21">Título destacado (H3)</strong><span style="font-size:13px;line-height:1.4;color:#5F5A60">Tarjeta principal, título de artículo destacado</span></div>
+        <div class="ex" style="font-family:Montserrat,sans-serif;font-size:30px;font-weight:700;line-height:1.15;letter-spacing:-.01em;min-width:0;overflow-wrap:anywhere">Una Reforma que todavía nos habla</div>
+        <div class="tk" style="display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:13px;color:#43474D"><span style="color:#5F5A60">Fuente</span><span>Montserrat 700</span><span style="color:#5F5A60">Escritorio</span><span><strong>30 px</strong></span><span style="color:#5F5A60">Celular</span><span><strong>24 px</strong></span><span style="color:#5F5A60">Interlínea</span><span>1,15</span><span style="color:#5F5A60">Espaciado</span><span>−0,01 em</span></div>
+      </div>
+      <div class="tr" style="display:grid;grid-template-columns:240px minmax(0,1fr) 220px;gap:28px;align-items:baseline;padding:26px 0;border-top:1px solid #E1E3E6">
+        <div style="display:flex;flex-direction:column;gap:4px"><strong style="font-family:Montserrat,sans-serif;font-size:15px;font-weight:700;color:#1C1E21">Título de tarjeta (H4)</strong><span style="font-size:13px;line-height:1.4;color:#5F5A60">Tarjetas, listas, eventos</span></div>
+        <div class="ex" style="font-family:Montserrat,sans-serif;font-size:22px;font-weight:700;line-height:1.25;letter-spacing:0;min-width:0;overflow-wrap:anywhere">Encuentro de Mujeres JIUMP</div>
+        <div class="tk" style="display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:13px;color:#43474D"><span style="color:#5F5A60">Fuente</span><span>Montserrat 700</span><span style="color:#5F5A60">Escritorio</span><span><strong>22 px</strong></span><span style="color:#5F5A60">Celular</span><span><strong>19 px</strong></span><span style="color:#5F5A60">Interlínea</span><span>1,25</span><span style="color:#5F5A60">Espaciado</span><span>0</span></div>
+      </div>
+      <div class="tr" style="display:grid;grid-template-columns:240px minmax(0,1fr) 220px;gap:28px;align-items:baseline;padding:26px 0;border-top:1px solid #E1E3E6">
+        <div style="display:flex;flex-direction:column;gap:4px"><strong style="font-family:Montserrat,sans-serif;font-size:15px;font-weight:700;color:#1C1E21">Entradilla</strong><span style="font-size:13px;line-height:1.4;color:#5F5A60">Texto introductorio bajo un título</span></div>
+        <div class="ex" style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:20px;font-weight:400;line-height:1.6;letter-spacing:0;min-width:0;overflow-wrap:anywhere">Servimos con excelencia, guiados por el Espíritu Santo, capacitándonos para transmitir nuestro legado a las futuras generaciones.</div>
+        <div class="tk" style="display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:13px;color:#43474D"><span style="color:#5F5A60">Fuente</span><span>Helvetica 400</span><span style="color:#5F5A60">Escritorio</span><span><strong>20 px</strong></span><span style="color:#5F5A60">Celular</span><span><strong>18 px</strong></span><span style="color:#5F5A60">Interlínea</span><span>1,6</span><span style="color:#5F5A60">Espaciado</span><span>0</span></div>
+      </div>
+      <div class="tr" style="display:grid;grid-template-columns:240px minmax(0,1fr) 220px;gap:28px;align-items:baseline;padding:26px 0;border-top:1px solid #E1E3E6">
+        <div style="display:flex;flex-direction:column;gap:4px"><strong style="font-family:Montserrat,sans-serif;font-size:15px;font-weight:700;color:#1C1E21">Cuerpo</strong><span style="font-size:13px;line-height:1.4;color:#5F5A60">Párrafos generales</span></div>
+        <div class="ex" style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:17px;font-weight:400;line-height:1.7;letter-spacing:0;min-width:0;overflow-wrap:anywhere">Durante el mes de octubre, señoritas de diversas iglesias de nuestra corporación se dieron cita en la ciudad de Rengo.</div>
+        <div class="tk" style="display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:13px;color:#43474D"><span style="color:#5F5A60">Fuente</span><span>Helvetica 400</span><span style="color:#5F5A60">Escritorio</span><span><strong>17 px</strong></span><span style="color:#5F5A60">Celular</span><span><strong>16 px</strong></span><span style="color:#5F5A60">Interlínea</span><span>1,7</span><span style="color:#5F5A60">Espaciado</span><span>0</span></div>
+      </div>
+      <div class="tr" style="display:grid;grid-template-columns:240px minmax(0,1fr) 220px;gap:28px;align-items:baseline;padding:26px 0;border-top:1px solid #E1E3E6">
+        <div style="display:flex;flex-direction:column;gap:4px"><strong style="font-family:Montserrat,sans-serif;font-size:15px;font-weight:700;color:#1C1E21">Cuerpo de artículo</strong><span style="font-size:13px;line-height:1.4;color:#5F5A60">Lectura larga (ajustable con A− / A+)</span></div>
+        <div class="ex" style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:19px;font-weight:400;line-height:1.8;letter-spacing:0;min-width:0;overflow-wrap:anywhere">A lo largo de la historia de la Iglesia han existido momentos en los que fue necesario volver a examinar la fe a la luz de la Palabra de Dios.</div>
+        <div class="tk" style="display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:13px;color:#43474D"><span style="color:#5F5A60">Fuente</span><span>Helvetica 400</span><span style="color:#5F5A60">Escritorio</span><span><strong>19 px</strong></span><span style="color:#5F5A60">Celular</span><span><strong>18 px</strong></span><span style="color:#5F5A60">Interlínea</span><span>1,8</span><span style="color:#5F5A60">Espaciado</span><span>0</span></div>
+      </div>
+      <div class="tr" style="display:grid;grid-template-columns:240px minmax(0,1fr) 220px;gap:28px;align-items:baseline;padding:26px 0;border-top:1px solid #E1E3E6">
+        <div style="display:flex;flex-direction:column;gap:4px"><strong style="font-family:Montserrat,sans-serif;font-size:15px;font-weight:700;color:#1C1E21">Etiqueta</strong><span style="font-size:13px;line-height:1.4;color:#5F5A60">Una por sección como máximo, sobre el H2</span></div>
+        <div class="ex" style="font-family:'Segoe UI','Open Sans',sans-serif;font-size:13px;font-weight:600;line-height:1.3;letter-spacing:.12em;text-transform:uppercase;color:#0073B1;min-width:0;overflow-wrap:anywhere">ACTIVIDADES DESTACADAS 2026</div>
+        <div class="tk" style="display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:13px;color:#43474D"><span style="color:#5F5A60">Fuente</span><span>Open Sans 600</span><span style="color:#5F5A60">Escritorio</span><span><strong>13 px</strong></span><span style="color:#5F5A60">Celular</span><span><strong>12 px</strong></span><span style="color:#5F5A60">Interlínea</span><span>1,3</span><span style="color:#5F5A60">Espaciado</span><span>+0,12 em · MAYÚS.</span></div>
+      </div>
+      <div class="tr" style="display:grid;grid-template-columns:240px minmax(0,1fr) 220px;gap:28px;align-items:baseline;padding:26px 0;border-top:1px solid #E1E3E6">
+        <div style="display:flex;flex-direction:column;gap:4px"><strong style="font-family:Montserrat,sans-serif;font-size:15px;font-weight:700;color:#1C1E21">Botón y menú</strong><span style="font-size:13px;line-height:1.4;color:#5F5A60">Botones, enlaces de acción, navegación</span></div>
+        <div class="ex" style="font-family:'Segoe UI','Open Sans',sans-serif;font-size:16px;font-weight:600;line-height:1;letter-spacing:0;color:#0073B1;min-width:0;overflow-wrap:anywhere">Próximos eventos →</div>
+        <div class="tk" style="display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:13px;color:#43474D"><span style="color:#5F5A60">Fuente</span><span>Open Sans 600</span><span style="color:#5F5A60">Escritorio</span><span><strong>16 px</strong></span><span style="color:#5F5A60">Celular</span><span><strong>16 px</strong></span><span style="color:#5F5A60">Interlínea</span><span>1</span><span style="color:#5F5A60">Espaciado</span><span>0</span></div>
+      </div>
+      <div class="tr" style="display:grid;grid-template-columns:240px minmax(0,1fr) 220px;gap:28px;align-items:baseline;padding:26px 0;border-top:1px solid #E1E3E6">
+        <div style="display:flex;flex-direction:column;gap:4px"><strong style="font-family:Montserrat,sans-serif;font-size:15px;font-weight:700;color:#1C1E21">Metadato</strong><span style="font-size:13px;line-height:1.4;color:#5F5A60">Fechas, «Parte 2 de 4», pies de foto</span></div>
+        <div class="ex" style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;line-height:1.5;letter-spacing:0;color:#5F5A60;min-width:0;overflow-wrap:anywhere">Mes de la Biblia · Parte 2 de 4</div>
+        <div class="tk" style="display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:13px;color:#43474D"><span style="color:#5F5A60">Fuente</span><span>Helvetica 600</span><span style="color:#5F5A60">Escritorio</span><span><strong>14 px</strong></span><span style="color:#5F5A60">Celular</span><span><strong>13 px</strong></span><span style="color:#5F5A60">Interlínea</span><span>1,5</span><span style="color:#5F5A60">Espaciado</span><span>0</span></div>
+      </div>
+    </section>
+
+    <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:20px">
+      <div style="padding:26px;border-radius:18px;background:#F2F4F5;display:flex;flex-direction:column;gap:10px"><h3 style="margin:0;font-family:Montserrat,sans-serif;font-size:18px;font-weight:700;color:#0073B1">Reglas</h3><span style="font-size:15px;line-height:1.7">• Peso 800 solo en Display, H1 y H2; 700 en H3 y tarjetas; 600 en botones, etiquetas y metadatos; 400 en textos.<br>• Tres espaciados: −0,02 em en títulos, normal en textos, +0,12 em solo en etiquetas.<br>• Máximo una etiqueta en mayúsculas por sección.<br>• Líneas de lectura de 65 caracteres como máximo.<br>• Todos los botones en Open Sans 600.</span></div>
+      <div style="padding:26px;border-radius:18px;background:#F2F4F5;display:flex;flex-direction:column;gap:10px"><h3 style="margin:0;font-family:Montserrat,sans-serif;font-size:18px;font-weight:700;color:#0073B1">Qué no cambia</h3><span style="font-size:15px;line-height:1.7">Familias tipográficas del manual · colores aprobados · estructura y orden de secciones · fotos · textos. Los tamaños pasan de forma fluida entre celular y escritorio, sin saltos.</span></div>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2950}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

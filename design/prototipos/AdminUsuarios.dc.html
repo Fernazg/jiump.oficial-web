@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>JIUMP Admin — Usuarios y roles</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@600&display=swap" rel="stylesheet">
+<style>
+/* == Pase de diseño (criterios emil-design-eng) == */
+:root{--ease-out:cubic-bezier(.23,1,.32,1);--ease-in-out:cubic-bezier(.77,0,.175,1)}
+html{-webkit-text-size-adjust:100%;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+a,button,input,select,textarea,label,[role=button]{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button{transition:transform 160ms var(--ease-out),background-color .2s ease,border-color .2s ease,color .2s ease,box-shadow .2s ease}
+button:not(:disabled):active,a.btn:active,.heme-btn:active{transform:scale(.97)}
+h1,h2{letter-spacing:-.02em;text-wrap:balance}
+p{text-wrap:pretty}
+.tn,time{font-variant-numeric:tabular-nums}
+@media (pointer:coarse){input,select,textarea{font-size:16px!important}}
+@media (hover:none){[class]:hover:not(:active),[class]:hover:not(:active) img{transform:none!important}}
+
+body{margin:0;background:#F2F4F5}
+a{color:#0073B1}a:hover{color:#062F4A}
+.btn{transition:transform .2s ease}.btn:hover{transform:translateY(-1px)}.btn:active{transform:scale(.97)}
+</style>
+</helmet>
+<div style="width:100%;min-height:1150px;background:#F2F4F5;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1C1E21;display:flex;flex-wrap:wrap">
+
+  <div style="flex:1 1 240px;max-width:260px;display:flex"><dc-import name="AdminSidebar" activo="usuarios" rol="super" hint-size="260px,1150px"></dc-import></div>
+
+  <main style="flex:999 1 560px;min-width:0;padding:28px 36px 48px;box-sizing:border-box;display:flex;flex-direction:column;gap:22px">
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px">
+      <div style="display:flex;flex-direction:column;gap:4px"><h1 style="margin:0;font-family:Montserrat,sans-serif;font-size:32px;font-weight:800">Usuarios y roles</h1><span style="font-size:15px;color:#5F5A60">Solo el Superadministrador ve esta sección.</span></div>
+      <button class="btn" style="min-height:46px;padding:0 22px;border-radius:999px;border:none;background:#0073B1;color:#FFFFFF;font-family:'Segoe UI','Open Sans',sans-serif;font-weight:600;font-size:15px;cursor:pointer">+ Invitar usuario</button>
+    </div>
+
+    <section style="background:#FFFFFF;border-radius:20px;padding:8px 8px 12px">
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:14px;min-width:640px">
+          <thead><tr style="text-align:left;color:#5F5A60"><th style="padding:14px 12px;font-weight:600">Persona</th><th style="padding:14px 12px;font-weight:600">Roles</th><th style="padding:14px 12px;font-weight:600">Doble factor</th><th style="padding:14px 12px;font-weight:600">Último ingreso</th><th style="padding:14px 12px;font-weight:600;text-align:right">Acciones</th></tr></thead>
+          <tbody>
+            <tr style="border-top:1px solid #E7E9EC"><td style="padding:12px"><strong>[Nombre]</strong><br><span style="font-size:12.5px;color:#5F5A60">[correo]@jiump.cl</span></td><td style="padding:12px"><span style="padding:4px 10px;border-radius:999px;background:#062F4A;color:#FFFFFF;font-weight:600;font-size:12px">Superadministrador</span></td><td style="padding:12px;color:#00665F;font-weight:600">Activo</td><td style="padding:12px;color:#5F5A60">[fecha]</td><td style="padding:12px;text-align:right"><a href="#" style="font-weight:600">Editar</a></td></tr>
+            <tr style="border-top:1px solid #E7E9EC"><td style="padding:12px"><strong>[Nombre]</strong><br><span style="font-size:12.5px;color:#5F5A60">[correo]</span></td><td style="padding:12px"><span style="padding:4px 10px;border-radius:999px;background:#E3F0F8;color:#005A8C;font-weight:600;font-size:12px">Editor</span></td><td style="padding:12px;color:#5F5A60">Opcional</td><td style="padding:12px;color:#5F5A60">[fecha]</td><td style="padding:12px;text-align:right"><a href="#" style="font-weight:600">Editar</a></td></tr>
+            <tr style="border-top:1px solid #E7E9EC"><td style="padding:12px"><strong>[Nombre]</strong><br><span style="font-size:12.5px;color:#5F5A60">[correo]</span></td><td style="padding:12px;display:flex;gap:6px;flex-wrap:wrap"><span style="padding:4px 10px;border-radius:999px;background:#E0F5F3;color:#00665F;font-weight:600;font-size:12px">Eventos</span><span style="padding:4px 10px;border-radius:999px;background:#FBDADC;color:#7A1A18;font-weight:600;font-size:12px">Multimedia</span></td><td style="padding:12px;color:#5F5A60">Opcional</td><td style="padding:12px;color:#5F5A60">[fecha]</td><td style="padding:12px;text-align:right"><a href="#" style="font-weight:600">Editar</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section style="background:#FFFFFF;border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><h2 style="margin:0;font-family:Montserrat,sans-serif;font-size:20px;font-weight:800">Qué puede hacer cada rol</h2><span style="font-size:13px;color:#5F5A60">Se valida en el servidor y en la base de datos, no solo ocultando botones.</span></div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:14px;min-width:640px;text-align:center">
+          <thead><tr style="color:#5F5A60"><th style="padding:10px;text-align:left;font-weight:600">Sección</th><th style="padding:10px;font-weight:600">Superadmin</th><th style="padding:10px;font-weight:600">Editor</th><th style="padding:10px;font-weight:600">Eventos</th><th style="padding:10px;font-weight:600">Multimedia</th></tr></thead>
+          <tbody>
+            <tr style="border-top:1px solid #E7E9EC"><td style="padding:10px;text-align:left">Artículos, series y categorías</td><td style="color:#00665F">●</td><td style="color:#00665F">●</td><td style="color:#BFC5CC">—</td><td style="color:#BFC5CC">—</td></tr>
+            <tr style="border-top:1px solid #E7E9EC"><td style="padding:10px;text-align:left">Eventos y actividades (incluye destacar en Inicio)</td><td style="color:#00665F">●</td><td style="color:#BFC5CC">—</td><td style="color:#00665F">●</td><td style="color:#BFC5CC">—</td></tr>
+            <tr style="border-top:1px solid #E7E9EC"><td style="padding:10px;text-align:left">Biblioteca de fotos (subir y usar)</td><td style="color:#00665F">●</td><td style="color:#0073B1">◐</td><td style="color:#0073B1">◐</td><td style="color:#00665F">●</td></tr>
+            <tr style="border-top:1px solid #E7E9EC"><td style="padding:10px;text-align:left">Galerías, álbumes y videos</td><td style="color:#00665F">●</td><td style="color:#BFC5CC">—</td><td style="color:#BFC5CC">—</td><td style="color:#00665F">●</td></tr>
+            <tr style="border-top:1px solid #E7E9EC"><td style="padding:10px;text-align:left">Páginas, secciones de Inicio, menú y pie</td><td style="color:#00665F">●</td><td style="color:#BFC5CC">—</td><td style="color:#BFC5CC">—</td><td style="color:#BFC5CC">—</td></tr>
+            <tr style="border-top:1px solid #E7E9EC"><td style="padding:10px;text-align:left">Información institucional</td><td style="color:#00665F">●</td><td style="color:#BFC5CC">—</td><td style="color:#BFC5CC">—</td><td style="color:#BFC5CC">—</td></tr>
+            <tr style="border-top:1px solid #E7E9EC"><td style="padding:10px;text-align:left">Usuarios, roles, registro y configuración</td><td style="color:#00665F">●</td><td style="color:#BFC5CC">—</td><td style="color:#BFC5CC">—</td><td style="color:#BFC5CC">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <span style="font-size:13px;color:#5F5A60">● acceso completo · ◐ puede subir y elegir fotos para su contenido, no borrar las de otros · — sin acceso (la sección no aparece en su menú)</span>
+    </section>
+
+    <section style="background:#FFFFFF;border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:10px">
+      <h2 style="margin:0;font-family:Montserrat,sans-serif;font-size:20px;font-weight:800">Registro de actividad</h2>
+      <div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #E7E9EC;font-size:14px;flex-wrap:wrap"><span><strong>[Nombre]</strong> publicó cambios en «Portada principal» de Inicio</span><span style="color:#5F5A60">[fecha, hora]</span></div>
+      <div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #E7E9EC;font-size:14px;flex-wrap:wrap"><span><strong>[Nombre]</strong> eliminó un borrador (en la papelera 30 días)</span><span style="color:#5F5A60">[fecha, hora]</span></div>
+      <div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #E7E9EC;font-size:14px;flex-wrap:wrap"><span><strong>[Nombre]</strong> cambió el rol de [Nombre] a Eventos + Multimedia</span><span style="color:#5F5A60">[fecha, hora]</span></div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1150}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

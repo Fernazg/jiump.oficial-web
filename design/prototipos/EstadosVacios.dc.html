@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>JIUMP — Estados vacíos</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@600&display=swap" rel="stylesheet">
+<style>
+/* == Pase de diseño (criterios emil-design-eng) == */
+:root{--ease-out:cubic-bezier(.23,1,.32,1);--ease-in-out:cubic-bezier(.77,0,.175,1)}
+html{-webkit-text-size-adjust:100%;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+a,button,input,select,textarea,label,[role=button]{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button{transition:transform 160ms var(--ease-out),background-color .2s ease,border-color .2s ease,color .2s ease,box-shadow .2s ease}
+button:not(:disabled):active,a.btn:active,.heme-btn:active{transform:scale(.97)}
+h1,h2{letter-spacing:-.02em;text-wrap:balance}
+p{text-wrap:pretty}
+.tn,time{font-variant-numeric:tabular-nums}
+@media (pointer:coarse){input,select,textarea{font-size:16px!important}}
+@media (hover:none){[class]:hover:not(:active),[class]:hover:not(:active) img{transform:none!important}}
+
+body{margin:0;background:#FFFFFF}
+a{color:#0073B1}a:hover{color:#062F4A}
+/* Movimiento: sutil, rápido y desactivable */
+@view-transition{navigation:auto}
+@keyframes fi{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+section h1,section h1 ~ *{animation:fi .6s var(--ease-out) both}
+section h1 ~ *{animation-delay:.18s}
+a[style*="border-radius:999px"],button{transition:transform .2s ease,background-color .2s ease,box-shadow .2s ease}
+a[style*="border-radius:999px"]:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.18)}
+a[style*="border-radius:999px"]:active{transform:scale(.97)}
+a[style*="border-radius:20px"],a[style*="border-radius:24px"]{transition:transform .3s ease,box-shadow .3s ease}
+a[style*="border-radius:20px"]:hover,a[style*="border-radius:24px"]:hover{transform:translateY(-2px);box-shadow:0 18px 36px rgba(0,0,0,.18)}
+.zm{overflow:hidden}.zm img{transition:transform .5s var(--ease-out)}.zm:hover img{transform:scale(1.06)}
+.heme-btn{transition:transform .25s ease,box-shadow .3s ease!important}
+.heme-btn:hover{transform:translateY(-2px)!important;box-shadow:0 14px 30px -10px rgba(0,0,0,.45)!important}
+.heme-arrow{display:inline-block;transition:transform .25s ease}.heme-btn:hover .heme-arrow{transform:translateX(4px)}
+@media (max-width:760px){.heme > div[style*="padding:120px"]{padding:80px 20px!important;gap:48px!important}.heme-wm{bottom:-30px!important}}
+@media (max-width:760px){section [style*="grid-column:span"]{grid-column:1/-1!important}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition-property:opacity,color,background-color,border-color,box-shadow!important}}
+/* == Inicio responsive == */
+@media (max-width:900px){.hero{min-height:640px!important}.que-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media (max-width:640px){
+  .hero{min-height:560px!important}
+  .hero>div{padding-bottom:40px!important}
+  .hero-cta>a{flex:1 1 100%}
+  .act-grid{display:flex!important;gap:12px!important;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;margin:0 -20px;padding:0 20px 6px;scroll-padding:0 20px;scrollbar-width:none}
+  .act-grid::-webkit-scrollbar{display:none}
+  .act-grid>a{flex:0 0 calc(100% - 64px);width:calc(100% - 64px);height:440px!important;min-height:0!important;box-sizing:border-box;scroll-snap-align:start;scroll-snap-stop:always}
+  .act-grid>a>div[style*="padding:"]{padding:22px!important;width:100%;box-sizing:border-box}
+  .act-grid>a strong{font-size:28px!important;line-height:1.08!important;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:5;overflow:hidden}
+  .act-grid>a strong+span{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+  .que-grid{display:flex!important;gap:12px!important;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;touch-action:pan-x pan-y;margin:0 -20px;padding:0 20px 6px;scroll-padding:0 20px;scrollbar-width:none}
+  .que-grid::-webkit-scrollbar{display:none}
+  .que-grid>a{flex:0 0 280px;height:360px!important;box-sizing:border-box;scroll-snap-align:start}
+}
+/* == fin Inicio responsive == */
+/* == Responsive == */
+img{max-width:100%}
+.mnav{display:none;position:relative}
+.mnav>summary{list-style:none;cursor:pointer;width:48px;height:48px;border-radius:999px;border:1px solid #CDD1D6;background:#FFFFFF;color:#1C1E21;display:flex;align-items:center;justify-content:center}
+.mnav>summary::-webkit-details-marker{display:none}
+.mnav[open]>summary{background:#E3F0F8;border-color:#0073B1;color:#0073B1}
+.mnav-panel{position:absolute;right:0;top:58px;z-index:60;width:min(86vw,320px);background:#FFFFFF;border-radius:20px;box-shadow:0 0 0 1px rgba(0,0,0,.06),0 24px 48px -12px rgba(0,0,0,.28);padding:8px;display:flex;flex-direction:column;animation:mnav .2s var(--ease-out,ease-out) both;transform-origin:top right}
+@keyframes mnav{from{opacity:0;transform:scale(.97) translateY(-4px)}to{opacity:1;transform:none}}
+.mnav-panel a{display:flex;align-items:center;min-height:52px;padding:0 16px;border-radius:12px;font-family:'Segoe UI','Open Sans',sans-serif;font-size:17px;font-weight:600;color:#1C1E21;text-decoration:none}
+.mnav-panel a:hover{background:#F2F4F5}
+.mnav-panel a[aria-current]{color:#0073B1;background:#E3F0F8}
+@media (max-width:1024px){
+  [style*="max-width:1280px"],[style*="max-width:1200px"]{padding-left:32px!important;padding-right:32px!important}
+  .hnav{padding-left:32px!important;padding-right:32px!important}
+}
+@media (max-width:900px){
+  .nl-desk,.hcenter{display:none!important}
+  .mnav{display:block}
+  .hlogo{height:48px!important}
+}
+@media (max-width:640px){
+  [style*="max-width:1280px"],[style*="max-width:1200px"],[style*="max-width:900px"],[style*="max-width:760px"]{padding-left:20px!important;padding-right:20px!important}
+  .hnav{padding:8px 16px!important}
+  .hlogo{height:44px!important}
+  section[style*="padding:10"],section[style*="padding:11"],section[style*="padding:12"],section[style*="padding:9"],section[style*="padding:8"],section[style*="padding:7"],
+  section>div[style*="padding:10"],section>div[style*="padding:11"],section>div[style*="padding:12"],section>div[style*="padding:9"],section>div[style*="padding:8"],section>div[style*="padding:7"]{padding-top:56px!important;padding-bottom:56px!important}
+  h1{font-size:clamp(34px,9.8vw,38px)!important;line-height:1.04!important}
+  h2{font-size:clamp(28px,8.2vw,32px)!important;line-height:1.1!important}
+  [style*="repeat(12"]{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  [style*="repeat(12"][style*="grid-auto-rows"]{grid-auto-rows:150px!important}
+  [style*="grid-column:span 7"],[style*="grid-column:span 5"],[style*="grid-column:span 2;grid-row:span 2"]{grid-column:1/-1!important}
+  [style*="grid-column:span 4"],[style*="grid-column:span 6"],[style*="grid-column:span 3"]{grid-column:span 1!important}
+  [style*="grid-row:span 3"]{grid-row:span 2!important}
+  [style*="repeat(4,minmax(0,1fr))"]{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  [style*="column-width"]{column-width:150px!important;column-gap:10px!important}
+  footer [style*="grid-column:span 2"]{grid-column:1/-1!important}
+  footer [style*="minmax(220px,1fr)"]{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:28px!important}
+  [style*="min-height:46px"][style*="border-radius:999px"],[style*="min-height:48px"][style*="border-radius:999px"],[style*="min-height:52px"][style*="border-radius:999px"]{justify-content:center}
+}
+@media (max-width:900px){
+  .lay{grid-template-columns:minmax(0,1fr)!important}
+  .side,.side>div,.toc{min-width:0;max-width:100%}
+  .side{gap:18px!important}
+  .side>div:nth-child(2){display:none}
+  .side h2{font-size:12px!important;line-height:1.3!important;letter-spacing:.12em!important}
+  .toc{display:flex;gap:8px;overflow-x:auto;border-left:none!important;padding-bottom:6px;scrollbar-width:none}
+  .toc li{flex:0 0 auto}
+  .toc a{margin:0!important;border:1px solid #E1E3E6!important;border-radius:999px;padding:8px 14px!important;white-space:nowrap;background:#FFFFFF}
+  #mes-de-la-reforma figure{max-width:260px!important;margin:0 auto!important}
+}
+@media (max-width:640px){
+  .side h2{font-size:12px!important}
+  section figure[style*="max-width:320px"],section div[aria-hidden="true"][style*="aspect-ratio:3/4"]{display:none!important}
+  [style*="min-height:420px"]{min-height:200px!important}
+}
+</style>
+</helmet>
+<div style="width:100%;background:#FFFFFF;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1C1E21">
+
+  <header style="position:relative;z-index:30;background:#FFFFFF;border-bottom:1px solid #E1E3E6">
+    <nav class="hnav" style="max-width:1280px;margin:0 auto;padding:10px 40px;display:flex;align-items:center;justify-content:space-between;gap:16px">
+      <a href="Inicio.dc.html" aria-label="JIUMP, ir al inicio" style="display:flex;flex-shrink:0"><img class="hlogo" src="/_blob/1b16c658d676a48f9564e3144cfa63aa" alt="JIUMP" style="height:56px;width:auto;display:block"></a>
+      <div class="nl-desk" style="display:flex;align-items:center;gap:8px 28px;font-family:'Segoe UI','Open Sans',sans-serif;font-size:15px;font-weight:600"><a href="Nosotros.dc.html" style="color:#1C1E21;text-decoration:none">Nosotros</a><a href="Eventos.dc.html" style="color:#1C1E21;text-decoration:none">Eventos</a><a href="Articulos.dc.html" style="color:#1C1E21;text-decoration:none">Artículos</a><a href="Galeria.dc.html" style="color:#1C1E21;text-decoration:none">Galería</a></div>
+      <details class="mnav"><summary aria-label="Abrir menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></summary><div class="mnav-panel"><a href="Inicio.dc.html">Inicio</a><a href="Nosotros.dc.html">Nosotros</a><a href="Eventos.dc.html">Eventos</a><a href="Articulos.dc.html">Artículos</a><a href="Galeria.dc.html">Galería</a></div></details>
+    </nav>
+  </header>
+
+  <section style="max-width:1280px;margin:0 auto;padding:72px 40px 96px;display:flex;flex-direction:column;gap:36px">
+    <div style="display:flex;flex-direction:column;gap:12px;max-width:760px">
+      <span style="font-family:'Segoe UI','Open Sans',sans-serif;font-size:15px;font-weight:600;color:#0073B1">Componentes del sitio</span>
+      <h1 style="margin:0;font-family:Montserrat,sans-serif;font-size:clamp(38px,4.6vw,64px);line-height:1.02;font-weight:800;letter-spacing:-.02em">Estados vacíos</h1>
+      <p style="margin:0;font-size:17px;line-height:1.7;color:#5F5A60">Qué ve el visitante cuando todavía no hay contenido. En el sitio real cada uno aparece solo en esa situación; si una actividad no tiene videos, la sección completa se oculta en lugar de mostrar un recuadro vacío.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:28px">
+      <figure style="margin:0;display:flex;flex-direction:column;gap:12px">
+        <figcaption style="font-size:13px;font-weight:600;color:#5F5A60">Artículos · búsqueda sin resultados</figcaption>
+        <div class="es" style="padding:48px 32px;border-radius:24px;background:#F2F4F5;display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px">
+          <span aria-hidden="true" style="width:64px;height:64px;border-radius:20px;background:#E3F0F8;display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0073B1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>
+          <h3 style="margin:0;font-family:Montserrat,sans-serif;font-size:22px;line-height:1.25;font-weight:700;color:#1C1E21">No encontramos artículos con «Nehemías»</h3>
+          <p style="margin:0;max-width:420px;font-size:17px;line-height:1.7;color:#43474D">Revisa cómo está escrita la palabra o prueba con otra. También puedes explorar las series del mes.</p>
+          <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:6px"><a href="Articulos.dc.html" style="display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 26px;border-radius:999px;background:#0073B1;color:#FFFFFF;font-family:'Segoe UI','Open Sans',sans-serif;font-weight:600;font-size:16px;text-decoration:none;min-height:46px;font-size:15px">Ver todos los artículos</a><a href="Articulos.dc.html" style="display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 26px;border-radius:999px;border:1.5px solid #0073B1;color:#0073B1;font-family:'Segoe UI','Open Sans',sans-serif;font-weight:600;font-size:16px;text-decoration:none;min-height:46px;font-size:15px">Limpiar búsqueda</a></div>
+        </div>
+      </figure>
+      <figure style="margin:0;display:flex;flex-direction:column;gap:12px">
+        <figcaption style="font-size:13px;font-weight:600;color:#5F5A60">Galería · álbum sin fotos</figcaption>
+        <div class="es" style="padding:48px 32px;border-radius:24px;background:#F2F4F5;display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px">
+          <span aria-hidden="true" style="width:64px;height:64px;border-radius:20px;background:#E3F0F8;display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0073B1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg></span>
+          <h3 style="margin:0;font-family:Montserrat,sans-serif;font-size:22px;line-height:1.25;font-weight:700;color:#1C1E21">Fotos próximamente</h3>
+          <p style="margin:0;max-width:420px;font-size:17px;line-height:1.7;color:#43474D">Este álbum se completará cuando el equipo de Multimedia suba las fotos del encuentro.</p>
+          <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:6px"><a href="Galeria.dc.html" style="display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 26px;border-radius:999px;background:#0073B1;color:#FFFFFF;font-family:'Segoe UI','Open Sans',sans-serif;font-weight:600;font-size:16px;text-decoration:none;min-height:46px;font-size:15px">Ver otros álbumes</a></div>
+        </div>
+      </figure>
+      <figure style="margin:0;display:flex;flex-direction:column;gap:12px">
+        <figcaption style="font-size:13px;font-weight:600;color:#5F5A60">Eventos · sin próximos eventos</figcaption>
+        <div class="es" style="padding:48px 32px;border-radius:24px;background:#F2F4F5;display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px">
+          <span aria-hidden="true" style="width:64px;height:64px;border-radius:20px;background:#E3F0F8;display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0073B1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></span>
+          <h3 style="margin:0;font-family:Montserrat,sans-serif;font-size:22px;line-height:1.25;font-weight:700;color:#1C1E21">Aún no hay eventos programados</h3>
+          <p style="margin:0;max-width:420px;font-size:17px;line-height:1.7;color:#43474D">Cuando se confirme la próxima actividad la publicaremos aquí. Mientras tanto, revive las actividades de este año.</p>
+          <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:6px"><a href="Eventos.dc.html" style="display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 26px;border-radius:999px;background:#0073B1;color:#FFFFFF;font-family:'Segoe UI','Open Sans',sans-serif;font-weight:600;font-size:16px;text-decoration:none;min-height:46px;font-size:15px">Ver actividades 2026</a><a href="Galeria.dc.html" style="display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 26px;border-radius:999px;border:1.5px solid #0073B1;color:#0073B1;font-family:'Segoe UI','Open Sans',sans-serif;font-weight:600;font-size:16px;text-decoration:none;min-height:46px;font-size:15px">Ir a la galería</a></div>
+        </div>
+      </figure>
+      <figure style="margin:0;display:flex;flex-direction:column;gap:12px">
+        <figcaption style="font-size:13px;font-weight:600;color:#5F5A60">Actividad · sin videos ni enlaces</figcaption>
+        <div class="es" style="padding:48px 32px;border-radius:24px;background:#F2F4F5;display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px">
+          <span aria-hidden="true" style="width:64px;height:64px;border-radius:20px;background:#E3F0F8;display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0073B1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3z"/></svg></span>
+          <h3 style="margin:0;font-family:Montserrat,sans-serif;font-size:22px;line-height:1.25;font-weight:700;color:#1C1E21">Sin videos por ahora</h3>
+          <p style="margin:0;max-width:420px;font-size:17px;line-height:1.7;color:#43474D">Esta actividad todavía no tiene videos ni transmisiones publicadas.</p>
+          <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:6px"><a href="ActividadConvencion.dc.html" style="display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 26px;border-radius:999px;background:#0073B1;color:#FFFFFF;font-family:'Segoe UI','Open Sans',sans-serif;font-weight:600;font-size:16px;text-decoration:none;min-height:46px;font-size:15px">Ver fotos de la actividad</a></div>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer style="background:#FFFFFF;color:#1C1E21;border-top:1px solid #E1E3E6">
+    <div aria-hidden="true" style="display:flex;height:4px"><div style="flex:2;background:#00AB9F"></div><div style="flex:1;background:#0073B1"></div></div>
+    <div style="max-width:1280px;margin:0 auto;padding:80px 40px 40px;display:flex;flex-direction:column;gap:56px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:40px">
+        <div style="display:flex;flex-direction:column;gap:14px;grid-column:span 2">
+          <img src="/_blob/1b16c658d676a48f9564e3144cfa63aa" alt="JIUMP" style="height:96px;width:auto;align-self:flex-start">
+          <p style="margin:0;font-size:17px;line-height:1.7;color:#5F5A60;max-width:440px">Jóvenes Unidos para Adorar a Cristo. Movimiento juvenil de la Iglesia Unida Metodista Pentecostal.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:15px"><strong style="color:#0073B1;font-size:13px;letter-spacing:.12em;text-transform:uppercase;font-family:'Segoe UI','Open Sans',sans-serif;font-weight:600">Explora</strong><a href="Nosotros.dc.html" style="color:#1C1E21;text-decoration:none">Nosotros</a><a href="Eventos.dc.html" style="color:#1C1E21;text-decoration:none">Eventos</a><a href="Articulos.dc.html" style="color:#1C1E21;text-decoration:none">Artículos</a><a href="Galeria.dc.html" style="color:#1C1E21;text-decoration:none">Galería</a></div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:15px"><strong style="color:#0073B1;font-size:13px;letter-spacing:.12em;text-transform:uppercase;font-family:'Segoe UI','Open Sans',sans-serif;font-weight:600">Síguenos</strong><a href="https://www.instagram.com/jiump.oficial" target="_blank" rel="noopener" style="color:#1C1E21;text-decoration:none;display:inline-flex;align-items:center;gap:8px"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/></svg>Instagram · @jiump.oficial</a></div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px;padding-top:24px;border-top:1px solid #E1E3E6;font-size:13px;color:#5F5A60">
+        <span>© JIUMP 2026</span>
+        <span><a href="#" style="color:#5F5A60">Iglesia Unida Metodista Pentecostal</a> · <a href="#" style="color:#5F5A60">Privacidad</a></span>
+      </div>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

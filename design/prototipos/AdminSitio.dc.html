@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>JIUMP Admin — Páginas y secciones</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@600&display=swap" rel="stylesheet">
+<style>
+/* == Pase de diseño (criterios emil-design-eng) == */
+:root{--ease-out:cubic-bezier(.23,1,.32,1);--ease-in-out:cubic-bezier(.77,0,.175,1)}
+html{-webkit-text-size-adjust:100%;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+a,button,input,select,textarea,label,[role=button]{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button{transition:transform 160ms var(--ease-out),background-color .2s ease,border-color .2s ease,color .2s ease,box-shadow .2s ease}
+button:not(:disabled):active,a.btn:active,.heme-btn:active{transform:scale(.97)}
+h1,h2{letter-spacing:-.02em;text-wrap:balance}
+p{text-wrap:pretty}
+.tn,time{font-variant-numeric:tabular-nums}
+@media (pointer:coarse){input,select,textarea{font-size:16px!important}}
+@media (hover:none){[class]:hover:not(:active),[class]:hover:not(:active) img{transform:none!important}}
+
+body{margin:0;background:#F2F4F5}
+a{color:#0073B1}a:hover{color:#062F4A}
+.btn{transition:transform .2s ease}.btn:hover{transform:translateY(-1px)}.btn:active{transform:scale(.97)}
+.sec{transition:background-color .15s ease,border-color .15s ease}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition-property:opacity,color,background-color,border-color,box-shadow!important}}
+</style>
+</helmet>
+<div style="width:100%;min-height:1150px;background:#F2F4F5;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1C1E21;display:flex;flex-wrap:wrap">
+
+  <div style="flex:1 1 240px;max-width:260px;display:flex"><dc-import name="AdminSidebar" activo="inicio" rol="super" hint-size="260px,1150px"></dc-import></div>
+
+  <main style="flex:999 1 560px;min-width:0;padding:28px 36px 48px;box-sizing:border-box;display:flex;flex-direction:column;gap:20px">
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px">
+      <div style="display:flex;flex-direction:column;gap:4px"><h1 style="margin:0;font-family:Montserrat,sans-serif;font-size:32px;font-weight:800">Páginas y secciones</h1><span style="font-size:15px;color:#5F5A60">Edita textos, fotos y botones. El diseño se mantiene solo.</span></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <span style="font-size:13px;color:#7A4B00;background:#FFF1D6;padding:6px 12px;border-radius:999px;font-weight:600">{{ estadoCambios }}</span>
+        <a class="btn" href="Inicio.dc.html" style="display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:999px;border:1px solid #CDD1D6;background:#FFFFFF;color:#1C1E21;font-weight:600;font-size:14px;text-decoration:none">Vista previa completa</a>
+        <button class="btn" onClick="{{ publicar }}" style="min-height:44px;padding:0 20px;border-radius:999px;border:none;background:#0073B1;color:#FFFFFF;font-family:'Segoe UI','Open Sans',sans-serif;font-weight:600;font-size:14px;cursor:pointer">Publicar cambios</button>
+      </div>
+    </div>
+
+    <!-- Pestañas por página -->
+    <div role="tablist" style="display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid #DDE1E5">
+      <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="5">
+        <button role="tab" onClick="{{ t.elegir }}" style="{{ t.estilo }}">{{ t.nombre }}</button>
+      </sc-for>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+      <!-- Secciones -->
+      <section style="flex:1 1 260px;max-width:320px;background:#FFFFFF;border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:6px">
+        <span style="padding:6px 8px;font-size:12.5px;color:#5F5A60">Secciones de {{ tabNombre }} · en el orden en que aparecen</span>
+        <sc-for list="{{ secciones }}" as="s" hint-placeholder-count="8">
+          <div class="sec" style="{{ s.estilo }}">
+            <button onClick="{{ s.elegir }}" style="flex:1;min-height:40px;text-align:left;border:none;background:transparent;font:inherit;font-size:14px;font-weight:600;color:inherit;cursor:pointer">{{ s.nombre }}</button>
+            <button onClick="{{ s.subir }}" aria-label="Subir sección" style="width:30px;height:30px;border:none;border-radius:8px;background:#EEF0F2;cursor:pointer">↑</button>
+            <button onClick="{{ s.bajar }}" aria-label="Bajar sección" style="width:30px;height:30px;border:none;border-radius:8px;background:#EEF0F2;cursor:pointer">↓</button>
+            <button onClick="{{ s.ver }}" aria-label="Mostrar u ocultar sección" style="{{ s.ojo }}">{{ s.ojoTxt }}</button>
+          </div>
+        </sc-for>
+        <span style="padding:8px;font-size:12.5px;line-height:1.5;color:#5F5A60">Las secciones se ordenan y ocultan, pero no se diseñan desde aquí: así la página siempre se ve bien.</span>
+      </section>
+
+      <!-- Editor de la sección -->
+      <section style="flex:2 1 420px;min-width:0;background:#FFFFFF;border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><h2 style="margin:0;font-family:Montserrat,sans-serif;font-size:20px;font-weight:800">{{ seleccionada }}</h2><span style="font-size:12.5px;color:#5F5A60">Última edición: [Nombre] · [fecha]</span></div>
+
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#5F5A60">Etiqueta superior <span style="font-size:12px">({{ cEtiqueta }}/60)</span><input type="text" value="{{ etiqueta }}" onInput="{{ setEtiqueta }}" maxlength="60" style="min-height:44px;border-radius:10px;border:1px solid #CDD1D6;padding:0 12px;font:inherit;font-size:14px;color:#1C1E21"></label>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#5F5A60">Título principal <span style="font-size:12px">({{ cTitulo }}/60 · se recomienda menos de 45)</span><input type="text" value="{{ titulo }}" onInput="{{ setTitulo }}" maxlength="60" style="min-height:44px;border-radius:10px;border:1px solid #CDD1D6;padding:0 12px;font:inherit;font-size:15px;font-weight:600;color:#1C1E21"></label>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#5F5A60">Texto <span style="font-size:12px">({{ cTexto }}/180)</span><textarea rows="3" maxlength="180" onInput="{{ setTexto }}" style="border-radius:10px;border:1px solid #CDD1D6;padding:12px;font:inherit;font-size:14px;line-height:1.6;color:#1C1E21;resize:vertical">{{ texto }}</textarea></label>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#5F5A60">Texto del botón <span style="font-size:12px">({{ cBoton }}/24)</span><input type="text" value="{{ boton }}" onInput="{{ setBoton }}" maxlength="24" style="min-height:44px;border-radius:10px;border:1px solid #CDD1D6;padding:0 12px;font:inherit;font-size:14px;color:#1C1E21"></label>
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#5F5A60">El botón lleva a…<select style="min-height:44px;border-radius:10px;border:1px solid #CDD1D6;padding:0 10px;font:inherit;font-size:14px;color:#1C1E21"><option>Página: Eventos</option><option>Página: Nosotros</option><option>Actividad: Convención Nacional 2026</option><option>Artículo…</option><option>Enlace externo (YouTube, Instagram…)</option></select></label>
+        </div>
+
+        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:12px;border-radius:14px;background:#F2F4F5">
+          <img src="/_blob/37b805dcd7dbc8be26f1fab5a2d456b0" alt="" style="width:120px;height:72px;object-fit:cover;border-radius:10px">
+          <div style="flex:1 1 200px;display:flex;flex-direction:column;gap:4px;font-size:13px"><strong style="font-size:14px">Foto de fondo</strong><span style="color:#5F5A60">Mínimo 1920 × 1080 px. Se recorta y oscurece sola para que el texto se lea.</span></div>
+          <a class="btn" href="AdminMedios.dc.html" style="display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border-radius:999px;border:1.5px solid #0073B1;color:#0073B1;font-weight:600;font-size:13px;text-decoration:none">Cambiar desde la biblioteca</a>
+        </div>
+        <sc-if value="{{ largo }}" hint-placeholder-val="{{ false }}"><div role="status" style="padding:10px 14px;border-radius:12px;background:#FFF1D6;color:#7A4B00;font-size:13px">El título es largo: en celular ocupará más de 3 líneas. Te sugerimos acortarlo.</div></sc-if>
+      </section>
+
+      <!-- Vista previa en vivo -->
+      <section style="flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center"><strong style="font-size:14px">Vista previa en vivo</strong><span style="font-size:12.5px;color:#5F5A60">Así se verá al publicar</span></div>
+        <div style="position:relative;border-radius:18px;overflow:hidden;min-height:340px;background:#062F4A;color:#FFFFFF;display:flex;align-items:flex-end;box-shadow:0 18px 36px rgba(0,0,0,.18)">
+          <img src="/_blob/37b805dcd7dbc8be26f1fab5a2d456b0" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%">
+          <div aria-hidden="true" style="position:absolute;inset:0;background:linear-gradient(to top,rgba(6,47,74,.96) 0%,rgba(6,47,74,.8) 40%,rgba(6,47,74,.1) 80%)"></div>
+          <div style="position:relative;padding:20px;display:flex;flex-direction:column;gap:10px">
+            <span style="font-family:'Segoe UI','Open Sans',sans-serif;font-size:11.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase">{{ etiqueta }}</span>
+            <strong style="font-family:Montserrat,sans-serif;font-size:26px;line-height:1;font-weight:800">{{ titulo }}</strong>
+            <span style="font-size:12px;line-height:1.5;color:#E6EFF6">{{ texto }}</span>
+            <span style="align-self:flex-start;font-size:12px;font-weight:600;padding:8px 14px;border-radius:999px;background:#0073B1">{{ boton }} →</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;justify-content:center"><span style="font-size:12px;padding:5px 10px;border-radius:999px;background:#062F4A;color:#FFFFFF">Computador</span><span style="font-size:12px;padding:5px 10px;border-radius:999px;background:#FFFFFF;border:1px solid #CDD1D6">Celular</span></div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1150}}'>
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    this.state = {
+      tab: 0, sel: 1, cambios: false,
+      etiqueta: 'Movimiento juvenil · Iglesia Unida Metodista Pentecostal',
+      titulo: 'Jóvenes unidos para adorar a Cristo',
+      texto: 'Servimos con excelencia, guiados por el Espíritu Santo, capacitándonos para transmitir nuestro legado a las futuras generaciones.',
+      boton: 'Próximos eventos',
+      secs: [
+        { n: 'Barra «Próximo evento»', v: true }, { n: 'Portada principal', v: true }, { n: 'Actividades destacadas 2026', v: true },
+        { n: 'Qué hacemos', v: true }, { n: 'Heme aquí · Convención', v: true }, { n: 'Artículos recientes', v: true },
+        { n: 'Eventos', v: true }, { n: 'Momentos JIUMP', v: true }, { n: 'Qué creemos', v: true }, { n: 'Pie de página', v: true }
+      ]
+    };
+  }
+  renderVals() {
+    const self = this, st = this.state;
+    const set = function (k) { return function (e) { const o = { cambios: true }; o[k] = e.target.value; self.setState(o); }; };
+    const mover = function (i, d) { return function () { const j = i + d; if (j < 0 || j >= st.secs.length) return; const s = st.secs.slice(); const t = s[i]; s[i] = s[j]; s[j] = t; self.setState({ secs: s, sel: st.sel === i ? j : (st.sel === j ? i : st.sel), cambios: true }); }; };
+    const tabsN = ['Inicio', 'Nosotros', 'Información institucional', 'Redes sociales', 'Menú y pie de página'];
+    return {
+      tabs: tabsN.map(function (n, i) { const on = i === st.tab; return { nombre: n, elegir: function () { self.setState({ tab: i }); }, estilo: 'min-height:44px;padding:0 16px;border:none;background:transparent;font:inherit;font-size:14px;cursor:pointer;margin-bottom:-1px;' + (on ? 'font-weight:700;color:#0073B1;border-bottom:3px solid #0073B1' : 'color:#43474D;border-bottom:3px solid transparent') }; }),
+      tabNombre: tabsN[st.tab],
+      secciones: st.secs.map(function (s, i) {
+        const on = i === st.sel;
+        return { nombre: s.n, elegir: function () { self.setState({ sel: i }); }, subir: mover(i, -1), bajar: mover(i, 1),
+          ver: function () { const c = st.secs.slice(); c[i] = { n: s.n, v: !s.v }; self.setState({ secs: c, cambios: true }); },
+          ojoTxt: s.v ? '◉' : '○',
+          ojo: 'width:30px;height:30px;border:none;border-radius:8px;cursor:pointer;' + (s.v ? 'background:#E0F5F3;color:#00665F' : 'background:#EEF0F2;color:#9AA1A8'),
+          estilo: 'display:flex;align-items:center;gap:6px;padding:4px 6px 4px 10px;border-radius:12px;' + (on ? 'background:#E3F0F8;color:#005A8C;border:1.5px solid #0073B1' : 'border:1.5px solid transparent;' + (s.v ? 'color:#1C1E21' : 'color:#9AA1A8;text-decoration:line-through')) };
+      }),
+      seleccionada: st.secs[st.sel].n,
+      etiqueta: st.etiqueta, titulo: st.titulo, texto: st.texto, boton: st.boton,
+      cEtiqueta: st.etiqueta.length, cTitulo: st.titulo.length, cTexto: st.texto.length, cBoton: st.boton.length,
+      largo: st.titulo.length > 45,
+      setEtiqueta: set('etiqueta'), setTitulo: set('titulo'), setTexto: set('texto'), setBoton: set('boton'),
+      estadoCambios: st.cambios ? 'Cambios sin publicar' : 'Todo publicado',
+      publicar: function () { self.setState({ cambios: false }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

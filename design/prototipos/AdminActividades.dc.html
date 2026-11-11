@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>JIUMP Admin — Actividades</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@600&display=swap" rel="stylesheet">
+<style>
+/* == Pase de diseño (criterios emil-design-eng) == */
+:root{--ease-out:cubic-bezier(.23,1,.32,1);--ease-in-out:cubic-bezier(.77,0,.175,1)}
+html{-webkit-text-size-adjust:100%;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+a,button,input,select,textarea,label,[role=button]{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button{transition:transform 160ms var(--ease-out),background-color .2s ease,border-color .2s ease,color .2s ease,box-shadow .2s ease}
+button:not(:disabled):active,a.btn:active,.heme-btn:active{transform:scale(.97)}
+h1,h2{letter-spacing:-.02em;text-wrap:balance}
+p{text-wrap:pretty}
+.tn,time{font-variant-numeric:tabular-nums}
+@media (pointer:coarse){input,select,textarea{font-size:16px!important}}
+@media (hover:none){[class]:hover:not(:active),[class]:hover:not(:active) img{transform:none!important}}
+
+body{margin:0;background:#F2F4F5}
+a{color:#0073B1}a:hover{color:#062F4A}
+.btn{transition:transform .2s ease,background-color .2s ease}.btn:hover{transform:translateY(-1px)}.btn:active{transform:scale(.97)}
+.tile{transition:box-shadow .2s ease,transform .2s ease}.tile:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,.14)}
+.row{transition:background-color .15s ease}.row:hover{background:#F2F4F5}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition-property:opacity,color,background-color,border-color,box-shadow!important}}
+</style>
+</helmet>
+<div style="width:100%;min-height:1250px;background:#F2F4F5;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1C1E21;display:flex;flex-wrap:wrap">
+
+  <div style="flex:1 1 240px;max-width:260px;display:flex"><dc-import name="AdminSidebar" activo="eventos" rol="super" hint-size="260px,1250px"></dc-import></div>
+
+  <main style="flex:999 1 560px;min-width:0;padding:32px 40px;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px">
+      <div style="display:flex;flex-direction:column;gap:4px"><h1 style="margin:0;font-family:Montserrat,sans-serif;font-size:32px;font-weight:800">Eventos y actividades</h1><span style="font-size:15px;color:#5F5A60">Las publicadas aparecen en Inicio y tienen su propia página.</span></div>
+      <button class="btn" style="min-height:44px;padding:0 20px;border-radius:999px;border:none;background:#0073B1;color:#FFFFFF;font-family:'Segoe UI','Open Sans',sans-serif;font-weight:600;font-size:14px;cursor:pointer">+ Nuevo evento</button>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+      <!-- Lista -->
+      <div style="flex:1 1 300px;max-width:380px;background:#FFFFFF;border-radius:20px;padding:12px;display:flex;flex-direction:column;gap:4px">
+        <sc-for list="{{ lista }}" as="a" hint-placeholder-count="4">
+          <button class="row" onClick="{{ a.elegir }}" style="{{ a.estilo }}">
+            <span style="display:flex;flex-direction:column;gap:4px;text-align:left"><strong style="font-size:15px">{{ a.titulo }}</strong><span style="font-size:13px;color:#5F5A60">{{ a.fotosTxt }}</span></span>
+            <span style="{{ a.chip }}">{{ a.estado }}</span>
+          </button>
+        </sc-for>
+      </div>
+
+      <!-- Editor -->
+      <div style="flex:2 1 520px;min-width:0;background:#FFFFFF;border-radius:20px;padding:28px;display:flex;flex-direction:column;gap:20px">
+        <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px">
+          <h2 style="margin:0;font-family:Montserrat,sans-serif;font-size:24px;font-weight:800">{{ act.titulo }}</h2>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <a class="btn" href="ActividadFEDI.dc.html" style="display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:999px;border:1px solid #CDD1D6;color:#1C1E21;font-weight:600;font-size:14px;text-decoration:none">Vista previa</a>
+            <button class="btn" onClick="{{ alternar }}" style="{{ botonPublicar }}">{{ textoPublicar }}</button>
+            <button class="btn" onClick="{{ pedirBorrar }}" style="min-height:44px;padding:0 16px;border-radius:999px;border:1.5px solid #B42F2D;background:#FFFFFF;color:#B42F2D;font-family:'Segoe UI','Open Sans',sans-serif;font-weight:600;font-size:14px;cursor:pointer">Eliminar</button>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
+          <sc-if value="{{ confirmando }}" hint-placeholder-val="{{ false }}"><div role="alertdialog" style="grid-column:1/-1;padding:16px;border-radius:14px;background:#FBDADC;color:#7A1A18;display:flex;flex-wrap:wrap;align-items:center;gap:12px;font-size:14px"><span style="flex:1 1 260px"><strong>¿Eliminar «{{ act.titulo }}»?</strong> Su página y su tarjeta en Inicio dejarán de verse. Las fotos quedan en la biblioteca.</span><button onClick="{{ cancelarBorrar }}" style="min-height:40px;padding:0 14px;border-radius:999px;border:1px solid #7A1A18;background:#FFFFFF;color:#7A1A18;font:inherit;font-weight:600;cursor:pointer">Cancelar</button><button onClick="{{ cancelarBorrar }}" style="min-height:40px;padding:0 14px;border-radius:999px;border:none;background:#B42F2D;color:#FFFFFF;font:inherit;font-weight:600;cursor:pointer">Sí, eliminar</button></div></sc-if>
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#5F5A60">Título<input type="text" value="{{ act.titulo }}" style="min-height:44px;border-radius:10px;border:1px solid #CDD1D6;padding:0 12px;font:inherit;font-size:14px;color:#1C1E21"></label>
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#5F5A60">Dirección (URL)<input type="text" value="{{ act.slug }}" style="min-height:44px;border-radius:10px;border:1px solid #CDD1D6;padding:0 12px;font:inherit;font-size:14px;color:#1C1E21"></label>
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#5F5A60">Fecha<input type="month" style="min-height:44px;border-radius:10px;border:1px solid #CDD1D6;padding:0 12px;font:inherit;font-size:14px"><span style="font-size:12px;color:#5F5A60">Mes y año (el día es opcional)</span></label>
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#5F5A60">Lugar<input type="text" placeholder="Por confirmar" style="min-height:44px;border-radius:10px;border:1px solid #CDD1D6;padding:0 12px;font:inherit;font-size:14px"></label>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:16px;padding:12px 14px;border-radius:12px;background:#F2F4F5;font-size:14px"><label style="display:flex;align-items:center;gap:8px"><input type="checkbox" checked style="width:20px;height:20px"> Destacar en Inicio (Actividades destacadas)</label><label style="display:flex;align-items:center;gap:8px"><input type="checkbox" checked style="width:20px;height:20px"> Crear página propia con su enlace</label></div>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#5F5A60">Introducción (texto oficial)<textarea rows="4" style="border-radius:10px;border:1px solid #CDD1D6;padding:12px;font:inherit;font-size:14px;line-height:1.6;color:#1C1E21;resize:vertical">{{ act.intro }}</textarea></label>
+
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><strong style="font-size:15px">Fotos ({{ cantidad }})</strong><span style="font-size:13px;color:#5F5A60">Marca la portada con ★, ordena con ← → y elimina con ×</span></div>
+          <div style="height:96px;border:1.5px dashed #9AA1A8;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:14px;color:#5F5A60"><strong style="color:#1C1E21">Arrastra fotos aquí o haz clic para subir</strong>JPG, PNG o WebP · se optimizan solas</div>
+          <sc-if value="{{ sinFotos }}" hint-placeholder-val="{{ false }}"><div style="padding:20px;border-radius:14px;background:#F2F4F5;font-size:14px;color:#5F5A60">Esta actividad aún no tiene fotos.</div></sc-if>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px">
+            <sc-for list="{{ fotos }}" as="f" hint-placeholder-count="8">
+              <div class="tile" style="{{ f.marco }}">
+                <img src="{{ f.src }}" alt="" style="width:100%;height:96px;object-fit:cover;display:block">
+                <sc-if value="{{ f.esPortada }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:6px;left:6px;font-size:11.5px;font-weight:600;padding:3px 8px;border-radius:999px;background:#DA3A38;color:#FFFFFF">Portada</span></sc-if>
+                <div style="display:flex;justify-content:space-between;padding:4px">
+                  <button onClick="{{ f.portada }}" aria-label="Usar como portada" style="width:30px;height:30px;border:none;border-radius:8px;background:#E3F0F8;color:#005A8C;cursor:pointer">★</button>
+                  <button onClick="{{ f.izq }}" aria-label="Mover a la izquierda" style="width:30px;height:30px;border:none;border-radius:8px;background:#EEF0F2;cursor:pointer">←</button>
+                  <button onClick="{{ f.der }}" aria-label="Mover a la derecha" style="width:30px;height:30px;border:none;border-radius:8px;background:#EEF0F2;cursor:pointer">→</button>
+                  <button onClick="{{ f.quitar }}" aria-label="Eliminar foto" style="width:30px;height:30px;border:none;border-radius:8px;background:#FBDADC;color:#9E1F1D;cursor:pointer">×</button>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#5F5A60">Videos y enlaces (uno por línea)<textarea rows="2" placeholder="https://youtube.com/…" style="border-radius:10px;border:1px solid #CDD1D6;padding:12px;font:inherit;font-size:14px;resize:vertical"></textarea></label>
+        <span style="font-size:13px;color:#5F5A60">Permisos: solo Superadministrador, Eventos y Multimedia (fotos) pueden editar actividades. Se valida en el servidor.</span>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1250}}'>
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    const ids = ['12e708880533fae39418bacf4f5f8bd1','471f6e830276abcba80d047ed5dbeafa','41f587a900dd6fcc94cd4d9e093e0c73','0ec89f2b92b1a2e47af15f008f16f77e','7cf1bbd9172ac149aaa1e22cb312bcf2','21015b077af42f800ba45bf472e455e0','72aae312cb67f44e54c021dec1783407','9cb71b83c845546c451078ca60b86b94','afcfad84c4336e40e837fa4ffda3753e','3694fcafbcf80b4bb4aceacfbf3235c0','fbcb01fae53712385fd7ea5427abae4f','aef2a32523a1d42e5ebf906e8fb21327'];
+    this.state = {
+      borrar: false,
+      sel: 3,
+      acts: [
+        { titulo: 'Convención Nacional JIUMP 2026', slug: 'convencion-nacional-2026', intro: 'Más de 2.000 jóvenes respondieron al llamado de Dios en la Convención Nacional JIUMP 2026: “Heme aquí”\nRevisa nuestro resumen de los dos días llenos de gloria y presencia de nuestro Dios.', pub: true, fotos: [], portada: 0 },
+        { titulo: 'EMJ 2026', slug: 'emj-2026', intro: 'Durante el mes de octubre, señoritas de diversas iglesias de nuestra corporación, provenientes de distintos puntos del país, se dieron cita en la ciudad de Rengo para participar en una nueva edición del Encuentro de Mujeres (EMJ) 2026. Una instancia especial de comunión, edificación espiritual y fortalecimiento de la fe, donde juntas compartieron momentos de aprendizaje, adoración y crecimiento en la presencia de Dios.', pub: false, fotos: ['41c24f60d5fa1ad39db4a22e0dca3755','c812a4cd24f206fc856b063660dee62d','ca7a6206502cf4c966ab00e8359470cc','8bca7add752793f99fee0b8753265af9','1228472d44f39e83ee5ba831884a6f1e','a8ee3977f10649b692fdd03264f49352'].map(function (x) { return '/_blob/' + x; }), portada: 0 },
+        { titulo: 'EJZ 2026 · Encuentro de Jefaturas', slug: 'ejz-2026', intro: '¡Así se vivió nuestro Encuentro Anual de Jefaturas Zonales de JIUMP!\nUna instancia especial que reúne a hermanos y hermanas de distintas zonas de nuestra corporación, quienes desempeñan importantes labores de liderazgo y servicio dentro de nuestro movimiento juvenil. Un espacio de comunión, aprendizaje y coordinación, donde seguimos fortaleciendo el trabajo en conjunto para continuar impulsando la obra de Dios en las nuevas generaciones.', pub: false, fotos: ['aa8b5bfc6b53aece86afaa5d6c704994','e5446b7c014c334fc19b1e7a665d1661','119f54b55111c02604ef19531dcb2361','7a7095197174d535d4d6259e2d54ebf0'].map(function (x) { return '/_blob/' + x; }), portada: 0 },
+        { titulo: 'FEDI 2026', slug: 'fedi-2026', intro: 'Con el propósito de fortalecer el ministerio de Escuela Dominical Infantil y responder a los desafíos que presenta la enseñanza bíblica en la actualidad, este año comenzó a desarrollarse FEDI: Formación de Maestros de Escuela Dominical Infantil.', pub: true, fotos: ids.map(function (x) { return '/_blob/' + x; }), portada: 0 }
+      ]
+    };
+  }
+  cambiar(fn) {
+    const acts = this.state.acts.map(function (a) { return Object.assign({}, a, { fotos: a.fotos.slice() }); });
+    fn(acts[this.state.sel]);
+    this.setState({ acts: acts });
+  }
+  renderVals() {
+    const self = this, sel = this.state.sel, act = this.state.acts[sel];
+    const lista = this.state.acts.map(function (a, k) {
+      const on = k === sel;
+      return {
+        titulo: a.titulo, estado: a.pub ? 'Publicada' : 'Borrador',
+        fotosTxt: a.fotos.length ? a.fotos.length + ' fotos' : 'Sin fotos',
+        elegir: function () { self.setState({ sel: k }); },
+        estilo: 'display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;padding:14px;border-radius:14px;cursor:pointer;font:inherit;color:#1C1E21;border:' + (on ? '2px solid #0073B1;background:#E3F0F8' : '2px solid transparent;background:#FFFFFF'),
+        chip: 'font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap;' + (a.pub ? 'background:#E0F5F3;color:#00665F' : 'background:#EEF0F2;color:#43474D')
+      };
+    });
+    const n = act.fotos.length;
+    const fotos = act.fotos.map(function (src, k) {
+      const esP = k === act.portada;
+      return {
+        src: src, esPortada: esP,
+        marco: 'position:relative;border-radius:12px;overflow:hidden;background:#F2F4F5;border:' + (esP ? '2px solid #DA3A38' : '1px solid #E1E3E6'),
+        portada: function () { self.cambiar(function (a) { a.portada = k; }); },
+        izq: function () { if (k > 0) self.cambiar(function (a) { const t = a.fotos[k - 1]; a.fotos[k - 1] = a.fotos[k]; a.fotos[k] = t; if (a.portada === k) a.portada = k - 1; else if (a.portada === k - 1) a.portada = k; }); },
+        der: function () { if (k < n - 1) self.cambiar(function (a) { const t = a.fotos[k + 1]; a.fotos[k + 1] = a.fotos[k]; a.fotos[k] = t; if (a.portada === k) a.portada = k + 1; else if (a.portada === k + 1) a.portada = k; }); },
+        quitar: function () { self.cambiar(function (a) { a.fotos.splice(k, 1); if (a.portada >= a.fotos.length) a.portada = 0; else if (k < a.portada) a.portada -= 1; }); }
+      };
+    });
+    return {
+      lista: lista, act: act, confirmando: this.state.borrar, pedirBorrar: function () { self.setState({ borrar: true }); }, cancelarBorrar: function () { self.setState({ borrar: false }); }, fotos: fotos, cantidad: n, sinFotos: n === 0,
+      alternar: function () { self.cambiar(function (a) { a.pub = !a.pub; }); },
+      textoPublicar: act.pub ? 'Despublicar' : 'Publicar',
+      botonPublicar: 'min-height:44px;padding:0 20px;border-radius:999px;cursor:pointer;font-family:\'Segoe UI\',\'Open Sans\',sans-serif;font-weight:600;font-size:14px;' + (act.pub ? 'border:1.5px solid #DA3A38;background:#FFFFFF;color:#B42F2D' : 'border:none;background:#0073B1;color:#FFFFFF')
+    };
+  }
+}
+</script>
+</body>
+</html>

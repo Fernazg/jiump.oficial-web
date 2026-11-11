@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>JIUMP — Galería</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@600&display=swap" rel="stylesheet">
+<style>
+/* == Pase de diseño (criterios emil-design-eng) == */
+:root{--ease-out:cubic-bezier(.23,1,.32,1);--ease-in-out:cubic-bezier(.77,0,.175,1)}
+html{-webkit-text-size-adjust:100%;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+a,button,input,select,textarea,label,[role=button]{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button{transition:transform 160ms var(--ease-out),background-color .2s ease,border-color .2s ease,color .2s ease,box-shadow .2s ease}
+button:not(:disabled):active,a.btn:active,.heme-btn:active{transform:scale(.97)}
+h1,h2{letter-spacing:-.02em;text-wrap:balance}
+p{text-wrap:pretty}
+.tn,time{font-variant-numeric:tabular-nums}
+@media (pointer:coarse){input,select,textarea{font-size:16px!important}}
+@media (hover:none){[class]:hover:not(:active),[class]:hover:not(:active) img{transform:none!important}}
+
+body{margin:0;background:#FFFFFF}
+a{color:#0073B1}a:hover{color:#062F4A}
+.zm img{transition:transform .5s var(--ease-out)}.zm:hover img{transform:scale(1.03)}
+@media (max-width:760px){#album [style*="repeat(4"]{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition-property:opacity,color,background-color,border-color,box-shadow!important}}
+/* == Responsive == */
+img{max-width:100%}
+.mnav{display:none;position:relative}
+.mnav>summary{list-style:none;cursor:pointer;width:48px;height:48px;border-radius:999px;border:1px solid #CDD1D6;background:#FFFFFF;color:#1C1E21;display:flex;align-items:center;justify-content:center}
+.mnav>summary::-webkit-details-marker{display:none}
+.mnav[open]>summary{background:#E3F0F8;border-color:#0073B1;color:#0073B1}
+.mnav-panel{position:absolute;right:0;top:58px;z-index:60;width:min(86vw,320px);background:#FFFFFF;border-radius:20px;box-shadow:0 0 0 1px rgba(0,0,0,.06),0 24px 48px -12px rgba(0,0,0,.28);padding:8px;display:flex;flex-direction:column;animation:mnav .2s var(--ease-out,ease-out) both;transform-origin:top right}
+@keyframes mnav{from{opacity:0;transform:scale(.97) translateY(-4px)}to{opacity:1;transform:none}}
+.mnav-panel a{display:flex;align-items:center;min-height:52px;padding:0 16px;border-radius:12px;font-family:'Segoe UI','Open Sans',sans-serif;font-size:17px;font-weight:600;color:#1C1E21;text-decoration:none}
+.mnav-panel a:hover{background:#F2F4F5}
+.mnav-panel a[aria-current]{color:#0073B1;background:#E3F0F8}
+@media (max-width:1024px){
+  [style*="max-width:1280px"],[style*="max-width:1200px"]{padding-left:32px!important;padding-right:32px!important}
+  .hnav{padding-left:32px!important;padding-right:32px!important}
+}
+@media (max-width:900px){
+  .nl-desk,.hcenter{display:none!important}
+  .mnav{display:block}
+  .hlogo{height:48px!important}
+}
+@media (max-width:640px){
+  [style*="max-width:1280px"],[style*="max-width:1200px"],[style*="max-width:900px"],[style*="max-width:760px"]{padding-left:20px!important;padding-right:20px!important}
+  .hnav{padding:8px 16px!important}
+  .hlogo{height:44px!important}
+  section[style*="padding:10"],section[style*="padding:11"],section[style*="padding:12"],section[style*="padding:9"],section[style*="padding:8"],section[style*="padding:7"],
+  section>div[style*="padding:10"],section>div[style*="padding:11"],section>div[style*="padding:12"],section>div[style*="padding:9"],section>div[style*="padding:8"],section>div[style*="padding:7"]{padding-top:56px!important;padding-bottom:56px!important}
+  h1{font-size:clamp(34px,9.8vw,38px)!important;line-height:1.04!important}
+  h2{font-size:clamp(28px,8.2vw,32px)!important;line-height:1.1!important}
+  [style*="repeat(12"]{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  [style*="repeat(12"][style*="grid-auto-rows"]{grid-auto-rows:150px!important}
+  [style*="grid-column:span 7"],[style*="grid-column:span 5"],[style*="grid-column:span 2;grid-row:span 2"]{grid-column:1/-1!important}
+  [style*="grid-column:span 4"],[style*="grid-column:span 6"],[style*="grid-column:span 3"]{grid-column:span 1!important}
+  [style*="grid-row:span 3"]{grid-row:span 2!important}
+  [style*="repeat(4,minmax(0,1fr))"]{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  [style*="column-width"]{column-width:150px!important;column-gap:10px!important}
+  footer [style*="grid-column:span 2"]{grid-column:1/-1!important}
+  footer [style*="minmax(220px,1fr)"]{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:28px!important}
+  [style*="min-height:46px"][style*="border-radius:999px"],[style*="min-height:48px"][style*="border-radius:999px"],[style*="min-height:52px"][style*="border-radius:999px"]{justify-content:center}
+}
+@media (max-width:900px){
+  .lay{grid-template-columns:minmax(0,1fr)!important}
+  .side,.side>div,.toc{min-width:0;max-width:100%}
+  .side{gap:18px!important}
+  .side>div:nth-child(2){display:none}
+  .side h2{font-size:12px!important;line-height:1.3!important;letter-spacing:.12em!important}
+  .toc{display:flex;gap:8px;overflow-x:auto;border-left:none!important;padding-bottom:6px;scrollbar-width:none}
+  .toc li{flex:0 0 auto}
+  .toc a{margin:0!important;border:1px solid #E1E3E6!important;border-radius:999px;padding:8px 14px!important;white-space:nowrap;background:#FFFFFF}
+  #mes-de-la-reforma figure{max-width:260px!important;margin:0 auto!important}
+}
+@media (max-width:640px){
+  .side h2{font-size:12px!important}
+  section figure[style*="max-width:320px"],section div[aria-hidden="true"][style*="aspect-ratio:3/4"]{display:none!important}
+  [style*="min-height:420px"]{min-height:200px!important}
+}
+</style>
+</helmet>
+<div style="width:100%;background:#FFFFFF;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1C1E21">
+
+  <header style="position:relative;z-index:30;background:#FFFFFF;border-bottom:1px solid #E1E3E6">
+    <nav class="hnav" style="max-width:1280px;margin:0 auto;padding:10px 40px;display:flex;align-items:center;justify-content:space-between;gap:16px">
+      <a href="Inicio.dc.html" aria-label="JIUMP, ir al inicio" style="display:flex;flex-shrink:0"><img class="hlogo" src="/_blob/1b16c658d676a48f9564e3144cfa63aa" alt="JIUMP" style="height:56px;width:auto;display:block"></a>
+      <div class="nl-desk" style="display:flex;align-items:center;gap:8px 28px;font-family:'Segoe UI','Open Sans',sans-serif;font-size:15px;font-weight:600"><a href="Nosotros.dc.html" style="color:#1C1E21;text-decoration:none">Nosotros</a><a href="Eventos.dc.html" style="color:#1C1E21;text-decoration:none">Eventos</a><a href="Articulos.dc.html" style="color:#1C1E21;text-decoration:none">Artículos</a><a href="Galeria.dc.html" style="color:#0073B1;text-decoration:none" aria-current="page">Galería</a></div>
+      <details class="mnav"><summary aria-label="Abrir menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></summary><div class="mnav-panel"><a href="Inicio.dc.html">Inicio</a><a href="Nosotros.dc.html">Nosotros</a><a href="Eventos.dc.html">Eventos</a><a href="Articulos.dc.html">Artículos</a><a href="Galeria.dc.html" aria-current="page">Galería</a></div></details>
+    </nav>
+  </header>
+
+  <section style="max-width:1280px;margin:0 auto;padding:64px 40px 32px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:24px">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      
+      <h1 style="margin:0;font-family:Montserrat,sans-serif;font-size:clamp(38px,4.6vw,64px);line-height:1.02;font-weight:800;letter-spacing:-.02em">Momentos JIUMP</h1>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+      <button style="min-height:44px;padding:0 18px;border-radius:999px;border:none;background:#0073B1;color:#FFFFFF;font:inherit;font-weight:600;font-size:14px;font-family:'Segoe UI','Open Sans',sans-serif">Todos</button>
+      <button style="min-height:44px;padding:0 18px;border-radius:999px;border:1px solid #CDD1D6;background:#FFFFFF;font:inherit;font-size:14px;font-family:'Segoe UI','Open Sans',sans-serif;font-weight:600">2026</button>
+      <button style="min-height:44px;padding:0 18px;border-radius:999px;border:1px solid #CDD1D6;background:#FFFFFF;font:inherit;font-size:14px;font-family:'Segoe UI','Open Sans',sans-serif;font-weight:600">2025</button>
+      <button style="min-height:44px;padding:0 18px;border-radius:999px;border:1px solid #CDD1D6;background:#FFFFFF;font:inherit;font-size:14px;font-family:'Segoe UI','Open Sans',sans-serif;font-weight:600">Anteriores</button>
+      <button style="min-height:44px;padding:0 18px;border-radius:999px;border:1px solid #CDD1D6;background:#FFFFFF;font:inherit;font-size:14px;font-family:'Segoe UI','Open Sans',sans-serif;font-weight:600">Argentina</button>
+    </div>
+  </section>
+
+  <section style="max-width:1280px;margin:0 auto;padding:16px 40px 64px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:28px">
+    <a href="#album" style="text-decoration:none;color:#1C1E21;display:flex;flex-direction:column;gap:14px">
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:180px 110px;gap:6px;border-radius:22px;overflow:hidden"><div class="zm" style="grid-column:span 3;overflow:hidden;background:#062F4A"><img src="/_blob/784625ac3ebfe474ed6261cca016b8df" alt="Escenario de la Convención con la pantalla Samuel, Heme aquí" loading="lazy" style="width:100%;height:100%;object-fit:cover;object-position:60% 45%;display:block"></div><div class="zm" style="overflow:hidden;background:#062F4A"><img src="/_blob/25b550f1411f6c261cc0d42a3945ea92" alt="Jóvenes y pastores adorando con las manos levantadas" loading="lazy" style="width:100%;height:100%;object-fit:cover;object-position:50% 40%;display:block"></div><div class="zm" style="overflow:hidden;background:#062F4A"><img src="/_blob/a61a93fef1f7faeae53ef5f46d380003" alt="Grupo de jóvenes con sus credenciales" loading="lazy" style="width:100%;height:100%;object-fit:cover;object-position:50% 35%;display:block"></div><div class="zm" style="overflow:hidden;background:#062F4A"><img src="/_blob/5bde26efb15f98720f914e82247fae6b" alt="Joven en oración" loading="lazy" style="width:100%;height:100%;object-fit:cover;object-position:55% 30%;display:block"></div></div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px"><strong style="font-family:Montserrat,sans-serif;font-size:24px;font-weight:700">Convención Nacional 2026</strong><span style="font-size:14px;color:#5F5A60">12 fotos</span></div>
+    </a>
+    <a href="#album" style="text-decoration:none;color:#1C1E21;display:flex;flex-direction:column;gap:14px">
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:180px 110px;gap:6px;border-radius:22px;overflow:hidden"><div style="grid-column:span 3;background:#E3F0F8"></div><div style="background:#EEF0F2"></div><div style="background:#E1E3E6"></div><div style="background:#EEF0F2"></div></div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px"><strong style="font-family:Montserrat,sans-serif;font-size:24px;font-weight:700">50 años JIUMP</strong><span style="font-size:14px;color:#5F5A60">[N] fotos</span></div>
+    </a>
+    <a href="#album" style="text-decoration:none;color:#1C1E21;display:flex;flex-direction:column;gap:14px">
+      <div style="position:relative;height:296px;border-radius:22px;overflow:hidden;background:#F2F4F5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#1C1E21;text-align:center;padding:20px;box-sizing:border-box"><svg aria-hidden="true" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#0073B1" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg><strong style="font-family:Montserrat,sans-serif;font-size:18px">Fotos próximamente</strong><span style="font-size:13px;color:#5F5A60;max-width:260px">Este álbum se completa desde el panel cuando lleguen las fotos.</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px"><strong style="font-family:Montserrat,sans-serif;font-size:24px;font-weight:700">Encuentro de Jefaturas 2025</strong><span style="font-size:14px;color:#5F5A60">[N] fotos</span></div>
+    </a>
+    <a href="#album-emj-argentina" style="text-decoration:none;color:#1C1E21;display:flex;flex-direction:column;gap:14px">
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:180px 110px;gap:6px;border-radius:22px;overflow:hidden"><div class="zm" style="grid-column:span 2;overflow:hidden;background:#062F4A"><img src="/_blob/6eebca653ff6c5f7ec503ead1f64b43d" alt="Vista del salón con las asistentes frente al escenario" loading="lazy" style="width:100%;height:100%;object-fit:cover;object-position:50% 55%;display:block"></div><div class="zm" style="overflow:hidden;background:#062F4A"><img src="/_blob/1c1556616113621811b72f1a72d9521e" alt="Representación en el escenario" loading="lazy" style="width:100%;height:100%;object-fit:cover;object-position:50% 45%;display:block"></div><div class="zm" style="overflow:hidden;background:#062F4A"><img src="/_blob/62482a07364cbc3f25da1eb64305bca0" alt="Mesa principal en el escenario" loading="lazy" style="width:100%;height:100%;object-fit:cover;object-position:50% 45%;display:block"></div></div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px"><strong style="font-family:Montserrat,sans-serif;font-size:24px;font-weight:700">Encuentro de Mujeres JIUMP · Argentina</strong><span style="font-size:14px;color:#5F5A60;white-space:nowrap">3 fotos</span></div>
+    </a>
+  </section>
+
+  <section id="album" style="background:#FFFFFF;color:#1C1E21;border-top:1px solid #E1E3E6">
+    <div style="max-width:1280px;margin:0 auto;padding:64px 40px 80px;display:flex;flex-direction:column;gap:28px">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px">
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#0073B1;font-family:'Segoe UI','Open Sans',sans-serif">Vista de álbum</span><h2 style="margin:0;font-family:Montserrat,sans-serif;font-size:clamp(32px,3.4vw,48px);font-weight:800;line-height:1.05;letter-spacing:-.02em">Convención Nacional 2026</h2></div>
+        <a href="ActividadConvencion.dc.html" style="color:#0073B1;font-weight:600">Ver el evento →</a>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:200px;gap:10px">
+        <div class="zm" style="grid-row:span 2;border-radius:14px;overflow:hidden"><img src="/_blob/7e76ad743ad9592da3560f06b7aacd24" alt="Joven del equipo de transmisión operando una cámara" loading="lazy" style="width:100%;height:100%;object-fit:cover;object-position:50% 30%;display:block"></div>
+        <div class="zm" style="border-radius:14px;overflow:hidden"><img src="/_blob/05238004edcc733d035cca963adbfdec" alt="Músico tocando guitarra en el escenario" loading="lazy" style="width:100%;height:100%;object-fit:cover;object-position:50% 40%;display:block"></div>
+        <div class="zm" style="grid-column:span 2;border-radius:14px;overflow:hidden"><img src="/_blob/6241d30db312e8d18cada04768d40d9a" alt="Participantes en una sala de taller" loading="lazy" style="width:100%;height:100%;object-fit:cover;object-position:50% 45%;display:block"></div>
+        <div class="zm" style="border-radius:14px;overflow:hidden"><img src="/_blob/6bdcf2a4fbd967e7c1e87a19da8af333" alt="Joven del equipo de protocolo" loading="lazy" style="width:100%;height:100%;object-fit:cover;object-position:50% 25%;display:block"></div>
+        <div class="zm" style="position:relative;border-radius:14px;overflow:hidden;outline:3px solid #00AB9F;outline-offset:-3px"><img src="/_blob/e35bd4e9754b6589802b003ec8985b38" alt="Músico en el teclado durante la alabanza" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block"><span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:13px;color:#FFFFFF;background:rgba(0,0,0,.45);padding:6px 12px;border-radius:999px;white-space:nowrap">Clic: pantalla completa</span></div>
+        <div class="zm" style="border-radius:14px;overflow:hidden"><img src="/_blob/1b9e9abed25d0de0cf2d1f72ec5096d4" alt="Expositor en el taller de adolescentes" loading="lazy" style="width:100%;height:100%;object-fit:cover;object-position:50% 40%;display:block"></div>
+      </div>
+      <p style="margin:0;font-size:14px;color:#5F5A60">Fotos optimizadas automáticamente; visor a pantalla completa con flechas y deslizamiento en celular; cada foto con texto alternativo.</p>
+    </div>
+  </section>
+  <section id="album-emj-argentina" style="background:#F2F4F5">
+    <div style="max-width:1280px;margin:0 auto;padding:64px 40px 80px;display:flex;flex-direction:column;gap:28px">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px">
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#0073B1;font-family:'Segoe UI','Open Sans',sans-serif">Vista de álbum · Argentina</span><h2 style="margin:0;font-family:Montserrat,sans-serif;font-size:clamp(32px,3.4vw,48px);font-weight:800;color:#1C1E21;line-height:1.05;letter-spacing:-.02em">Encuentro de Mujeres JIUMP · Argentina</h2></div>
+        <span style="font-size:14px;color:#5F5A60">3 fotos</span>
+      </div>
+      <div style="column-width:300px;column-gap:12px">
+        <button class="zm" aria-label="Ver en grande: Vista del salón con las asistentes frente al escenario" style="display:block;width:100%;margin:0 0 12px;padding:0;border:none;border-radius:14px;overflow:hidden;cursor:zoom-in;background:#0B4A73;break-inside:avoid"><img src="/_blob/6eebca653ff6c5f7ec503ead1f64b43d" alt="Vista del salón con las asistentes frente al escenario" loading="lazy" style="width:100%;height:auto;display:block"></button>
+        <button class="zm" aria-label="Ver en grande: Representación en el escenario" style="display:block;width:100%;margin:0 0 12px;padding:0;border:none;border-radius:14px;overflow:hidden;cursor:zoom-in;background:#0B4A73;break-inside:avoid"><img src="/_blob/1c1556616113621811b72f1a72d9521e" alt="Representación en el escenario" loading="lazy" style="width:100%;height:auto;display:block"></button>
+        <button class="zm" aria-label="Ver en grande: Mesa principal en el escenario" style="display:block;width:100%;margin:0 0 12px;padding:0;border:none;border-radius:14px;overflow:hidden;cursor:zoom-in;background:#0B4A73;break-inside:avoid"><img src="/_blob/62482a07364cbc3f25da1eb64305bca0" alt="Mesa principal en el escenario" loading="lazy" style="width:100%;height:auto;display:block"></button>
+      </div>
+      <p style="margin:0;font-size:14px;color:#5F5A60">Mismo visor a pantalla completa que las demás galerías. Fecha y lugar: [por confirmar].</p>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2700}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
