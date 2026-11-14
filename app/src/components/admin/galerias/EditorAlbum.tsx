@@ -2,16 +2,17 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { BotonAccion } from '@/components/admin/BotonAccion';
-import { Confirmar } from '@/components/admin/Confirmar';
+import { AccionesPublicacion } from '@/components/admin/AccionesPublicacion';
 import { SelectorFoto } from '@/components/admin/editor/SelectorFoto';
 import { ListaFotos } from '@/components/admin/eventos/ListaFotos';
-import { despublicar, eliminar, guardarAlbum, publicar, type DatosAlbum } from '@/lib/admin/acciones-contenido';
+import { guardarAlbum, type DatosAlbum } from '@/lib/admin/acciones-contenido';
 import type { FotoCatalogo } from '@/lib/admin/galerias';
 
 const AVISOS: Record<string, string> = {
   publicado: 'Publicado. Ya se ve en la Galería.',
   borrador: 'El álbum volvió a borrador: ya no se ve en la Galería.',
+  'cambios-publicados': 'Cambios publicados. Ya se ven en la Galería.',
+  descartados: 'Se descartaron los cambios sin publicar.',
 };
 
 /**
@@ -29,6 +30,7 @@ export function EditorAlbum(p: {
   actividades: { id: string; titulo: string; anio: number; estado: string }[];
   catalogo: FotoCatalogo[];
   aviso: string | null;
+  hayCambios: boolean;
 }) {
   const router = useRouter();
   const [d, setD] = useState<DatosAlbum>({ ...p.inicial, titulo: p.inicial.titulo === 'Álbum sin título' ? '' : p.inicial.titulo });
@@ -39,6 +41,16 @@ export function EditorAlbum(p: {
   const [elegir, setElegir] = useState(false);
   const [listo, setListo] = useState(false);
   const version = useRef(p.version);
+  // Si lo guardado cambia (publicar, descartar, guardar), el formulario vuelve a lo guardado.
+  const guardadoMostrado = useRef(JSON.stringify([p.version, p.inicial]));
+  const guardadoActual = JSON.stringify([p.version, p.inicial]);
+  useEffect(() => {
+    if (guardadoMostrado.current === guardadoActual) return;
+    guardadoMostrado.current = guardadoActual;
+    setD({ ...p.inicial, titulo: p.inicial.titulo === 'Álbum sin título' ? '' : p.inicial.titulo });
+    setSucio(false);
+    version.current = p.version;
+  }, [guardadoActual]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => setListo(true), []);
   useEffect(() => {
     const avisar = (e: BeforeUnloadEvent) => { if (sucio) e.preventDefault(); };
@@ -66,7 +78,6 @@ export function EditorAlbum(p: {
     && (f.album_id === null || f.album_id === p.id)
     && (f.actividad_id === null ? true : f.actividad_id === d.actividad_id));
   const publicado = p.estado === 'publicado';
-  const puedePublicar = p.previaAlDia && !sucio && !publicado;
 
   return (
     <section className="adm-caja flex min-w-0 flex-col gap-5 p-5 sm:p-7" data-editor-album data-listo={listo || undefined} data-version={p.version}>
@@ -77,26 +88,10 @@ export function EditorAlbum(p: {
             {publicado ? 'Publicado' : 'Borrador'}
           </span>
         </div>
-        <div className="flex flex-wrap gap-2.5">
-          <button type="button" className="adm-boton adm-secundario" onClick={irAVistaPrevia}>Vista previa</button>
-          {publicado ? (
-            <Confirmar boton="Despublicar" claseBoton="adm-boton bg-white text-rojo-oscuro shadow-[inset_0_0_0_1.5px_var(--color-rojo)]" peligro={false}
-              titulo="¿Retirar el álbum de la Galería?" confirmar="Sí, despublicar" accion={despublicar.bind(null, 'album', p.id)}>
-              Dejará de verse en la Galería. Podrás publicarlo otra vez después de la vista previa.
-            </Confirmar>
-          ) : (
-            <BotonAccion accion={publicar.bind(null, 'album', p.id)} disabled={!puedePublicar} data-publicar
-              titulo={puedePublicar ? undefined : 'Primero guarda y revisa la vista previa'}>Publicar</BotonAccion>
-          )}
-          <Confirmar boton="Eliminar" claseBoton="adm-boton bg-white text-rojo-oscuro shadow-[inset_0_0_0_1.5px_var(--color-rojo)]"
-            titulo={`¿Eliminar «${d.titulo || 'este álbum'}»?`} accion={eliminar.bind(null, 'album', p.id)}>
-            Dejará de verse en la Galería. Las fotos quedan en la biblioteca.
-          </Confirmar>
-        </div>
       </div>
+      <AccionesPublicacion tipo="album" id={p.id} titulo={d.titulo} publicado={publicado} hayCambios={p.hayCambios}
+        previaAlDia={p.previaAlDia} sucio={sucio} alVerPrevia={irAVistaPrevia} />
       {p.aviso && AVISOS[p.aviso] && <p role="status" className="adm-ok">{AVISOS[p.aviso]}</p>}
-      {!publicado && !puedePublicar && <p className="adm-aviso" data-falta-previa>{sucio ? 'Tienes cambios sin guardar. ' : ''}Para publicar, guarda y revisa la vista previa.</p>}
-      {publicado && <p className="adm-aviso">Este álbum está publicado: al guardar, los cambios se ven de inmediato en la Galería.</p>}
       {error && <p role="alert" className="adm-error">{error.texto}{error.conflicto && <button type="button" className="ml-2 font-semibold underline" onClick={() => window.location.reload()}>Recargar</button>}</p>}
 
       <div className="grid gap-4 sm:grid-cols-2">

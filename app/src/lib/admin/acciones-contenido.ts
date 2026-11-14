@@ -28,6 +28,8 @@ function mensaje(e: PostgrestError | null, porDefecto: string): string {
   if (!e) return porDefecto;
   if (e.hint === 'vista_previa_pendiente') return 'Antes de publicar, revisa la vista previa de este contenido.';
   if (e.hint === 'foto_de_otro_evento') return 'Una de las fotos ya pertenece a otro evento: no se mezclan fotos de distintos eventos.';
+  if (e.hint === 'publicado_pendiente') return 'Está publicado: guarda los cambios y publícalos después de revisar la vista previa.';
+  if (e.hint === 'sin_cambios') return 'No hay cambios pendientes para publicar.';
   if (e.hint === 'conflicto') return 'Otra persona guardó cambios antes. Recarga para ver la última versión: así no se pisan los cambios.';
   if (e.code === '23505' && /slug/.test(e.message)) return 'Ya existe otro con esa dirección. Cambia la dirección (slug).';
   if (e.code === '23505' && /una_vez/.test(e.message)) return 'Una de las fotos ya está en otro álbum o actividad.';
@@ -103,8 +105,8 @@ export async function guardarActividad(id: string, d: DatosActividad, version: s
   const fotos = [...new Set((d.fotos ?? []).filter(esUuid))].slice(0, 300);
   const abreviatura = t(d.abreviatura, 10).toUpperCase();
 
-  const { data, error } = await supabase.rpc('guardar_actividad', {
-    p_id: id, p_version: version,
+  const { data, error } = await supabase.rpc('guardar_contenido', {
+    p_tipo: 'actividad', p_id: id, p_version: version,
     p_datos: {
       titulo, slug: slugDesde(t(d.slug, 120) || titulo), tipo: t(d.tipo, 40) || 'encuentro', anio,
       fecha_precision: precision, fecha_inicio: inicio, fecha_fin: fin,
@@ -133,8 +135,8 @@ export async function guardarAlbum(id: string, d: DatosAlbum, version: string): 
   const anio = anioTxt ? Number.parseInt(anioTxt, 10) : null;
   if (anio !== null && !(anio >= 1970 && anio <= 2100)) return { ok: false, error: 'El año no es válido.' };
   const fotos = [...new Set((d.fotos ?? []).filter(esUuid))].slice(0, 500);
-  const { data, error } = await supabase.rpc('guardar_album', {
-    p_id: id, p_version: version,
+  const { data, error } = await supabase.rpc('guardar_contenido', {
+    p_tipo: 'album', p_id: id, p_version: version,
     p_datos: {
       titulo, slug: slugDesde(t(d.slug, 120) || titulo), descripcion: t(d.descripcion, 600), anio: anio ?? '',
       pais: t(d.pais, 80), ciudad: t(d.ciudad, 80), actividad_id: esUuid(d.actividad_id) ? d.actividad_id : '',
@@ -164,9 +166,12 @@ export async function guardarVideo(_: EstadoFormulario, f: FormData): Promise<Es
   };
   if (esUuid(id)) {
     const version = t(f.get('version'), 40);
-    const { data, error } = await supabase.from('videos').update(fila).eq('id', id).eq('actualizado_en', version).select('id');
+    // Si el video está publicado, los cambios quedan pendientes hasta revisarlos y publicarlos.
+    const { error } = await supabase.rpc('guardar_contenido', {
+      p_tipo: 'video', p_id: id, p_version: version,
+      p_datos: { ...fila, album_id: fila.album_id ?? '', actividad_id: fila.actividad_id ?? '', descripcion: fila.descripcion ?? '' },
+    });
     if (error) return { error: mensaje(error, 'No se pudo guardar el video.') };
-    if (!data?.length) return { error: 'Otra persona guardó cambios antes. Recarga para ver la última versión.' };
     redirect(`/admin/videos/${id}?aviso=guardado`);
   }
   const { data, error } = await supabase.from('videos').insert(fila).select('id').single();
@@ -179,16 +184,32 @@ export async function guardarVideo(_: EstadoFormulario, f: FormData): Promise<Es
 // -----------------------------------------------------------------------------
 export async function publicar(tipo: Tipo, id: string): Promise<EstadoFormulario> {
   const supabase = await exigir(tipo);
+  const { data: fila } = await supabase.from(TABLA[tipo]).select('estado').eq('id', id).maybeSingle();
+  if (!fila) return { error: 'No se encontró o no tienes acceso.' };
+  if (fila.estado === 'publicado') {
+    // Ya publicado: publicar los cambios pendientes (la base exige su vista previa).
+    const { error } = await supabase.rpc('publicar_cambios', { p_tipo: tipo, p_id: id });
+    if (error) return { error: mensaje(error, 'No se pudieron publicar los cambios.') };
+    redirect(`${RUTA[tipo]}/${id}?aviso=cambios-publicados`);
+  }
   const { data, error } = await supabase.from(TABLA[tipo]).update({ estado: 'publicado' }).eq('id', id).select('id');
   if (error || !data?.length) return { error: mensaje(error, 'No se pudo publicar.') };
   redirect(`${RUTA[tipo]}/${id}?aviso=publicado`);
 }
 
+/** Retirar del sitio: vuelve a borrador (los cambios pendientes quedan en el borrador). */
 export async function despublicar(tipo: Tipo, id: string): Promise<EstadoFormulario> {
   const supabase = await exigir(tipo);
-  const { data, error } = await supabase.from(TABLA[tipo]).update({ estado: 'borrador' }).eq('id', id).select('id');
-  if (error || !data?.length) return { error: mensaje(error, 'No se pudo retirar del sitio.') };
+  const { error } = await supabase.rpc('despublicar_contenido', { p_tipo: tipo, p_id: id });
+  if (error) return { error: mensaje(error, 'No se pudo retirar del sitio.') };
   redirect(`${RUTA[tipo]}/${id}?aviso=borrador`);
+}
+
+export async function descartarCambios(tipo: Tipo, id: string): Promise<EstadoFormulario> {
+  const supabase = await exigir(tipo);
+  const { error } = await supabase.from('contenido_cambios').delete().eq('tipo', tipo).eq('registro_id', id);
+  if (error) return { error: mensaje(error, 'No se pudieron descartar los cambios.') };
+  redirect(`${RUTA[tipo]}/${id}?aviso=descartados`);
 }
 
 /** Eliminar: las fotos quedan en la biblioteca (solo se quita la relación). */

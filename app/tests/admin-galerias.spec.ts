@@ -152,3 +152,54 @@ test('Galerías se adapta al celular @celular', async ({ page }) => {
     expect(ancho, ruta).toBeLessThanOrEqual(0);
   }
 });
+
+test('álbum y video publicados: los cambios quedan pendientes hasta la vista previa', async ({ page }) => {
+  await ingresar(page, u.multimedia);
+  // Álbum publicado del diseño: se edita una copia de prueba
+  await page.goto('/admin/galerias');
+  await page.getByRole('button', { name: '+ Nuevo álbum' }).click();
+  await page.locator('[data-editor-album][data-listo]').waitFor();
+  const titulo = `Álbum publicado ${marca}`;
+  await page.getByLabel('Título del álbum').fill(titulo);
+  await guardarAlbum(page);
+  await page.getByRole('button', { name: 'Vista previa' }).click();
+  await page.getByRole('button', { name: 'Publicar ahora' }).click();
+  await expect(page).toHaveURL(/aviso=publicado/);
+  const a = await leerAlbum(titulo);
+  await page.locator('[data-editor-album][data-listo]').waitFor();
+
+  await page.getByLabel('Descripción (opcional) · 0/200').fill('Descripción nueva');
+  await guardarAlbum(page);
+  await expect(page.locator('[data-cambios-pendientes]')).toBeVisible();
+  expect(await (await page.request.get(`/galeria/${a.slug}`)).text()).not.toContain('Descripción nueva');
+  await page.goto(`/admin/galerias/${a.id}/vista-previa`);
+  await expect(page.locator('[data-vista-previa-contenido]')).toContainText('Descripción nueva');
+  await page.getByRole('button', { name: 'Publicar los cambios' }).click();
+  await expect(page).toHaveURL(/aviso=cambios-publicados/);
+  expect(await (await page.request.get(`/galeria/${a.slug}`)).text()).toContain('Descripción nueva');
+
+  // Video publicado
+  await page.goto('/admin/videos/nuevo');
+  await page.locator('form[data-listo]').waitFor();
+  const tv = `Video publicado ${marca}`;
+  await page.getByLabel('Enlace de YouTube').fill('https://www.youtube.com/watch?v=XIn6jmUKxH0');
+  await page.getByLabel(/^Título/).fill(tv);
+  await page.getByLabel('Dónde aparece').selectOption({ label: `Galería › ${titulo}` });
+  await page.getByRole('button', { name: 'Agregar video' }).click();
+  await expect(page.getByText('Video agregado.')).toBeVisible();
+  await page.getByRole('link', { name: 'Vista previa' }).click();
+  await page.getByRole('button', { name: 'Publicar ahora' }).click();
+  await expect(page.getByText('Video publicado en el sitio.')).toBeVisible();
+
+  await page.locator('form[data-listo]').waitFor();
+  await page.getByLabel(/^Título/).fill(`${tv} corregido`);
+  await page.getByRole('button', { name: 'Guardar cambios' }).click();
+  await expect(page.locator('[data-cambios-pendientes]')).toBeVisible();
+  await expect(page.locator('[data-publicar-cambios]')).toBeDisabled();
+  expect(await (await page.request.get(`/galeria/${a.slug}`)).text()).not.toContain(`${tv} corregido`);
+  await page.getByRole('link', { name: 'Vista previa' }).click();
+  await expect(page.locator('[data-vista-previa-contenido]')).toContainText(`${tv} corregido`);
+  await page.getByRole('button', { name: 'Publicar los cambios' }).click();
+  await expect(page.getByText('Cambios publicados en el sitio.')).toBeVisible();
+  expect(await (await page.request.get(`/galeria/${a.slug}`)).text()).toContain(`${tv} corregido`);
+});

@@ -5,7 +5,9 @@ import { EditorActividad } from '@/components/admin/eventos/EditorActividad';
 import { ListaActividades } from '@/components/admin/eventos/ListaActividades';
 import { exigirSeccion } from '@/lib/admin/acceso';
 import { esUuid } from '@/lib/admin/bloques';
-import { actividadParaEditar, fotosParaActividad, listarActividades, miniaturas, TIPOS_ACTIVIDAD, vistaPreviaContenidoAlDia } from '@/lib/admin/eventos';
+import {
+  actividadDesdeCambios, actividadParaEditar, cambiosPendientes, fotosParaActividad, listarActividades, miniaturas, TIPOS_ACTIVIDAD, vistaPreviaContenidoAlDia,
+} from '@/lib/admin/eventos';
 
 export const metadata: Metadata = { title: 'Editar actividad' };
 
@@ -15,10 +17,14 @@ export default async function EditarActividad({ params, searchParams }: Props) {
   await exigirSeccion('eventos');
   const { id } = await params;
   if (!esUuid(id)) notFound();
-  const datos = await actividadParaEditar(id);
-  if (!datos) notFound();
+  const vivo = await actividadParaEditar(id);
+  if (!vivo) notFound();
   const { aviso } = await searchParams;
+  // Si está publicada y tiene cambios sin publicar, se editan esos cambios.
+  const cambios = vivo.actividad.estado === 'publicado' ? await cambiosPendientes('actividad', id) : null;
+  const datos = cambios ? actividadDesdeCambios(vivo.actividad, cambios.datos) : vivo;
   const { actividad: a } = datos;
+  const version = cambios?.actualizado_en ?? vivo.actividad.actualizado_en;
   const [lista, libres, elegidas, previaAlDia] = await Promise.all([
     listarActividades(), fotosParaActividad(id), miniaturas(datos.fotos), vistaPreviaContenidoAlDia('actividad', id),
   ]);
@@ -36,9 +42,10 @@ export default async function EditarActividad({ params, searchParams }: Props) {
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
         <div className="hidden xl:block"><ListaActividades lista={lista} actual={id} /></div>
         <EditorActividad
-          key={a.actualizado_en}
+          key={version}
           id={id}
-          version={a.actualizado_en}
+          version={version}
+          hayCambios={Boolean(cambios)}
           estado={a.estado}
           previaAlDia={previaAlDia}
           tipos={TIPOS_ACTIVIDAD.some((t) => t.clave === a.tipo) ? TIPOS_ACTIVIDAD : [...TIPOS_ACTIVIDAD, { clave: a.tipo, nombre: a.tipo }]}

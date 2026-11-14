@@ -4,8 +4,8 @@ import { notFound } from 'next/navigation';
 import { EditorAlbum } from '@/components/admin/galerias/EditorAlbum';
 import { exigirSeccion } from '@/lib/admin/acceso';
 import { esUuid } from '@/lib/admin/bloques';
-import { vistaPreviaContenidoAlDia } from '@/lib/admin/eventos';
-import { actividadesVisibles, albumParaEditar, catalogoFotos } from '@/lib/admin/galerias';
+import { cambiosPendientes, vistaPreviaContenidoAlDia } from '@/lib/admin/eventos';
+import { actividadesVisibles, albumDesdeCambios, albumParaEditar, catalogoFotos } from '@/lib/admin/galerias';
 
 export const metadata: Metadata = { title: 'Editar álbum' };
 
@@ -15,8 +15,11 @@ export default async function EditarAlbum({ params, searchParams }: Props) {
   await exigirSeccion('galerias');
   const { id } = await params;
   if (!esUuid(id)) notFound();
-  const datos = await albumParaEditar(id);
-  if (!datos) notFound();
+  const vivo = await albumParaEditar(id);
+  if (!vivo) notFound();
+  const cambios = vivo.album.estado === 'publicado' ? await cambiosPendientes('album', id) : null;
+  const datos = cambios ? albumDesdeCambios(vivo.album, cambios.datos) : vivo;
+  const version = cambios?.actualizado_en ?? vivo.album.actualizado_en;
   const { aviso } = await searchParams;
   const [actividades, catalogo, previaAlDia] = await Promise.all([actividadesVisibles(), catalogoFotos(), vistaPreviaContenidoAlDia('album', id)]);
   const a = datos.album;
@@ -26,7 +29,7 @@ export default async function EditarAlbum({ params, searchParams }: Props) {
         <Link href="/admin/galerias" className="text-[14px] font-semibold text-azul">← Galerías y álbumes</Link>
         <h1 className="adm-h1">Editar álbum</h1>
       </div>
-      <EditorAlbum key={a.actualizado_en} id={id} version={a.actualizado_en} estado={a.estado} previaAlDia={previaAlDia}
+      <EditorAlbum key={version} id={id} version={version} hayCambios={Boolean(cambios)} estado={a.estado} previaAlDia={previaAlDia}
         actividades={actividades} catalogo={catalogo} aviso={aviso ?? null}
         inicial={{
           titulo: a.titulo, slug: a.slug, descripcion: a.descripcion ?? '', anio: a.anio ? String(a.anio) : '',

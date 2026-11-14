@@ -2,11 +2,10 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { BotonAccion } from '@/components/admin/BotonAccion';
-import { Confirmar } from '@/components/admin/Confirmar';
+import { AccionesPublicacion } from '@/components/admin/AccionesPublicacion';
 import { type BloqueEditable, CamposBloque } from '@/components/admin/editor/CamposBloque';
 import { type FotoBiblioteca, SelectorFoto } from '@/components/admin/editor/SelectorFoto';
-import { despublicar, eliminar, guardarActividad, publicar, type DatosActividad } from '@/lib/admin/acciones-contenido';
+import { guardarActividad, type DatosActividad } from '@/lib/admin/acciones-contenido';
 import { bloqueVacio, nombreBloque, TIPOS_BLOQUE, type TipoBloque } from '@/lib/admin/bloques';
 import type { Bloque } from '@/lib/tipos';
 import { ListaFotos } from './ListaFotos';
@@ -20,6 +19,8 @@ const clave = () => `c${++n}`;
 const AVISOS: Record<string, string> = {
   publicado: 'Publicada. Ya se ve en el sitio.',
   borrador: 'La actividad volvió a borrador: ya no se ve en el sitio.',
+  'cambios-publicados': 'Cambios publicados. Ya se ven en el sitio.',
+  descartados: 'Se descartaron los cambios sin publicar.',
 };
 
 export function EditorActividad(p: {
@@ -32,16 +33,22 @@ export function EditorActividad(p: {
   fotosElegidas: FotoBiblioteca[];
   fotosLibres: FotoBiblioteca[];
   aviso: string | null;
+  hayCambios: boolean;
 }) {
   const router = useRouter();
-  const [d, setD] = useState(() => {
-    const { secciones: _s, enlaces: _e, ...resto } = p.inicial; // eslint-disable-line @typescript-eslint/no-unused-vars
-    return { ...resto, titulo: resto.titulo === 'Actividad sin título' ? '' : resto.titulo };
-  });
-  const [secciones, setSecciones] = useState<Seccion[]>(() => p.inicial.secciones.map((s) => ({
-    k: clave(), titulo: s.titulo, bloques: (Array.isArray(s.contenido) ? s.contenido : []).map((b) => ({ k: clave(), b: b as BloqueEditable })),
-  })));
-  const [enlaces, setEnlaces] = useState<Enlace[]>(() => p.inicial.enlaces.map((e) => ({ k: clave(), ...e })));
+  const desdeInicial = () => {
+    const { secciones: s0, enlaces: e0, ...resto } = p.inicial;
+    return {
+      d: { ...resto, titulo: resto.titulo === 'Actividad sin título' ? '' : resto.titulo },
+      secciones: s0.map((s) => ({
+        k: clave(), titulo: s.titulo, bloques: (Array.isArray(s.contenido) ? s.contenido : []).map((b) => ({ k: clave(), b: b as BloqueEditable })),
+      })) as Seccion[],
+      enlaces: e0.map((e) => ({ k: clave(), ...e })) as Enlace[],
+    };
+  };
+  const [d, setD] = useState(() => desdeInicial().d);
+  const [secciones, setSecciones] = useState<Seccion[]>(() => desdeInicial().secciones);
+  const [enlaces, setEnlaces] = useState<Enlace[]>(() => desdeInicial().enlaces);
   const [catalogo, setCatalogo] = useState<FotoBiblioteca[]>(() => [...p.fotosElegidas, ...p.fotosLibres.filter((f) => !p.inicial.fotos.includes(f.id))]);
   const [sucio, setSucio] = useState(false);
   const [estadoGuardar, setEstadoGuardar] = useState<'al-dia' | 'guardando' | 'error' | 'conflicto'>('al-dia');
@@ -49,6 +56,16 @@ export function EditorActividad(p: {
   const [elegir, setElegir] = useState<null | { para: 'actividad' } | { para: 'bloque'; seccion: string; bloque: string }>(null);
   const [listo, setListo] = useState(false);
   const version = useRef(p.version);
+  // Si lo guardado cambia (publicar, descartar, guardar), el formulario vuelve a lo guardado.
+  const guardadoMostrado = useRef(JSON.stringify([p.version, p.inicial]));
+  const guardadoActual = JSON.stringify([p.version, p.inicial]);
+  useEffect(() => {
+    if (guardadoMostrado.current === guardadoActual) return;
+    guardadoMostrado.current = guardadoActual;
+    const x = desdeInicial();
+    setD(x.d); setSecciones(x.secciones); setEnlaces(x.enlaces); setSucio(false);
+    version.current = p.version;
+  }, [guardadoActual]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => setListo(true), []);
   useEffect(() => {
     const avisar = (e: BeforeUnloadEvent) => { if (sucio) e.preventDefault(); };
@@ -82,7 +99,6 @@ export function EditorActividad(p: {
   };
 
   const publicada = p.estado === 'publicado';
-  const puedePublicar = p.previaAlDia && !sucio && !publicada;
 
   return (
     <section className="adm-caja flex min-w-0 flex-col gap-5 p-5 sm:p-7" data-editor-actividad data-listo={listo || undefined} data-version={p.version}>
@@ -93,31 +109,10 @@ export function EditorActividad(p: {
             {publicada ? 'Publicada' : p.estado === 'archivado' ? 'Archivada' : 'Borrador'}
           </span>
         </div>
-        <div className="flex flex-wrap gap-2.5">
-          <button type="button" className="adm-boton adm-secundario" onClick={irAVistaPrevia}>Vista previa</button>
-          {publicada ? (
-            <Confirmar boton="Despublicar" claseBoton="adm-boton bg-white text-rojo-oscuro shadow-[inset_0_0_0_1.5px_var(--color-rojo)]" peligro={false}
-              titulo="¿Retirar la actividad del sitio?" confirmar="Sí, despublicar" accion={despublicar.bind(null, 'actividad', p.id)}>
-              Su página y su tarjeta en Inicio dejarán de verse. Podrás publicarla otra vez después de la vista previa.
-            </Confirmar>
-          ) : (
-            <BotonAccion accion={publicar.bind(null, 'actividad', p.id)} disabled={!puedePublicar} data-publicar
-              titulo={puedePublicar ? undefined : 'Primero guarda y revisa la vista previa'}>Publicar</BotonAccion>
-          )}
-          <Confirmar boton="Eliminar" claseBoton="adm-boton bg-white text-rojo-oscuro shadow-[inset_0_0_0_1.5px_var(--color-rojo)]"
-            titulo={`¿Eliminar «${d.titulo || 'esta actividad'}»?`} accion={eliminar.bind(null, 'actividad', p.id)}>
-            Su página y su tarjeta en Inicio dejarán de verse. Las fotos quedan en la biblioteca.
-          </Confirmar>
-        </div>
       </div>
-
+      <AccionesPublicacion tipo="actividad" id={p.id} titulo={d.titulo} publicado={publicada} hayCambios={p.hayCambios}
+        previaAlDia={p.previaAlDia} sucio={sucio} alVerPrevia={irAVistaPrevia} />
       {p.aviso && AVISOS[p.aviso] && <p role="status" className="adm-ok">{AVISOS[p.aviso]}</p>}
-      {!publicada && !puedePublicar && (
-        <p className="adm-aviso" data-falta-previa>
-          {sucio ? 'Tienes cambios sin guardar. ' : ''}Para publicar, guarda y revisa la vista previa: nada se publica sin verlo antes.
-        </p>
-      )}
-      {publicada && <p className="adm-aviso">Esta actividad está publicada: al guardar, los cambios se ven de inmediato en el sitio. Revisa la vista previa antes de guardar cambios grandes.</p>}
       {error && <p role="alert" className="adm-error">{error}{estadoGuardar === 'conflicto' && <button type="button" className="ml-2 font-semibold underline" onClick={() => window.location.reload()}>Recargar</button>}</p>}
 
       {/* Datos */}

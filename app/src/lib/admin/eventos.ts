@@ -103,3 +103,37 @@ export async function vistaPreviaContenidoAlDia(tipo: 'actividad' | 'album' | 'v
 }
 
 export const puedeEventos = (a: Acceso) => a.efectivos.some((r) => r === 'superadmin' || r === 'eventos');
+
+/** Cambios pendientes de algo ya publicado (null si no hay). */
+export type Cambios = { datos: Record<string, unknown>; actualizado_en: string };
+export async function cambiosPendientes(tipo: 'actividad' | 'album' | 'video', id: string): Promise<Cambios | null> {
+  const supabase = await clientePanel();
+  const { data } = await supabase.from('contenido_cambios').select('datos, actualizado_en').eq('tipo', tipo).eq('registro_id', id).maybeSingle();
+  return (data as Cambios | null) ?? null;
+}
+
+const vacioANull = (v: unknown) => (v === '' || v === undefined ? null : v);
+
+/** Actividad + secciones/enlaces/fotos a partir de los cambios pendientes (forma de guardar_contenido). */
+export function actividadDesdeCambios(base: ActividadPanel, datos: Record<string, unknown>) {
+  const d = datos as {
+    titulo: string; slug: string; tipo: string; anio: number | string; fecha_inicio?: string; fecha_precision?: 'dia' | 'mes'; fecha_fin?: string;
+    lugar?: string; zona?: string; introduccion?: string; lema?: string; cita_texto?: string; cita_referencia?: string; abreviatura?: string;
+    portada_foto_id?: string; fotos?: { foto_id: string }[]; secciones?: SeccionEditable[]; enlaces?: EnlaceEditable[];
+  };
+  const actividad: ActividadPanel = {
+    ...base,
+    titulo: d.titulo, slug: d.slug, tipo: d.tipo, anio: Number(d.anio),
+    fecha_inicio: vacioANull(d.fecha_inicio) as string | null, fecha_precision: d.fecha_precision ?? 'dia', fecha_fin: vacioANull(d.fecha_fin) as string | null,
+    lugar: vacioANull(d.lugar) as string | null, zona: vacioANull(d.zona) as string | null, introduccion: vacioANull(d.introduccion) as string | null,
+    lema: vacioANull(d.lema) as string | null, cita_texto: vacioANull(d.cita_texto) as string | null,
+    cita_referencia: vacioANull(d.cita_referencia) as string | null, abreviatura: vacioANull(d.abreviatura) as string | null,
+    portada_foto_id: vacioANull(d.portada_foto_id) as string | null,
+  };
+  return {
+    actividad,
+    secciones: d.secciones ?? [],
+    enlaces: d.enlaces ?? [],
+    fotos: (d.fotos ?? []).map((f) => f.foto_id),
+  };
+}

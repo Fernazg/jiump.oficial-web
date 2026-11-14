@@ -69,3 +69,18 @@ export async function listarVideos(): Promise<(VideoPanel & { donde: string | nu
   return ((data ?? []) as unknown as (VideoPanel & { albumes: { titulo: string } | null; actividades: { titulo: string } | null })[])
     .map(({ albumes, actividades, ...v }) => ({ ...v, donde: albumes?.titulo ? `Álbum · ${albumes.titulo}` : actividades?.titulo ? `Actividad · ${actividades.titulo}` : null }));
 }
+
+/** Álbum y sus fotos a partir de los cambios pendientes (forma de guardar_contenido). */
+export function albumDesdeCambios(base: AlbumPanel, datos: Record<string, unknown>) {
+  const d = datos as { titulo: string; slug: string; descripcion?: string; anio?: number | string; pais?: string; ciudad?: string;
+    actividad_id?: string; portada_foto_id?: string; fotos?: { foto_id: string }[] };
+  const v = (x: unknown) => (x === '' || x === undefined || x === null ? null : x);
+  return {
+    album: {
+      ...base, titulo: d.titulo, slug: d.slug, descripcion: v(d.descripcion) as string | null,
+      anio: v(d.anio) === null ? null : Number(d.anio), pais: v(d.pais) as string | null, ciudad: v(d.ciudad) as string | null,
+      actividad_id: v(d.actividad_id) as string | null, portada_foto_id: v(d.portada_foto_id) as string | null,
+    } as AlbumPanel,
+    fotos: (d.fotos ?? []).map((f) => f.foto_id),
+  };
+}

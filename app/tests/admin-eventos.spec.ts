@@ -211,3 +211,50 @@ test('el editor de actividades se adapta al celular @celular', async ({ page }) 
     expect(ancho, ruta).toBeLessThanOrEqual(0);
   }
 });
+
+test('editar una actividad publicada: los cambios quedan pendientes hasta la vista previa', async ({ page }) => {
+  await ingresar(page, u.eventos);
+  const titulo = `Actividad publicada ${marca}`;
+  await nueva(page, titulo);
+  await page.getByLabel('Introducción (texto oficial)').fill('Versión publicada.');
+  await guardar(page);
+  await page.getByRole('button', { name: 'Vista previa' }).click();
+  await page.getByRole('button', { name: 'Publicar ahora' }).click();
+  await expect(page).toHaveURL(/aviso=publicado/);
+  const a = await leer(titulo);
+  await page.locator('[data-editor-actividad][data-listo]').waitFor();
+  await expect(page.locator('[data-aviso-publicado]')).toContainText('no cambia el sitio');
+
+  // Editar: queda pendiente, el sitio no cambia
+  await page.getByLabel('Introducción (texto oficial)').fill('Versión corregida.');
+  await page.getByRole('button', { name: '+ Agregar sección' }).click();
+  await page.locator('[data-seccion-actividad]').first().getByLabel('Título de la sección').fill('Día 1');
+  await guardar(page);
+  await expect(page.locator('[data-cambios-pendientes]')).toContainText('Hay cambios sin publicar');
+  await expect(page.getByLabel('Introducción (texto oficial)')).toHaveValue('Versión corregida.');
+  await expect(page.locator('[data-publicar-cambios]')).toBeDisabled();
+  await page.goto(`/eventos/${a.slug}`);
+  await expect(page.locator('main')).toContainText('Versión publicada.');
+  await expect(page.locator('main')).not.toContainText('Día 1');
+
+  // Vista previa de los cambios y publicarlos
+  await page.goto(`/admin/eventos/${a.id}/vista-previa`);
+  await expect(page.locator('[data-barra-vista-previa]')).toContainText('con los cambios sin publicar');
+  await expect(page.locator('[data-vista-previa-contenido]')).toContainText('Versión corregida.');
+  await page.getByRole('button', { name: 'Publicar los cambios' }).click();
+  await expect(page).toHaveURL(/aviso=cambios-publicados/);
+  await page.goto(`/eventos/${a.slug}`);
+  await expect(page.locator('main')).toContainText('Versión corregida.');
+  await expect(page.locator('main')).toContainText('Día 1');
+
+  // Descartar cambios
+  await page.goto(`/admin/eventos/${a.id}`);
+  await page.locator('[data-editor-actividad][data-listo]').waitFor();
+  await page.getByLabel('Introducción (texto oficial)').fill('Cambio que se descarta.');
+  await guardar(page);
+  await page.getByRole('button', { name: 'Descartar cambios' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Sí, descartar' }).click();
+  await expect(page).toHaveURL(/aviso=descartados/);
+  await expect(page.getByLabel('Introducción (texto oficial)')).toHaveValue('Versión corregida.');
+  expect(await admin<unknown[]>(`contenido_cambios?registro_id=eq.${a.id}`)).toHaveLength(0);
+});

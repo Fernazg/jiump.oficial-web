@@ -6,6 +6,7 @@ import { Encabezado, Pie } from '@/components/Marco';
 import { exigirSeccion } from '@/lib/admin/acceso';
 import { publicar } from '@/lib/admin/acciones-contenido';
 import { esUuid } from '@/lib/admin/bloques';
+import { cambiosPendientes } from '@/lib/admin/eventos';
 import { clientePanel } from '@/lib/admin/supabase-panel';
 import { idYoutube } from '@/lib/formato';
 
@@ -21,15 +22,28 @@ export default async function VistaPreviaVideo({ params }: { params: Promise<{ i
   if (!v) notFound();
   const { data: huella } = await supabase.rpc('huella_contenido', { p_tipo: 'video', p_id: id });
   const registro = huella ? await supabase.from('vistas_previas_contenido').insert({ tipo: 'video', registro_id: id, huella }) : { error: true };
-  const yt = idYoutube(v.url);
-  const rel = v as unknown as { albumes: { titulo: string } | null; actividades: { titulo: string } | null };
-  const donde = rel.albumes?.titulo ? `Galería › ${rel.albumes.titulo}` : rel.actividades?.titulo ? `Eventos › ${rel.actividades.titulo} › Videos y transmisiones` : null;
+  const cambios = v.estado === 'publicado' ? await cambiosPendientes('video', id) : null;
+  const c = (cambios?.datos ?? null) as { url: string; titulo: string; album_id?: string; actividad_id?: string } | null;
+  const url = c?.url ?? v.url;
+  const titulo = c?.titulo ?? v.titulo;
+  const yt = idYoutube(url);
+  let donde: string | null;
+  if (c) {
+    const [{ data: al }, { data: ac }] = await Promise.all([
+      c.album_id ? supabase.from('albumes').select('titulo').eq('id', c.album_id).maybeSingle() : Promise.resolve({ data: null }),
+      c.actividad_id ? supabase.from('actividades').select('titulo').eq('id', c.actividad_id).maybeSingle() : Promise.resolve({ data: null }),
+    ]);
+    donde = al ? `Galería › ${al.titulo}` : ac ? `Eventos › ${ac.titulo} › Videos y transmisiones` : null;
+  } else {
+    const rel = v as unknown as { albumes: { titulo: string } | null; actividades: { titulo: string } | null };
+    donde = rel.albumes?.titulo ? `Galería › ${rel.albumes.titulo}` : rel.actividades?.titulo ? `Eventos › ${rel.actividades.titulo} › Videos y transmisiones` : null;
+  }
 
   return (
     <>
-      <BarraVistaPrevia volver={`/admin/videos/${id}`} publicado={v.estado === 'publicado'} error={Boolean(registro.error)}>
-        {!registro.error && v.estado !== 'publicado' && (
-          <BotonAccion accion={publicar.bind(null, 'video', id)} className="adm-boton bg-white text-azul">Publicar ahora</BotonAccion>
+      <BarraVistaPrevia volver={`/admin/videos/${id}`} publicado={v.estado === 'publicado'} cambios={Boolean(cambios)} error={Boolean(registro.error)}>
+        {!registro.error && (v.estado !== 'publicado' || cambios) && (
+          <BotonAccion accion={publicar.bind(null, 'video', id)} className="adm-boton bg-white text-azul">{cambios ? 'Publicar los cambios' : 'Publicar ahora'}</BotonAccion>
         )}
       </BarraVistaPrevia>
       <Encabezado />
@@ -40,11 +54,11 @@ export default async function VistaPreviaVideo({ params }: { params: Promise<{ i
             <li>
               {yt ? (
                 <div className="aspect-video overflow-hidden rounded-[18px] bg-azul-profundo">
-                  <iframe className="size-full" src={`https://www.youtube-nocookie.com/embed/${yt}`} title={v.titulo} loading="lazy"
+                  <iframe className="size-full" src={`https://www.youtube-nocookie.com/embed/${yt}`} title={titulo} loading="lazy"
                     allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
                 </div>
               ) : null}
-              <p className="t-meta mt-3">{v.titulo}</p>
+              <p className="t-meta mt-3">{titulo}</p>
             </li>
           </ul>
         </section>

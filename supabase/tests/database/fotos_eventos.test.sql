@@ -6,7 +6,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(45);
+select plan(61);
 
 create function pg_temp.crear_usuario(p_id uuid, p_correo text, p_roles rol_app[])
 returns void language plpgsql as $$
@@ -169,13 +169,49 @@ reset role;
 
 
 -- -----------------------------------------------------------------------------
+-- Cambios pendientes de una actividad publicada (como en los artículos)
+-- -----------------------------------------------------------------------------
+select pg_temp.como('f2000000-0000-4000-8000-000000000002');
+select throws_ok($$ update actividades set titulo = 'Cambio directo' where id = 'ac100000-0000-4000-8000-000000000001' $$,
+  'P0001', 'Está publicado: los cambios quedan pendientes hasta revisar la vista previa y publicarlos',
+  'Lo publicado no se cambia directo');
+select throws_ok($$ insert into actividad_secciones (actividad_id, titulo) values ('ac100000-0000-4000-8000-000000000001', 'Directo') $$,
+  'P0001', null, 'Tampoco sus secciones');
+select lives_ok(format($$ select guardar_contenido('actividad', 'ac100000-0000-4000-8000-000000000001', %L,
+  '{"titulo":"Título corregido","slug":"actividad-prueba-a","tipo":"zonal","anio":2027,"destacar_inicio":false,
+    "fotos":[{"foto_id":"fa100000-0000-4000-8000-000000000001"}],"secciones":[{"titulo":"Día 1","contenido":[]}]}') $$,
+  (select actualizado_en from actividades where id = 'ac100000-0000-4000-8000-000000000001')),
+  'Guardar una actividad publicada…');
+select is((select titulo from actividades where id = 'ac100000-0000-4000-8000-000000000001'), 'Actividad de prueba A',
+  '…deja el sitio igual (cambio pendiente)');
+select is((select destacar_inicio from actividades where id = 'ac100000-0000-4000-8000-000000000001'), false,
+  'Destacar en Inicio sí se aplica de inmediato');
+select throws_ok($$ select publicar_cambios('actividad', 'ac100000-0000-4000-8000-000000000001') $$,
+  'P0001', 'Antes de publicar hay que revisar la vista previa de este contenido', 'Publicar los cambios exige vista previa');
+insert into vistas_previas_contenido (tipo, registro_id, huella)
+values ('actividad', 'ac100000-0000-4000-8000-000000000001', huella_contenido('actividad', 'ac100000-0000-4000-8000-000000000001'));
+select lives_ok($$ select publicar_cambios('actividad', 'ac100000-0000-4000-8000-000000000001') $$, 'Con vista previa, se publican');
+select is((select titulo from actividades where id = 'ac100000-0000-4000-8000-000000000001'), 'Título corregido', 'El sitio muestra los cambios');
+select is((select count(*)::int from contenido_cambios where registro_id = 'ac100000-0000-4000-8000-000000000001'), 0, 'Y ya no quedan pendientes');
+select is((select string_agg(titulo, ',') from actividad_secciones where actividad_id = 'ac100000-0000-4000-8000-000000000001'), 'Día 1',
+  'Las secciones también se publicaron');
+-- Retirar del sitio con cambios pendientes: quedan aplicados en el borrador
+select lives_ok(format($$ select guardar_contenido('actividad', 'ac100000-0000-4000-8000-000000000001', %L,
+  '{"titulo":"Pendiente al retirar","slug":"actividad-prueba-a","tipo":"zonal","anio":2027,"fotos":[{"foto_id":"fa100000-0000-4000-8000-000000000001"}]}') $$,
+  (select actualizado_en from actividades where id = 'ac100000-0000-4000-8000-000000000001')), 'Otro cambio pendiente');
+select lives_ok($$ select despublicar_contenido('actividad', 'ac100000-0000-4000-8000-000000000001') $$, 'Retirar del sitio');
+select is((select titulo || '|' || estado from actividades where id = 'ac100000-0000-4000-8000-000000000001'), 'Pendiente al retirar|borrador',
+  'Pasa a borrador con los cambios pendientes aplicados');
+reset role;
+
+-- -----------------------------------------------------------------------------
 -- Guardar todo de una vez (actividad y álbum)
 -- -----------------------------------------------------------------------------
 select pg_temp.como('f2000000-0000-4000-8000-000000000002');
-select throws_ok($$ select guardar_actividad('ac100000-0000-4000-8000-000000000002', now() - interval '1 day',
+select throws_ok($$ select guardar_contenido('actividad', 'ac100000-0000-4000-8000-000000000002', now() - interval '1 day',
   '{"titulo":"x","slug":"actividad-prueba-b","tipo":"zonal","anio":2027}') $$,
   'P0001', 'Otra persona guardó cambios antes', 'Guardar con una versión vieja no pisa los cambios de otra persona');
-select lives_ok(format($$ select guardar_actividad('ac100000-0000-4000-8000-000000000002', %L,
+select lives_ok(format($$ select guardar_contenido('actividad', 'ac100000-0000-4000-8000-000000000002', %L,
   '{"titulo":"Actividad de prueba B","slug":"actividad-prueba-b","tipo":"zonal","anio":2027,
     "secciones":[{"titulo":"Día 1","contenido":[]}],"enlaces":[{"titulo":"Transmisión","url":"https://www.youtube.com/watch?v=x"}],
     "fotos":[{"foto_id":"fa100000-0000-4000-8000-000000000002"}],"portada_foto_id":"fa100000-0000-4000-8000-000000000002"}') $$,
@@ -183,21 +219,32 @@ select lives_ok(format($$ select guardar_actividad('ac100000-0000-4000-8000-0000
   'Eventos guarda datos, secciones, enlaces y fotos en una sola operación');
 select is((select portada_foto_id from actividades where id = 'ac100000-0000-4000-8000-000000000002'), 'fa100000-0000-4000-8000-000000000002'::uuid,
   'La portada queda guardada');
-select lives_ok(format($$ select guardar_actividad('ac100000-0000-4000-8000-000000000002', %L,
+select lives_ok(format($$ select guardar_contenido('actividad', 'ac100000-0000-4000-8000-000000000002', %L,
   '{"titulo":"Actividad de prueba B","slug":"actividad-prueba-b","tipo":"zonal","anio":2027,"fotos":[]}') $$,
   (select actualizado_en from actividades where id = 'ac100000-0000-4000-8000-000000000002')), 'Quitar las fotos de la actividad…');
 select is((select count(*)::int from fotos where id = 'fa100000-0000-4000-8000-000000000002'), 1, '…las deja en la biblioteca');
 select is((select portada_foto_id from actividades where id = 'ac100000-0000-4000-8000-000000000002'), null, '…y la portada queda vacía');
 
 select pg_temp.como('f3000000-0000-4000-8000-000000000003');
-select throws_ok(format($$ select guardar_actividad('ac100000-0000-4000-8000-000000000002', %L, '{"titulo":"x","slug":"x","tipo":"zonal","anio":2027}') $$,
+select throws_ok(format($$ select guardar_contenido('actividad', 'ac100000-0000-4000-8000-000000000002', %L, '{"titulo":"x","slug":"x","tipo":"zonal","anio":2027}') $$,
   (select actualizado_en from actividades where id = 'ac100000-0000-4000-8000-000000000002')),
   '42501', null, 'Multimedia no guarda actividades');
-select throws_ok(format($$ select guardar_album('ab100000-0000-4000-8000-000000000001', %L,
+-- El álbum ya está publicado: guardar deja los cambios pendientes; la regla 2 se
+-- revisa al publicarlos.
+select lives_ok(format($$ select guardar_contenido('album', 'ab100000-0000-4000-8000-000000000001', %L,
   '{"titulo":"Álbum de prueba","slug":"album-prueba","fotos":[{"foto_id":"fa100000-0000-4000-8000-000000000001"}]}') $$,
   (select actualizado_en from albumes where id = 'ab100000-0000-4000-8000-000000000001')),
+  'Guardar un álbum publicado deja los cambios pendientes');
+select is((select count(*)::int from album_fotos where album_id = 'ab100000-0000-4000-8000-000000000001'), 0,
+  'El álbum publicado no cambia hasta publicar los cambios');
+select throws_ok($$ select publicar_cambios('album', 'ab100000-0000-4000-8000-000000000001') $$,
+  'P0001', 'Antes de publicar hay que revisar la vista previa de este contenido', 'Publicar cambios exige su vista previa');
+insert into vistas_previas_contenido (tipo, registro_id, huella)
+values ('album', 'ab100000-0000-4000-8000-000000000001', huella_contenido('album', 'ab100000-0000-4000-8000-000000000001'));
+select throws_ok($$ select publicar_cambios('album', 'ab100000-0000-4000-8000-000000000001') $$,
   'P0001', 'Esta foto ya pertenece a otro evento: no se mezclan fotos de distintos eventos',
-  'Un álbum sin actividad no recibe fotos de una actividad (regla 2)');
+  'Al publicar, un álbum sin actividad no recibe fotos de una actividad (regla 2)');
+delete from contenido_cambios where registro_id = 'ab100000-0000-4000-8000-000000000001';
 reset role;
 
 -- -----------------------------------------------------------------------------
@@ -216,7 +263,7 @@ select is((select creado_por from actividades where id = 'ac100000-0000-4000-800
   'Su contenido queda, sin autor');
 
 select ok(not exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-                      where n.nspname = 'public' and p.proname in ('huella_contenido', 'guardar_actividad', 'guardar_album', 'puede_editar_contenido', 'marcar_proximo', 'exigir_vista_previa_contenido')
+                      where n.nspname = 'public' and p.proname in ('huella_contenido', 'guardar_contenido', 'publicar_cambios', 'despublicar_contenido', 'aplicar_actividad', 'aplicar_album', 'aplicar_video', 'proteger_publicado', 'puede_editar_contenido', 'marcar_proximo', 'exigir_vista_previa_contenido')
                         and p.prosecdef),
   'Las funciones nuevas (salvo usos_fotos y la regla 2) respetan RLS');
 

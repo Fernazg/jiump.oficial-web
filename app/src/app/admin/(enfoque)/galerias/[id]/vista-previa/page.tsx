@@ -7,6 +7,8 @@ import { Encabezado, Pie } from '@/components/Marco';
 import { exigirSeccion } from '@/lib/admin/acceso';
 import { publicar } from '@/lib/admin/acciones-contenido';
 import { esUuid } from '@/lib/admin/bloques';
+import { cambiosPendientes } from '@/lib/admin/eventos';
+import { albumDesdeCambios, type AlbumPanel } from '@/lib/admin/galerias';
 import { clientePanel } from '@/lib/admin/supabase-panel';
 import { actividades, firmarFotos, videosDeAlbum } from '@/lib/datos';
 import type { Album } from '@/lib/tipos';
@@ -24,8 +26,11 @@ export default async function VistaPreviaAlbum({ params }: { params: Promise<{ i
     supabase.from('album_fotos').select('foto_id').eq('album_id', id).order('orden'),
   ]);
   if (!data) notFound();
-  const { estado, ...album } = data as Album & { estado: string };
-  const fotoIds = ((rel ?? []) as { foto_id: string }[]).map((x) => x.foto_id);
+  const { estado, ...vivo } = data as Album & { estado: string };
+  const cambios = estado === 'publicado' ? await cambiosPendientes('album', id) : null;
+  const pendiente = cambios ? albumDesdeCambios({ ...vivo, estado: 'publicado', actualizado_en: '' } as AlbumPanel, cambios.datos) : null;
+  const album: Album = pendiente ? (({ estado: _e, actualizado_en: _a, ...x }) => x)(pendiente.album) : vivo; // eslint-disable-line @typescript-eslint/no-unused-vars
+  const fotoIds = pendiente ? pendiente.fotos : ((rel ?? []) as { foto_id: string }[]).map((x) => x.foto_id);
 
   const { data: huella } = await supabase.rpc('huella_contenido', { p_tipo: 'album', p_id: id });
   const registro = huella ? await supabase.from('vistas_previas_contenido').insert({ tipo: 'album', registro_id: id, huella }) : { error: true };
@@ -33,9 +38,9 @@ export default async function VistaPreviaAlbum({ params }: { params: Promise<{ i
   const [fotos, videos, acts] = await Promise.all([firmarFotos(fotoIds, supabase), videosDeAlbum(id), actividades()]);
   return (
     <>
-      <BarraVistaPrevia volver={`/admin/galerias/${id}`} publicado={estado === 'publicado'} error={Boolean(registro.error)}>
-        {!registro.error && estado !== 'publicado' && (
-          <BotonAccion accion={publicar.bind(null, 'album', id)} className="adm-boton bg-white text-azul">Publicar ahora</BotonAccion>
+      <BarraVistaPrevia volver={`/admin/galerias/${id}`} publicado={estado === 'publicado'} cambios={Boolean(cambios)} error={Boolean(registro.error)}>
+        {!registro.error && (estado !== 'publicado' || cambios) && (
+          <BotonAccion accion={publicar.bind(null, 'album', id)} className="adm-boton bg-white text-azul">{cambios ? 'Publicar los cambios' : 'Publicar ahora'}</BotonAccion>
         )}
       </BarraVistaPrevia>
       <Encabezado />
