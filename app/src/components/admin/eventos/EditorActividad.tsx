@@ -85,7 +85,7 @@ export function EditorActividad(p: {
   const puedePublicar = p.previaAlDia && !sucio && !publicada;
 
   return (
-    <section className="adm-caja flex min-w-0 flex-col gap-5 p-5 sm:p-7" data-editor-actividad data-listo={listo || undefined}>
+    <section className="adm-caja flex min-w-0 flex-col gap-5 p-5 sm:p-7" data-editor-actividad data-listo={listo || undefined} data-version={p.version}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
           <h2 className="font-titulo text-[24px] font-extrabold leading-tight">{d.titulo || 'Actividad sin título'}</h2>

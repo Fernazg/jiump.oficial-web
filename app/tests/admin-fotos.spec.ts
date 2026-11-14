@@ -25,6 +25,7 @@ test.beforeAll(async () => {
 test.afterAll(async () => {
   if (process.env.CONSERVAR) return;
   await admin(`articulos?titulo=like.*${marca}*`, 'DELETE');
+  await admin(`articulos?creado_por=eq.${u.editor.id}`, 'DELETE');
   for (const x of Object.values(u)) await borrarFotosDe(x);
 });
 

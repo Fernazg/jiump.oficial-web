@@ -401,3 +401,40 @@ end;
 $$;
 revoke execute on function public.guardar_album(uuid, timestamptz, jsonb) from public, anon;
 grant execute on function public.guardar_album(uuid, timestamptz, jsonb) to authenticated, service_role;
+
+-- -----------------------------------------------------------------------------
+-- Corrección: no se podía borrar la cuenta de alguien que creó contenido
+-- Al borrar un usuario, la base pone «creado_por = null» en su contenido
+-- (ON DELETE SET NULL), pero este trigger volvía a poner el valor anterior y
+-- la referencia fallaba. Ahora, si quien actualiza NO es una persona del panel
+-- (es la propia base aplicando el borrado), se acepta el valor vacío. Desde la
+-- API, «creado_por» sigue sin poder cambiarse.
+-- -----------------------------------------------------------------------------
+create or replace function public.fijar_columnas_comunes()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+declare
+  usuario uuid := auth.uid();
+begin
+  if tg_op = 'INSERT' then
+    new.creado_en := coalesce(new.creado_en, now());
+    new.actualizado_en := new.creado_en;
+    if usuario is not null then
+      new.creado_por := usuario;
+      new.actualizado_por := usuario;
+    end if;
+  else
+    new.creado_en := old.creado_en;
+    if not (new.creado_por is null and current_user not in ('authenticated', 'anon')) then
+      new.creado_por := old.creado_por;
+    end if;
+    new.actualizado_en := now();
+    if usuario is not null then
+      new.actualizado_por := usuario;
+    end if;
+  end if;
+  return new;
+end;
+$$;

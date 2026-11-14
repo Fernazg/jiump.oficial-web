@@ -6,7 +6,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(34);
+select plan(45);
 
 create function pg_temp.crear_usuario(p_id uuid, p_correo text, p_roles rol_app[])
 returns void language plpgsql as $$
@@ -167,8 +167,56 @@ select throws_ok($$ insert into vistas_previas_contenido (tipo, registro_id, hue
   '42501', null, 'Editor no registra vistas previas de álbumes');
 reset role;
 
+
+-- -----------------------------------------------------------------------------
+-- Guardar todo de una vez (actividad y álbum)
+-- -----------------------------------------------------------------------------
+select pg_temp.como('f2000000-0000-4000-8000-000000000002');
+select throws_ok($$ select guardar_actividad('ac100000-0000-4000-8000-000000000002', now() - interval '1 day',
+  '{"titulo":"x","slug":"actividad-prueba-b","tipo":"zonal","anio":2027}') $$,
+  'P0001', 'Otra persona guardó cambios antes', 'Guardar con una versión vieja no pisa los cambios de otra persona');
+select lives_ok(format($$ select guardar_actividad('ac100000-0000-4000-8000-000000000002', %L,
+  '{"titulo":"Actividad de prueba B","slug":"actividad-prueba-b","tipo":"zonal","anio":2027,
+    "secciones":[{"titulo":"Día 1","contenido":[]}],"enlaces":[{"titulo":"Transmisión","url":"https://www.youtube.com/watch?v=x"}],
+    "fotos":[{"foto_id":"fa100000-0000-4000-8000-000000000002"}],"portada_foto_id":"fa100000-0000-4000-8000-000000000002"}') $$,
+  (select actualizado_en from actividades where id = 'ac100000-0000-4000-8000-000000000002')),
+  'Eventos guarda datos, secciones, enlaces y fotos en una sola operación');
+select is((select portada_foto_id from actividades where id = 'ac100000-0000-4000-8000-000000000002'), 'fa100000-0000-4000-8000-000000000002'::uuid,
+  'La portada queda guardada');
+select lives_ok(format($$ select guardar_actividad('ac100000-0000-4000-8000-000000000002', %L,
+  '{"titulo":"Actividad de prueba B","slug":"actividad-prueba-b","tipo":"zonal","anio":2027,"fotos":[]}') $$,
+  (select actualizado_en from actividades where id = 'ac100000-0000-4000-8000-000000000002')), 'Quitar las fotos de la actividad…');
+select is((select count(*)::int from fotos where id = 'fa100000-0000-4000-8000-000000000002'), 1, '…las deja en la biblioteca');
+select is((select portada_foto_id from actividades where id = 'ac100000-0000-4000-8000-000000000002'), null, '…y la portada queda vacía');
+
+select pg_temp.como('f3000000-0000-4000-8000-000000000003');
+select throws_ok(format($$ select guardar_actividad('ac100000-0000-4000-8000-000000000002', %L, '{"titulo":"x","slug":"x","tipo":"zonal","anio":2027}') $$,
+  (select actualizado_en from actividades where id = 'ac100000-0000-4000-8000-000000000002')),
+  '42501', null, 'Multimedia no guarda actividades');
+select throws_ok(format($$ select guardar_album('ab100000-0000-4000-8000-000000000001', %L,
+  '{"titulo":"Álbum de prueba","slug":"album-prueba","fotos":[{"foto_id":"fa100000-0000-4000-8000-000000000001"}]}') $$,
+  (select actualizado_en from albumes where id = 'ab100000-0000-4000-8000-000000000001')),
+  'P0001', 'Esta foto ya pertenece a otro evento: no se mezclan fotos de distintos eventos',
+  'Un álbum sin actividad no recibe fotos de una actividad (regla 2)');
+reset role;
+
+-- -----------------------------------------------------------------------------
+-- Borrar la cuenta de alguien que creó contenido (corrección de la migración 9)
+-- -----------------------------------------------------------------------------
+select pg_temp.como('f2000000-0000-4000-8000-000000000002');
+insert into actividades (id, titulo, slug, tipo, anio) values ('ac100000-0000-4000-8000-000000000003', 'Actividad de prueba C', 'actividad-prueba-c', 'zonal', 2027);
+update actividades set creado_por = null where id = 'ac100000-0000-4000-8000-000000000003';
+select is((select creado_por from actividades where id = 'ac100000-0000-4000-8000-000000000003'), 'f2000000-0000-4000-8000-000000000002'::uuid,
+  'Una persona del panel no puede borrar ni cambiar «creado_por»');
+reset role;
+select set_config('request.jwt.claims', '{}', true);  -- como el servidor (sin sesión)
+select lives_ok($$ delete from auth.users where id = 'f2000000-0000-4000-8000-000000000002' $$,
+  'Se puede borrar la cuenta de alguien que creó contenido');
+select is((select creado_por from actividades where id = 'ac100000-0000-4000-8000-000000000003'), null,
+  'Su contenido queda, sin autor');
+
 select ok(not exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-                      where n.nspname = 'public' and p.proname in ('huella_contenido', 'puede_editar_contenido', 'marcar_proximo', 'exigir_vista_previa_contenido')
+                      where n.nspname = 'public' and p.proname in ('huella_contenido', 'guardar_actividad', 'guardar_album', 'puede_editar_contenido', 'marcar_proximo', 'exigir_vista_previa_contenido')
                         and p.prosecdef),
   'Las funciones nuevas (salvo usos_fotos y la regla 2) respetan RLS');
 
