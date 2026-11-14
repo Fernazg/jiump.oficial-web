@@ -263,7 +263,7 @@ export function EditorActividad(p: {
         <span className="text-[13px] text-texto-3" data-estado-guardado={sucio ? 'sin-guardar' : estadoGuardar}>
           {sucio ? 'Cambios sin guardar' : estadoGuardar === 'al-dia' ? 'Todo guardado' : ''}
         </span>
-        <span className="ml-auto text-[12px] text-texto-3">Solo Superadministrador y Eventos editan actividades. Se valida en el servidor.</span>
+        <span className="ml-auto hidden text-[12px] text-texto-3 sm:inline">Solo Superadministrador y Eventos editan actividades. Se valida en el servidor.</span>
       </div>
 
       <SelectorFoto fotos={elegir?.para === 'actividad' ? catalogo.filter((f) => !d.fotos.includes(f.id)) : catalogo} abierto={elegir !== null}
