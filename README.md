@@ -10,7 +10,8 @@ Nuevo sitio web de **JIUMP — Jóvenes Unidos para Adorar a Cristo**, movimient
 | Diseño visual (escritorio, tablet, celular) y panel /admin | ✅ aprobado |
 | Modelo de datos y permisos | 📝 propuesta en `docs/` (por validar) |
 | Backend (base de datos, acceso, archivos) | 🚧 migraciones, RLS, fotos y pruebas listas en `supabase/` (falta validar con la directiva) |
-| Sitio público y panel /admin | ⏳ |
+| Sitio público (`app/`) | 🚧 Inicio, Artículos, artículo, Nosotros, Eventos, actividad, Galería, álbum, 404 y Mantenimiento, con pruebas |
+| Panel /admin | ⏳ |
 | Migración de contenido desde Wix | ⏳ |
 | Pruebas y lanzamiento (cambio de DNS) | ⏳ |
 
@@ -28,7 +29,7 @@ design/
   prototipos/         Prototipos HTML fuente (formato del lienzo de diseño)
   fotos/              Fotos reales usadas en el diseño + índice
 supabase/             Migraciones SQL, políticas RLS, bucket de fotos, semillas y pruebas
-app/                  (vacío) sitio y panel
+app/                  Sitio público en Next.js (ver app/README.md); el panel /admin va después
 ```
 
 ## Tecnología propuesta

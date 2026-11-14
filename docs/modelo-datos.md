@@ -19,6 +19,32 @@ Derivado del diseño aprobado del sitio y del panel /admin. Nombres en español 
 Tipos usados en el diseño: `parrafo` (con negritas), `entradilla`, `titulo_seccion`, `pregunta_destacada`, `versiculo` (texto + referencia + etiqueta), `idea_clave` (texto + etiqueta), `para_recordar`, `lista_numerada`, `tarjetas` (título + ítems), `linea_tiempo`, `cifras`, `imagen`, `video`.
 Las referencias bíblicas dentro del texto se resaltan automáticamente.
 
+Formato que usa el sitio (`app/src/lib/tipos.ts`). `cuerpo` es una lista de bloques; las negritas van entre `**…**`:
+
+| Tipo | Campos |
+|---|---|
+| `parrafo`, `entradilla`, `titulo_seccion`, `pregunta_destacada` | `texto` |
+| `versiculo` | `texto`, `referencia`, `etiqueta` (opcional) |
+| `idea_clave`, `para_recordar` | `texto`, `etiqueta` (opcional) |
+| `lista_numerada` | `items: [texto]` |
+| `tarjetas` | `titulo` (opcional), `items: [texto]` |
+| `linea_tiempo` | `items: [{ fecha, texto }]` |
+| `cifras` | `items: [{ valor, texto }]` |
+| `imagen` | `foto_id`, `pie` (opcional) — solo se muestra si la foto es pública |
+| `video` | `url` (YouTube), `titulo` (opcional) |
+
+Un tipo desconocido no se muestra. `actividad_secciones.contenido` usa los mismos bloques.
+
+### Contenido de las secciones de página (`secciones.contenido`)
+Lo que lee hoy el sitio (Inicio y Nosotros). Si falta un campo, ese elemento no se muestra:
+
+| `tipo` | Campos |
+|---|---|
+| `portada` | `foto_id`, `titulo` (opcional; si falta, Inicio usa el nombre del movimiento) |
+| `presentacion` | `etiqueta`, `texto` (las cifras salen de `institucional`, tipo `cifra`: título = valor, texto = descripción) |
+| `que_hacemos` | `etiqueta`, `titulo`, `enlace: { texto, url }`, `tarjetas: [{ titulo, foto_id }]` |
+| `destacado` («Heme aquí») | `etiqueta`, `titulo`, `texto`, `boton: { texto, url }`, `fotos: [foto_id]` |
+
 ## Eventos y actividades
 - **actividades** — `titulo`, `slug`, `tipo` (convención, encuentro, zonal, formación, mujeres…), `fecha_inicio` (puede ser solo mes y año), `fecha_fin`, `lugar` (opcional), `zona` (opcional), `introduccion` (texto oficial), `portada_foto_id`, `estado`, `destacar_inicio bool`, `orden_inicio`, `es_proximo bool` (alimenta la barra y el bloque «Próximo evento»).
 - **actividad_secciones** — bloques editables de la página de la actividad (ej.: Día 1 / Día 2), `orden`.
