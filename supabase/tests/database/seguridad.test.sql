@@ -304,7 +304,8 @@ select set_eq(
   '4 · Anónimo solo ejecuta las funciones que necesitan las políticas y la búsqueda');
 select is((select array_agg(p.proname::text order by p.proname) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
            where n.nspname = 'public' and p.prosecdef and has_function_privilege('authenticated', p.oid, 'execute')
-             and p.proname not in ('es_equipo', 'tiene_rol', 'tiene_algun_rol', 'mis_roles', 'foto_es_publica', 'objeto_foto_es_publico')),
+             and p.proname not in ('es_equipo', 'tiene_rol', 'tiene_algun_rol', 'mis_roles', 'foto_es_publica', 'objeto_foto_es_publico',
+                                 'usos_fotos')), -- usos_fotos: migración 9, oculta títulos sin permiso (ver fotos_eventos.test.sql)
   null, '4 · Ninguna otra función SECURITY DEFINER (triggers, purga) es ejecutable desde la API');
 select ok(not exists (select 1 from pg_class c join pg_namespace n on n.oid = c.relnamespace
                       where n.nspname = 'public' and c.relkind in ('r', 'p') and not c.relrowsecurity),
