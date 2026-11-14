@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import { IconoHerramienta, IconoInstagram } from '@/components/Iconos';
 import { usuarioInstagram } from '@/components/Marco';
-import { configuracion } from '@/lib/datos';
+import { Foto } from '@/components/Basicos';
+import { configuracion, firmarFotos } from '@/lib/datos';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Sitio en mantenimiento', robots: { index: false } };
@@ -14,6 +15,10 @@ export const metadata: Metadata = { title: 'Sitio en mantenimiento', robots: { i
 export default async function Mantenimiento() {
   const conf = await configuracion().catch(() => null);
   const ig = conf?.instagram_url ?? null;
+  // Foto elegida en la configuración (opcional); sin ella, el recuadro azul del diseño.
+  const foto = conf?.mantenimiento_foto_id
+    ? (await firmarFotos([conf.mantenimiento_foto_id]).catch(() => new Map())).get(conf.mantenimiento_foto_id)
+    : undefined;
   return (
     <div className="flex min-h-dvh flex-col">
       <div className="franja" />
@@ -34,9 +39,16 @@ export default async function Mantenimiento() {
             </>
           )}
         </div>
-        <div className="relative flex aspect-[11/10] items-end overflow-hidden rounded-[28px] bg-azul-profundo p-8 max-lg:hidden">
-          <span className="franja-corta absolute left-8 top-8" aria-hidden />
-          <p className="font-titulo text-[30px] font-extrabold leading-tight text-white">Jóvenes unidos para adorar a Cristo</p>
+        <div className={`relative isolate flex aspect-[11/10] items-end overflow-hidden rounded-[28px] bg-azul-profundo p-6 sm:p-8 ${foto ? '' : 'max-lg:hidden'}`} data-foto-mantenimiento={foto ? '' : undefined}>
+          {foto ? (
+            <>
+              <Foto foto={foto} prioridad className="absolute inset-0 -z-10 size-full object-cover" tamanos="50vw" />
+              <div className="velo absolute inset-0 -z-10" />
+            </>
+          ) : (
+            <span className="franja-corta absolute left-8 top-8" aria-hidden />
+          )}
+          <p className="font-titulo text-[26px] font-extrabold leading-tight text-white sm:text-[30px]">Jóvenes unidos para adorar a Cristo</p>
         </div>
       </main>
       <footer className="border-t border-linea">

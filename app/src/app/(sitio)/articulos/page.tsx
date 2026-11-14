@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { AvisoVistaPrevia } from '@/components/AvisoVistaPrevia';
+import { exigirPagina } from '@/lib/paginas';
 import Link from 'next/link';
 import { EstadoVacio, Flecha, Foto } from '@/components/Basicos';
 import { IconoAntorcha, IconoBuscar, IconoLibro } from '@/components/Iconos';
@@ -13,6 +15,7 @@ export const metadata: Metadata = { title: 'Artículos' };
 type Busqueda = { q?: string; serie?: string; tema?: string };
 
 export default async function Articulos({ searchParams }: { searchParams: Promise<Busqueda> }) {
+  const { vistaPrevia } = await exigirPagina('articulos');
   const params = await searchParams;
   const q = (params.q ?? '').trim().slice(0, 100);
   const [todos, listaSeries, listaTemas] = await Promise.all([articulos(), series(), temas()]);
@@ -40,6 +43,7 @@ export default async function Articulos({ searchParams }: { searchParams: Promis
 
   return (
     <>
+      <AvisoVistaPrevia activo={vistaPrevia} />
       <section className="contenedor pb-10 pt-16 sm:pt-20">
         <h1 className="t-h1 max-w-[16ch]">Reflexiones y enseñanzas para fortalecer tu fe</h1>
         <form action="/articulos" role="search" className="relative mt-8 max-w-[880px]">

@@ -14,8 +14,11 @@ export function TarjetaActividad({ actividad, foto, alto = 'h-[440px]', grande =
       {foto && <Foto foto={foto} className="absolute inset-0 size-full object-cover" tamanos="(max-width: 640px) 90vw, 50vw" />}
       <div className="velo absolute inset-0" />
       <div className="relative p-6 sm:p-7">
-        <Pastilla>{etiquetaActividad(actividad)}</Pastilla>
-        <h3 className={`mt-3 font-titulo font-bold leading-tight ${grande ? 'text-[26px] sm:text-[32px]' : 'text-[22px] sm:text-[26px]'}`}>{actividad.titulo}</h3>
+        {/* Con lema (diseño): la etiqueta lleva el nombre y el título es el lema «Heme aquí» */}
+        <Pastilla>{actividad.lema ? actividad.titulo : etiquetaActividad(actividad)}</Pastilla>
+        <h3 className={`mt-3 font-titulo font-bold leading-tight ${grande ? 'text-[26px] sm:text-[32px]' : 'text-[22px] sm:text-[26px]'}`}>
+          {actividad.lema ? `«${actividad.lema}»` : actividad.titulo}
+        </h3>
         {actividad.introduccion && <p className="mt-2 line-clamp-2 text-[15px] text-white/85">{recortar(actividad.introduccion, 180)}</p>}
         <span className="mt-3 inline-flex items-center gap-1 font-ui text-[14px] font-semibold">Ver actividad <Flecha /></span>
       </div>
@@ -53,13 +56,13 @@ export function FilaArticulo({ articulo, serie, total }: { articulo: Articulo; s
 }
 
 /** Tarjeta de álbum: portada + tres miniaturas, o «Fotos próximamente». */
-export function TarjetaAlbum({ album, fotos }: { album: Album & { fotoIds: string[] }; fotos: Map<string, FotoFirmada> }) {
+export function TarjetaAlbum({ album, fotos, href }: { album: Album & { fotoIds: string[] }; fotos: Map<string, FotoFirmada>; href?: string }) {
   const ids = album.fotoIds.filter((id) => fotos.has(id));
   const portada = (album.portada_foto_id && fotos.get(album.portada_foto_id)) || (ids[0] ? fotos.get(ids[0]) : undefined);
   const resto = ids.filter((id) => id !== portada?.id).slice(0, 3).map((id) => fotos.get(id)!);
   const n = album.fotoIds.length; // todas las del álbum (aquí solo se firman las del collage)
   return (
-    <Link href={`/galeria/${album.slug}`} data-album={album.slug} className="levantar group block">
+    <Link href={href ?? `/galeria/${album.slug}`} data-album={album.slug} className="levantar group block">
       {portada ? (
         <div className="grid gap-1.5 overflow-hidden rounded-[22px]">
           <Foto foto={portada} className="aspect-[16/7] w-full object-cover" tamanos="(max-width: 640px) 90vw, 33vw" />

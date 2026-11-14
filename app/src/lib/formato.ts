@@ -35,9 +35,12 @@ const TIPOS: Record<string, string> = {
   mujeres: 'Encuentro de mujeres',
 };
 
-/** Etiqueta corta de una actividad: «Convención · 2026». */
-export const etiquetaActividad = (a: Pick<Actividad, 'tipo' | 'anio'>) =>
-  `${TIPOS[a.tipo] ?? mayuscula(a.tipo)} · ${a.anio}`;
+/**
+ * Etiqueta corta de una actividad: con abreviatura «EMJ 2026» (como en el
+ * diseño); sin ella, «Convención · 2026».
+ */
+export const etiquetaActividad = (a: Pick<Actividad, 'tipo' | 'anio' | 'abreviatura'>) =>
+  a.abreviatura ? `${a.abreviatura} ${a.anio}` : `${TIPOS[a.tipo] ?? mayuscula(a.tipo)} · ${a.anio}`;
 
 export const dosDigitos = (n: number | null | undefined) => String(n ?? 0).padStart(2, '0');
 

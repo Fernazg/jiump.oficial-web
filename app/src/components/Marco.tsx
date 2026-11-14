@@ -1,11 +1,26 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { configuracion, menu } from '@/lib/datos';
+import { paginasPublicadas } from '@/lib/paginas';
+import { vistaPreviaActiva } from '@/lib/vista-previa';
+import type { ItemMenu } from '@/lib/tipos';
 import { IconoInstagram } from './Iconos';
 import { Navegacion } from './Navegacion';
 
 /** Nombre del movimiento según el README (no es contenido nuevo). */
 export const LEMA = 'Jóvenes Unidos para Adorar a Cristo. Movimiento juvenil de la Iglesia Unida Metodista Pentecostal.';
+
+const CLAVES_PAGINA = ['nosotros', 'eventos', 'articulos', 'galeria'];
+
+/** Quita del menú los enlaces a páginas que no están publicadas (darían 404). */
+async function menuVisible(): Promise<ItemMenu[]> {
+  const [items, publicadas] = await Promise.all([menu(), paginasPublicadas()]);
+  if (vistaPreviaActiva()) return items;
+  return items.filter((i) => {
+    const clave = i.url.replace(/^\//, '').replace(/\/$/, '');
+    return !CLAVES_PAGINA.includes(clave) || publicadas.has(clave);
+  });
+}
 
 export function usuarioInstagram(url: string | null): string | null {
   if (!url) return null;
@@ -14,7 +29,7 @@ export function usuarioInstagram(url: string | null): string | null {
 }
 
 export async function Encabezado({ acento }: { acento?: 'rojo' }) {
-  const items = (await menu()).filter((i) => i.ubicacion === 'principal');
+  const items = (await menuVisible()).filter((i) => i.ubicacion === 'principal');
   return (
     <header className={`sticky top-0 z-40 bg-white/95 backdrop-blur ${acento === 'rojo' ? 'border-b-2 border-rojo' : 'border-b border-linea'}`}>
       <div className="contenedor relative flex h-[76px] items-center justify-between">
@@ -28,7 +43,7 @@ export async function Encabezado({ acento }: { acento?: 'rojo' }) {
 }
 
 export async function Pie() {
-  const [items, conf] = await Promise.all([menu(), configuracion()]);
+  const [items, conf] = await Promise.all([menuVisible(), configuracion()]);
   const explora = items.filter((i) => i.ubicacion === 'principal');
   const pie = items.filter((i) => i.ubicacion === 'pie');
   const ig = usuarioInstagram(conf.instagram_url);

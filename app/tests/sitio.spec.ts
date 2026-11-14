@@ -228,3 +228,103 @@ test.describe('celular @celular', () => {
     await expect(page.locator('#menu-movil')).toBeHidden();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Decisión 1: una página completa solo se muestra si está publicada
+// ---------------------------------------------------------------------------
+test.describe('páginas en borrador', () => {
+  test.afterEach(async () => {
+    await admin('paginas?clave=in.(nosotros,articulos,galeria)', 'PATCH', { estado: 'publicado' });
+  });
+
+  test('una página en borrador da 404 y sale del menú, aunque el servidor tenga la vista previa activada', async ({ page }) => {
+    await admin('paginas?clave=eq.nosotros', 'PATCH', { estado: 'borrador' });
+    expect((await page.goto('/nosotros'))?.status()).toBe(404);
+    await expect(page.locator('[data-vista-previa]')).toHaveCount(0);
+    await page.goto('/');
+    const nav = page.getByRole('navigation', { name: 'Principal' }).first();
+    await expect(nav.getByRole('link')).toHaveText(['Eventos', 'Artículos', 'Galería']);
+  });
+
+  test('las subpáginas siguen a su página: artículo y álbum dan 404 si su sección está en borrador', async ({ page }) => {
+    await admin('paginas?clave=in.(articulos,galeria)', 'PATCH', { estado: 'borrador' });
+    expect((await page.goto('/articulos/por-que-fue-necesaria-la-reforma'))?.status()).toBe(404);
+    expect((await page.goto('/galeria/convencion-nacional-2026'))?.status()).toBe(404);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Decisión 2: lema, cita bíblica y abreviatura de las actividades
+// ---------------------------------------------------------------------------
+test('lema, cita y abreviatura se muestran solo cuando tienen valor', async ({ page }) => {
+  // Sin valor (seed): nada de lema ni cita
+  await page.goto('/eventos/convencion-nacional-2026');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Convención Nacional JIUMP 2026');
+  await expect(page.locator('[data-cita], [data-cita-referencia], [data-nombre-actividad]')).toHaveCount(0);
+
+  // Valores de PRUEBA (se borran al terminar; el seed los deja vacíos)
+  await admin('actividades?slug=eq.convencion-nacional-2026', 'PATCH',
+    { lema: 'Lema de prueba', cita_texto: 'Texto de prueba de la cita.', cita_referencia: '1 Samuel 3:8' });
+  await admin('actividades?slug=eq.emj-2026', 'PATCH', { abreviatura: 'PRB' });
+  try {
+    await page.goto('/eventos/convencion-nacional-2026');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Lema de prueba');
+    await expect(page.locator('[data-nombre-actividad]')).toHaveText('Convención Nacional JIUMP 2026');
+    await expect(page.locator('[data-cita-referencia]')).toHaveText('Cita: 1 Samuel 3:8');
+    await expect(page.locator('[data-cita]')).toContainText('Texto de prueba de la cita.');
+
+    await page.goto('/');
+    const conv = page.locator('[data-seccion="actividades-destacadas"] [data-actividad="convencion-nacional-2026"]');
+    await expect(conv.getByRole('heading')).toHaveText('«Lema de prueba»');
+    await expect(conv).toContainText('Convención Nacional JIUMP 2026');
+    await expect(page.locator('[data-actividad="emj-2026"]')).toContainText('PRB 2026');
+  } finally {
+    await admin('actividades?slug=in.(convencion-nacional-2026,emj-2026)', 'PATCH',
+      { lema: null, cita_texto: null, cita_referencia: null, abreviatura: null });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Decisión 3: las fotos del álbum se ven dentro de Galería
+// ---------------------------------------------------------------------------
+test('Galería muestra cada álbum con sus fotos y su dirección propia tiene el mismo aspecto', async ({ page }) => {
+  await page.goto('/galeria');
+  const vista = page.locator('[data-vista-album="convencion-nacional-2026"]');
+  await expect(vista.getByRole('heading', { name: 'Convención Nacional 2026' })).toBeVisible();
+  await expect(vista.getByRole('button', { name: /Ver en pantalla completa/ })).toHaveCount(10);
+  await expect(vista).toContainText('10 fotos');
+  await expect(vista.getByRole('link', { name: /Ver el evento/ })).toHaveAttribute('href', '/eventos/convencion-nacional-2026');
+  // La tarjeta lleva a la vista dentro de la misma página
+  await expect(page.locator('[data-album="convencion-nacional-2026"]')).toHaveAttribute('href', '#album-convencion-nacional-2026');
+  await vista.getByRole('button', { name: /Ver en pantalla completa/ }).first().click();
+  await expect(page.getByRole('dialog', { name: 'Visor de fotos' })).toBeVisible();
+  await page.keyboard.press('Escape');
+
+  // Dirección para compartir: misma vista
+  await vista.getByRole('link', { name: 'Enlace del álbum' }).click();
+  await expect(page).toHaveURL(/\/galeria\/convencion-nacional-2026$/);
+  const propia = page.locator('[data-vista-album="convencion-nacional-2026"]');
+  await expect(propia.getByRole('heading', { level: 1 })).toHaveText('Convención Nacional 2026');
+  await expect(propia.getByRole('button', { name: /Ver en pantalla completa/ })).toHaveCount(10);
+});
+
+// ---------------------------------------------------------------------------
+// Foto de la página de mantenimiento (configuracion.mantenimiento_foto_id)
+// ---------------------------------------------------------------------------
+test('la página de mantenimiento muestra la foto configurada, y sin ella el recuadro azul', async ({ page }) => {
+  await page.goto('/mantenimiento');
+  await expect(page.locator('[data-foto-mantenimiento]')).toHaveCount(0);
+
+  // Foto real de JIUMP del seed (de PRUEBA: se quita al terminar)
+  const [foto] = await admin<{ id: string }[]>('fotos?archivo=eq.diseno/37b805dcd7dbc8be26f1fab5a2d456b0.jpg&select=id');
+  await admin('configuracion?id=eq.true', 'PATCH', { mantenimiento_foto_id: foto.id });
+  try {
+    await page.goto('/mantenimiento');
+    const img = page.locator('[data-foto-mantenimiento] img');
+    await expect(img).toHaveAttribute('src', /\/storage\/v1\/object\/sign\/fotos\//);
+    await expect(img).toHaveAttribute('alt', /.+/);
+    await expect.poll(() => img.evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0)).toBe(true);
+  } finally {
+    await admin('configuracion?id=eq.true', 'PATCH', { mantenimiento_foto_id: null });
+  }
+});

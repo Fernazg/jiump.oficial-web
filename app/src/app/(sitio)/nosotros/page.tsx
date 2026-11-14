@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { AvisoVistaPrevia } from '@/components/AvisoVistaPrevia';
+import { exigirPagina } from '@/lib/paginas';
 import Link from 'next/link';
 import { EstadoVacio, Etiqueta, Flecha, Foto } from '@/components/Basicos';
 import { IconoLibro } from '@/components/Iconos';
@@ -15,6 +17,7 @@ export const metadata: Metadata = { title: 'Nosotros' };
  * están cargados, se muestra el estado vacío: el sitio no completa con textos propios.
  */
 export default async function Nosotros() {
+  const { vistaPrevia } = await exigirPagina('nosotros');
   const [inst, secs] = await Promise.all([institucional(), seccionesDePagina('nosotros')]);
   const identidad = inst.filter((i) => i.tipo === 'identidad' || i.tipo === 'quienes_somos');
   const cifras = inst.filter((i) => i.tipo === 'cifra');
@@ -27,6 +30,7 @@ export default async function Nosotros() {
 
   return (
     <>
+      <AvisoVistaPrevia activo={vistaPrevia} />
       <section className="relative isolate overflow-hidden bg-azul-profundo text-white">
         {fotoPortada && <Foto foto={fotoPortada} prioridad className="absolute inset-0 -z-10 size-full object-cover" tamanos="100vw" />}
         <div className="velo absolute inset-0 -z-10" />

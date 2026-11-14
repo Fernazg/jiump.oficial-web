@@ -166,6 +166,11 @@ insert into public.album_fotos (album_id, foto_id, orden) values
 insert into public.videos (url, titulo, album_id, estado) values
   ('https://www.youtube.com/watch?v=XIn6jmUKxH0', 'Video 50 años JIUMP (título pendiente)', 'd0000000-0000-4000-8000-000000000003', 'borrador');
 
+-- Páginas del sitio publicadas SOLO en desarrollo, para ver el sitio local.
+-- En producción las publica la directiva desde el panel (una página en
+-- borrador responde 404; ver app/README.md › Vista previa local).
+update public.paginas set estado = 'publicado';
+
 -- El registro de actividad no debe arrastrar la carga de prueba.
 truncate public.registro_actividad;
 

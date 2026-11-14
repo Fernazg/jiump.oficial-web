@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { AvisoVistaPrevia } from '@/components/AvisoVistaPrevia';
+import { exigirPagina } from '@/lib/paginas';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Flecha, Foto, Pastilla } from '@/components/Basicos';
@@ -20,6 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function PaginaActividad({ params }: Props) {
+  const { vistaPrevia } = await exigirPagina('eventos');
   const actividad = await actividadPorSlug((await params).slug);
   if (!actividad) notFound();
 
@@ -39,6 +42,7 @@ export default async function PaginaActividad({ params }: Props) {
 
   return (
     <>
+      <AvisoVistaPrevia activo={vistaPrevia} />
       <section className="relative isolate overflow-hidden bg-azul-profundo text-white">
         {portada && <Foto foto={portada} prioridad className="absolute inset-0 -z-10 size-full object-cover" tamanos="100vw" />}
         <div className="velo absolute inset-0 -z-10" />
@@ -46,20 +50,39 @@ export default async function PaginaActividad({ params }: Props) {
           <nav aria-label="Ruta" className="t-meta font-normal text-white/85">
             <Link href="/eventos" className="underline underline-offset-2">Eventos</Link> / {actividad.titulo}
           </nav>
-          <div className="mt-5"><Pastilla>{etiquetaActividad(actividad)}</Pastilla></div>
-          <h1 className="t-h1 mt-4 max-w-[20ch]">{actividad.titulo}</h1>
-          {(fecha || actividad.lugar) && (
+          {actividad.lema ? (
+            // Diseño: el nombre como etiqueta con línea turquesa y el lema como titular
+            <>
+              <p className="t-etiqueta mt-5 flex items-center gap-3 text-turquesa-claro" data-nombre-actividad>
+                <span aria-hidden className="franja-corta !w-14" />{actividad.titulo}
+              </p>
+              <h1 className="t-display mt-3 max-w-[16ch]">{actividad.lema}</h1>
+            </>
+          ) : (
+            <>
+              <div className="mt-5"><Pastilla>{etiquetaActividad(actividad)}</Pastilla></div>
+              <h1 className="t-h1 mt-4 max-w-[20ch]">{actividad.titulo}</h1>
+            </>
+          )}
+          {(fecha || actividad.lugar || actividad.cita_referencia) && (
             <ul className="t-meta mt-5 flex flex-wrap gap-x-6 gap-y-2 font-normal text-white/90">
-              {fecha && <li className="flex items-center gap-2"><IconoCalendario tam={18} />{fecha}</li>}
+              {fecha && <li className="flex items-center gap-2"><IconoCalendario tam={18} /><span><strong>Fecha:</strong> {fecha}</span></li>}
               {actividad.lugar && <li className="flex items-center gap-2"><IconoUbicacion tam={18} />{actividad.lugar}</li>}
+              {actividad.cita_referencia && <li data-cita-referencia><strong>Cita:</strong> {actividad.cita_referencia}</li>}
             </ul>
           )}
         </div>
       </section>
 
-      {actividad.introduccion && (
-        <section className="contenedor py-14">
-          <p className="t-entradilla medida whitespace-pre-line">{actividad.introduccion}</p>
+      {(actividad.introduccion || actividad.cita_texto) && (
+        <section className="contenedor grid gap-8 py-14 lg:grid-cols-[1.3fr_1fr] lg:items-start">
+          {actividad.introduccion && <p className="t-entradilla medida whitespace-pre-line">{actividad.introduccion}</p>}
+          {actividad.cita_texto && actividad.cita_referencia && (
+            <figure className="rounded-2xl border-l-4 border-azul bg-azul-claro px-6 py-6" data-cita>
+              <blockquote className="font-titulo text-[20px] font-semibold leading-snug text-azul-profundo">“{actividad.cita_texto}”</blockquote>
+              <figcaption className="t-meta mt-3 text-azul-oscuro">{actividad.cita_referencia}</figcaption>
+            </figure>
+          )}
         </section>
       )}
 

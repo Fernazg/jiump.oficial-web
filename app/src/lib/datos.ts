@@ -14,7 +14,7 @@ import type {
 const COLUMNAS_ARTICULO =
   'id, titulo, slug, bajada, autor, serie_id, parte, portada_foto_id, cuerpo, estado, publicado_en, minutos_lectura';
 const COLUMNAS_ACTIVIDAD =
-  'id, titulo, slug, tipo, anio, fecha_inicio, fecha_precision, fecha_fin, lugar, zona, introduccion, portada_foto_id, destacar_inicio, orden_inicio, es_proximo';
+  'id, titulo, slug, tipo, anio, fecha_inicio, fecha_precision, fecha_fin, lugar, zona, introduccion, portada_foto_id, destacar_inicio, orden_inicio, es_proximo, lema, cita_texto, cita_referencia, abreviatura';
 const COLUMNAS_ALBUM = 'id, titulo, slug, descripcion, anio, pais, ciudad, actividad_id, portada_foto_id, orden';
 
 /** Duración de las URL firmadas de las fotos (las páginas se generan en cada visita). */
@@ -58,11 +58,11 @@ export async function firmarFotos(ids: Iterable<string | null | undefined>): Pro
 export async function configuracion(): Promise<Configuracion> {
   const r = await supabase()
     .from('configuracion')
-    .select('modo_mantenimiento, instagram_url, mostrar_barra_proximo_evento, seo_titulo, seo_descripcion')
+    .select('modo_mantenimiento, instagram_url, mostrar_barra_proximo_evento, seo_titulo, seo_descripcion, mantenimiento_foto_id')
     .maybeSingle();
   if (r.error) throw new Error(`No se pudo leer la configuración: ${r.error.message}`);
   return (r.data as Configuracion | null) ?? {
-    modo_mantenimiento: false, instagram_url: null, mostrar_barra_proximo_evento: false, seo_titulo: null, seo_descripcion: null,
+    modo_mantenimiento: false, instagram_url: null, mostrar_barra_proximo_evento: false, seo_titulo: null, seo_descripcion: null, mantenimiento_foto_id: null,
   };
 }
 

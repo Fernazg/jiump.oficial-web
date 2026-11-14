@@ -57,6 +57,10 @@ export type Actividad = {
   destacar_inicio: boolean;
   orden_inicio: number;
   es_proximo: boolean;
+  lema: string | null;
+  cita_texto: string | null;
+  cita_referencia: string | null;
+  abreviatura: string | null;
 };
 
 export type Album = {
@@ -90,6 +94,7 @@ export type Configuracion = {
   mostrar_barra_proximo_evento: boolean;
   seo_titulo: string | null;
   seo_descripcion: string | null;
+  mantenimiento_foto_id: string | null;
 };
 
 // -----------------------------------------------------------------------------

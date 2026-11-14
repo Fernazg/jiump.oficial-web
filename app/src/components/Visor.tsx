@@ -7,8 +7,9 @@ import { IconoCerrar, IconoDerecha, IconoIzquierda } from './Iconos';
 /**
  * Cuadrícula de fotos + visor a pantalla completa (flechas, teclado y
  * deslizamiento en celular). Cada foto lleva su texto alternativo.
+ * «mosaico»: rejilla del diseño de Galería; «columnas»: columnas a lo alto (actividades).
  */
-export function GaleriaFotos({ fotos }: { fotos: FotoFirmada[] }) {
+export function GaleriaFotos({ fotos, diseno = 'columnas' }: { fotos: FotoFirmada[]; diseno?: 'mosaico' | 'columnas' }) {
   const [actual, setActual] = useState<number | null>(null);
   const dialogo = useRef<HTMLDialogElement>(null);
   const toque = useRef<number | null>(null);
@@ -32,14 +33,22 @@ export function GaleriaFotos({ fotos }: { fotos: FotoFirmada[] }) {
 
   return (
     <>
-      <ul className="columns-1 gap-3 sm:columns-2 lg:columns-3 [&>li]:mb-3">
+      <ul className={diseno === 'mosaico'
+        ? 'grid grid-flow-row-dense auto-rows-[150px] grid-cols-2 gap-2 sm:auto-rows-[200px] sm:gap-3 lg:grid-cols-4'
+        : 'columns-1 gap-3 sm:columns-2 lg:columns-3 [&>li]:mb-3'}>
         {fotos.map((f, i) => (
-          <li key={f.id} className="break-inside-avoid">
-            <button type="button" onClick={() => abrir(i)} className="levantar block w-full overflow-hidden rounded-[16px]"
+          <li key={f.id}
+            className={diseno === 'mosaico'
+              // Patrón del diseño: una foto alta, una ancha y el resto normales
+              ? `${i % 6 === 0 ? 'row-span-2' : ''} ${i % 6 === 2 ? 'lg:col-span-2' : ''}`
+              : 'break-inside-avoid'}>
+            <button type="button" onClick={() => abrir(i)}
+              className={`levantar block w-full overflow-hidden rounded-[16px] ${diseno === 'mosaico' ? 'h-full' : ''}`}
               aria-label={`Ver en pantalla completa: ${f.texto_alternativo}`}>
+              {/* Miniatura recortada solo en pantalla; el visor muestra la foto completa */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={f.url} alt={f.texto_alternativo} width={f.ancho ?? undefined} height={f.alto ?? undefined}
-                loading="lazy" decoding="async" className="w-full" />
+                loading="lazy" decoding="async" className={diseno === 'mosaico' ? 'size-full object-cover' : 'w-full'} />
             </button>
           </li>
         ))}

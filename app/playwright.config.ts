@@ -20,6 +20,8 @@ export default defineConfig({
   ],
   webServer: {
     command: 'npx next start -p 3100',
+    // Se activa la vista previa A PROPÓSITO: en un build de producción no debe tener efecto.
+    env: { JIUMP_VISTA_PREVIA: '1' },
     url: 'http://localhost:3100/articulos',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

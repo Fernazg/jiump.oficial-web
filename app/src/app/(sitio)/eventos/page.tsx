@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { AvisoVistaPrevia } from '@/components/AvisoVistaPrevia';
+import { exigirPagina } from '@/lib/paginas';
 import Link from 'next/link';
 import { EstadoVacio, Etiqueta, Flecha, Foto, Pastilla } from '@/components/Basicos';
 import { IconoCalendario, IconoUbicacion } from '@/components/Iconos';
@@ -14,6 +16,7 @@ export const metadata: Metadata = { title: 'Eventos' };
  * reciente. Por decisión de la directiva no hay sección «Realizados».
  */
 export default async function Eventos() {
+  const { vistaPrevia } = await exigirPagina('eventos');
   const [acts, conf] = await Promise.all([actividades(), configuracion()]);
   const proximo = acts.find((a) => a.es_proximo);
   const anio = acts.filter((a) => !a.es_proximo)[0]?.anio;
@@ -23,6 +26,7 @@ export default async function Eventos() {
 
   return (
     <>
+      <AvisoVistaPrevia activo={vistaPrevia} />
       <section className="contenedor pb-16 pt-16 sm:pt-20">
         <h1 className="t-h1">Encuentros que nos unen</h1>
         <div className="mt-10">

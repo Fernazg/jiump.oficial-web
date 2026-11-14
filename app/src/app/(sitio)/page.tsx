@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { AvisoVistaPrevia } from '@/components/AvisoVistaPrevia';
+import { exigirPagina } from '@/lib/paginas';
 import { Etiqueta, EstadoVacio, Flecha, Foto, Pastilla } from '@/components/Basicos';
 import { IconoCalendario } from '@/components/Iconos';
 import { Cifras, Destacado, QueHacemos } from '@/components/SeccionesPagina';
@@ -16,6 +18,7 @@ export const dynamic = 'force-dynamic';
 const NOMBRE_MOVIMIENTO = 'Jóvenes unidos para adorar a Cristo';
 
 export default async function Inicio() {
+  const { vistaPrevia } = await exigirPagina('inicio');
   const [secs, inst, acts, arts, listaSeries, albs, conf] = await Promise.all([
     seccionesDePagina('inicio'), institucional(), actividades(), articulos(), series(), albumes(), configuracion(),
   ]);
@@ -42,6 +45,7 @@ export default async function Inicio() {
 
   return (
     <>
+      <AvisoVistaPrevia activo={vistaPrevia} />
       {proximo && conf.mostrar_barra_proximo_evento && (
         <Link href={`/eventos/${proximo.slug}`} data-barra-proximo
           className="block bg-azul text-white">

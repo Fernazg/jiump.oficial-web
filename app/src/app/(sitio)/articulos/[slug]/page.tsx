@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { AvisoVistaPrevia } from '@/components/AvisoVistaPrevia';
+import { exigirPagina } from '@/lib/paginas';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { EstadoVacio, Flecha, Foto } from '@/components/Basicos';
@@ -18,6 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function PaginaArticulo({ params }: Props) {
+  const { vistaPrevia } = await exigirPagina('articulos');
   const articulo = await articuloPorSlug((await params).slug);
   if (!articulo) notFound(); // no existe o no está publicado (RLS)
 
@@ -44,6 +47,8 @@ export default async function PaginaArticulo({ params }: Props) {
   ].filter(Boolean);
 
   return (
+    <>
+      <AvisoVistaPrevia activo={vistaPrevia} />
     <article>
       {cuerpo.length > 0 && <BarraLectura color={tono} />}
 
@@ -155,5 +160,6 @@ export default async function PaginaArticulo({ params }: Props) {
         </div>
       </div>
     </article>
+    </>
   );
 }
