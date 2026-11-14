@@ -174,13 +174,13 @@ export async function actividadPorSlug(slug: string): Promise<Actividad | null> 
   return r.data as Actividad | null;
 }
 
-export async function detalleActividad(id: string) {
+export async function detalleActividad(id: string, cliente: SupabaseClient = supabase()) {
   const [secciones, enlaces, fotos, videos, albumes] = await Promise.all([
-    supabase().from('actividad_secciones').select('id, titulo, contenido, orden').eq('actividad_id', id).order('orden'),
-    supabase().from('actividad_enlaces').select('id, url, titulo, orden').eq('actividad_id', id).order('orden'),
-    supabase().from('actividad_fotos').select('foto_id, orden, es_portada').eq('actividad_id', id).order('orden'),
-    supabase().from('videos').select('id, url, titulo, descripcion, album_id, actividad_id').eq('actividad_id', id).order('orden'),
-    supabase().from('albumes').select(COLUMNAS_ALBUM).eq('actividad_id', id).order('orden'),
+    cliente.from('actividad_secciones').select('id, titulo, contenido, orden').eq('actividad_id', id).order('orden'),
+    cliente.from('actividad_enlaces').select('id, url, titulo, orden').eq('actividad_id', id).order('orden'),
+    cliente.from('actividad_fotos').select('foto_id, orden, es_portada').eq('actividad_id', id).order('orden'),
+    cliente.from('videos').select('id, url, titulo, descripcion, album_id, actividad_id').eq('actividad_id', id).order('orden'),
+    cliente.from('albumes').select(COLUMNAS_ALBUM).eq('actividad_id', id).order('orden'),
   ]);
   return {
     secciones: filas<SeccionActividad>(secciones, 'las secciones de la actividad'),
@@ -207,9 +207,9 @@ export async function albumes(): Promise<(Album & { fotoIds: string[] })[]> {
   return lista.map((a) => ({ ...a, fotoIds: rel.filter((r) => r.album_id === a.id).map((r) => r.foto_id) }));
 }
 
-export async function videosDeAlbum(albumId: string): Promise<Video[]> {
+export async function videosDeAlbum(albumId: string, cliente: SupabaseClient = supabase()): Promise<Video[]> {
   return filas<Video>(
-    await supabase().from('videos').select('id, url, titulo, descripcion, album_id, actividad_id').eq('album_id', albumId).order('orden'),
+    await cliente.from('videos').select('id, url, titulo, descripcion, album_id, actividad_id').eq('album_id', albumId).order('orden'),
     'los videos del álbum',
   );
 }

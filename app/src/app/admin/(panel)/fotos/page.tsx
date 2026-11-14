@@ -5,6 +5,7 @@ import { BotonEnviar, Formulario } from '@/components/admin/Formulario';
 import { SubidorBiblioteca } from '@/components/admin/fotos/SubidorBiblioteca';
 import { SelectorAuto } from '@/components/admin/SelectorAuto';
 import { exigirSeccion } from '@/lib/admin/acceso';
+import { crearContenido } from '@/lib/admin/acciones-contenido';
 import { editarFoto, eliminarFoto } from '@/lib/admin/acciones-fotos';
 import { firmarMiniaturas, listarFotos } from '@/lib/admin/fotos';
 import { fechaChile } from '@/lib/admin/hora-chile';
@@ -47,7 +48,9 @@ export default async function Fotos({ searchParams }: Props) {
           <span className="text-[15px] text-texto-3">Todas las fotos de JIUMP en un solo lugar. Solo fotos reales de JIUMP, sin retocar.</span>
         </div>
         {puedeEntrar('galerias', acceso.efectivos) && (
-          <Link href="/admin/galerias?nuevo=1" className="adm-boton adm-primario min-h-[46px] px-[22px] text-[15px]">+ Nuevo álbum</Link>
+          <form action={crearContenido.bind(null, 'album')}>
+            <button className="adm-boton adm-primario min-h-[46px] px-[22px] text-[15px]">+ Nuevo álbum</button>
+          </form>
         )}
       </div>
       {f.aviso === 'foto-eliminada' && <p role="status" className="adm-ok">Foto eliminada de la biblioteca.</p>}

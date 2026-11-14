@@ -283,3 +283,121 @@ end;
 $$;
 revoke execute on function public.marcar_proximo(uuid, boolean) from public, anon;
 grant execute on function public.marcar_proximo(uuid, boolean) to authenticated, service_role;
+
+-- -----------------------------------------------------------------------------
+-- Guardar una actividad o un álbum completo en una sola transacción (datos,
+-- secciones, enlaces y fotos). Respetan RLS (invoker) y las reglas de la base.
+-- p_version: actualizado_en que tenía el formulario; si otra persona guardó
+-- antes, se rechaza (no se pisan cambios).
+-- -----------------------------------------------------------------------------
+create or replace function public.guardar_actividad(p_id uuid, p_version timestamptz, p_datos jsonb)
+returns timestamptz
+language plpgsql
+set search_path = ''
+as $$
+declare
+  v_nueva timestamptz;
+  v_fotos uuid[];
+  v_portada uuid := nullif(p_datos ->> 'portada_foto_id', '')::uuid;
+begin
+  select coalesce(array_agg((f ->> 'foto_id')::uuid order by o), '{}')
+    into v_fotos from jsonb_array_elements(coalesce(p_datos -> 'fotos', '[]')) with ordinality as t(f, o);
+  if v_portada is not null and not v_portada = any (v_fotos) then
+    v_portada := null;
+  end if;
+
+  update public.actividades set
+    titulo = p_datos ->> 'titulo',
+    slug = p_datos ->> 'slug',
+    tipo = p_datos ->> 'tipo',
+    anio = (p_datos ->> 'anio')::smallint,
+    fecha_inicio = nullif(p_datos ->> 'fecha_inicio', '')::date,
+    fecha_precision = coalesce(nullif(p_datos ->> 'fecha_precision', ''), 'dia'),
+    fecha_fin = nullif(p_datos ->> 'fecha_fin', '')::date,
+    lugar = nullif(p_datos ->> 'lugar', ''),
+    zona = nullif(p_datos ->> 'zona', ''),
+    introduccion = nullif(p_datos ->> 'introduccion', ''),
+    lema = nullif(p_datos ->> 'lema', ''),
+    cita_texto = nullif(p_datos ->> 'cita_texto', ''),
+    cita_referencia = nullif(p_datos ->> 'cita_referencia', ''),
+    abreviatura = nullif(p_datos ->> 'abreviatura', ''),
+    destacar_inicio = coalesce((p_datos ->> 'destacar_inicio')::boolean, false),
+    portada_foto_id = v_portada
+  where id = p_id and date_trunc('milliseconds', actualizado_en) = date_trunc('milliseconds', p_version)
+  returning actualizado_en into v_nueva;
+  if v_nueva is null then
+    if exists (select 1 from public.actividades where id = p_id) then
+      raise exception 'Otra persona guardó cambios antes' using errcode = 'P0001', hint = 'conflicto';
+    end if;
+    raise exception 'Actividad no encontrada o sin permiso' using errcode = '42501';
+  end if;
+
+  delete from public.actividad_secciones where actividad_id = p_id;
+  insert into public.actividad_secciones (actividad_id, titulo, contenido, orden)
+  select p_id, s ->> 'titulo', coalesce(s -> 'contenido', '[]'), o
+  from jsonb_array_elements(coalesce(p_datos -> 'secciones', '[]')) with ordinality as t(s, o);
+
+  delete from public.actividad_enlaces where actividad_id = p_id;
+  insert into public.actividad_enlaces (actividad_id, titulo, url, orden)
+  select p_id, e ->> 'titulo', e ->> 'url', o
+  from jsonb_array_elements(coalesce(p_datos -> 'enlaces', '[]')) with ordinality as t(e, o);
+
+  -- Fotos: quitar una foto de la actividad no la borra de la biblioteca.
+  delete from public.actividad_fotos where actividad_id = p_id and not (foto_id = any (v_fotos));
+  update public.actividad_fotos set es_portada = false where actividad_id = p_id and es_portada;
+  insert into public.actividad_fotos (actividad_id, foto_id, orden, es_portada)
+  select p_id, f, o, f = v_portada from unnest(v_fotos) with ordinality as t(f, o)
+  on conflict (actividad_id, foto_id) do update set orden = excluded.orden, es_portada = excluded.es_portada;
+
+  return v_nueva;
+end;
+$$;
+revoke execute on function public.guardar_actividad(uuid, timestamptz, jsonb) from public, anon;
+grant execute on function public.guardar_actividad(uuid, timestamptz, jsonb) to authenticated, service_role;
+
+create or replace function public.guardar_album(p_id uuid, p_version timestamptz, p_datos jsonb)
+returns timestamptz
+language plpgsql
+set search_path = ''
+as $$
+declare
+  v_nueva timestamptz;
+  v_fotos uuid[];
+  v_portada uuid := nullif(p_datos ->> 'portada_foto_id', '')::uuid;
+begin
+  select coalesce(array_agg((f ->> 'foto_id')::uuid order by o), '{}')
+    into v_fotos from jsonb_array_elements(coalesce(p_datos -> 'fotos', '[]')) with ordinality as t(f, o);
+  if v_portada is not null and not v_portada = any (v_fotos) then
+    v_portada := null;
+  end if;
+
+  -- Primero se quitan las fotos que salen (así cambiar de actividad no choca con ellas).
+  delete from public.album_fotos where album_id = p_id and not (foto_id = any (v_fotos));
+
+  update public.albumes set
+    titulo = p_datos ->> 'titulo',
+    slug = p_datos ->> 'slug',
+    descripcion = nullif(p_datos ->> 'descripcion', ''),
+    anio = nullif(p_datos ->> 'anio', '')::smallint,
+    pais = nullif(p_datos ->> 'pais', ''),
+    ciudad = nullif(p_datos ->> 'ciudad', ''),
+    actividad_id = nullif(p_datos ->> 'actividad_id', '')::uuid,
+    portada_foto_id = v_portada
+  where id = p_id and date_trunc('milliseconds', actualizado_en) = date_trunc('milliseconds', p_version)
+  returning actualizado_en into v_nueva;
+  if v_nueva is null then
+    if exists (select 1 from public.albumes where id = p_id) then
+      raise exception 'Otra persona guardó cambios antes' using errcode = 'P0001', hint = 'conflicto';
+    end if;
+    raise exception 'Álbum no encontrado o sin permiso' using errcode = '42501';
+  end if;
+
+  insert into public.album_fotos (album_id, foto_id, orden)
+  select p_id, f, o from unnest(v_fotos) with ordinality as t(f, o)
+  on conflict (album_id, foto_id) do update set orden = excluded.orden;
+
+  return v_nueva;
+end;
+$$;
+revoke execute on function public.guardar_album(uuid, timestamptz, jsonb) from public, anon;
+grant execute on function public.guardar_album(uuid, timestamptz, jsonb) to authenticated, service_role;
