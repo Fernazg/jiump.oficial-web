@@ -1,18 +1,24 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { protegerAdmin } from '@/lib/admin/proxy-admin';
 
 /**
  * Antes de cada página:
+ *  0. Panel /admin: exige sesión y permisos (ver lib/admin/proxy-admin.ts).
+ *     El panel no se ve afectado por el modo mantenimiento ni las redirecciones,
+ *     para que el equipo siempre pueda entrar (y desactivarlo).
  *  1. Modo mantenimiento (configuracion.modo_mantenimiento): muestra la página
  *     de mantenimiento con estado 503 en todo el sitio.
  *  2. Redirecciones 301 desde las URL antiguas de Wix (tabla redirecciones).
  * Lee con la clave anónima. Si Supabase no responde, el sitio sigue normal.
  */
 export async function proxy(request: NextRequest) {
+  const ruta = request.nextUrl.pathname;
+  if (ruta === '/admin' || ruta.startsWith('/admin/')) return protegerAdmin(request);
+
   const url = process.env.SUPABASE_URL;
   const clave = process.env.SUPABASE_ANON_KEY;
   if (!url || !clave) return NextResponse.next();
 
-  const ruta = request.nextUrl.pathname;
   const cabeceras = { apikey: clave, Authorization: `Bearer ${clave}` };
   const leer = async (consulta: string) => {
     try {
