@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { admin } from './apoyo';
 import { borrarFotosDe, crearUsuario, ingresar, listarArchivos, type Usuario } from './apoyo-admin';
+import { dimensionesDe, formatoDe } from '../src/lib/admin/imagen';
 
 /**
  * Biblioteca de fotos: subir (arrastrando o eligiendo), optimizar, texto
@@ -76,6 +77,21 @@ test('subir fotos: texto alternativo obligatorio, se optimizan en WebP y AVIF si
   }).then(async (x) => ({ data: (await x.json()) as { size: number } }));
   expect(data.size).toBe(original.length);
 
+  // Las versiones (creadas en el navegador) son WebP y AVIF reales, del ancho indicado, sin recortar
+  for (const ancho of [480, 960, 1600]) {
+    for (const formato of ['webp', 'avif'] as const) {
+      const r2 = await fetch(`${process.env.SUPABASE_URL}/storage/v1/object/authenticated/fotos/${base}/${ancho}.${formato}`, {
+        headers: { apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!, Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}` },
+      });
+      const bytes = new Uint8Array(await r2.arrayBuffer());
+      expect(formatoDe(bytes), `${ancho}.${formato}`).toBe(formato);
+      const d = dimensionesDe(bytes, formato)!;
+      expect(d.ancho).toBe(ancho);
+      expect(d.alto).toBe(Math.round((900 * ancho) / 1600)); // misma proporción que el original (1600×900)
+    }
+  }
+  expect(dimensionesDe(new Uint8Array(original), 'jpeg')).toEqual({ ancho: 1600, alto: 900 });
+
   // Buscar y filtrar
   await page.goto(`/admin/fotos?q=${encodeURIComponent(`Escenario de prueba ${marca}`)}`);
   await expect(page.locator('[data-lista-fotos] [data-foto]')).toHaveCount(1);
@@ -92,7 +108,7 @@ test('archivos no válidos: más de 10 MB, o que no son imágenes', async ({ pag
   await page.getByLabel('Elegir fotos para subir').setInputFiles({ name: 'falsa.jpg', mimeType: 'image/jpeg', buffer: Buffer.from('esto no es una imagen') });
   await page.locator('[data-por-subir] [data-pendiente]').getByLabel('Texto alternativo (obligatorio)').fill('No es una foto');
   await page.locator('[data-subir-fotos]').click();
-  await expect(page.locator('[data-por-subir]')).toContainText('no es una imagen válida');
+  await expect(page.locator('[data-por-subir]')).toContainText('no es una imagen JPG, PNG, WebP ni AVIF válida');
   expect(await fotosDe(u.eventos)).toHaveLength(0);
 });
 

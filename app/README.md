@@ -96,7 +96,8 @@ Etapa 1: inicio de sesión, estructura, escritorio y artículos. Etapa 2: biblio
 
 **Biblioteca de fotos** (todo el equipo; ◐ Editor y Eventos solo editan o borran las suyas)
 - Subir arrastrando o eligiendo archivos: JPG, PNG, WebP o AVIF de hasta 10 MB, con texto alternativo obligatorio y crédito opcional.
-- Al subir se guardan el original sin cambios y versiones WebP y AVIF de varios anchos (`sharp`, en el servidor). El sitio muestra esas versiones (más livianas, sin datos de ubicación).
+- Al subir se guardan el original sin cambios y versiones WebP y AVIF de 480, 960 y 1600 px. **Las versiones las crea el navegador de quien sube** (WebAssembly: codificadores de Squoosh vía jSquash, licencia Apache 2.0), así que no dependen del alojamiento: funciona igual en Cloudflare, Vercel o un servidor propio, sin servicios pagados. El servidor solo verifica, con JavaScript puro (`src/lib/admin/imagen.ts`), que el original y cada versión sean imágenes reales del tipo y ancho esperados, y las guarda. Si un navegador no pudiera optimizar, se guarda solo el original y el sitio lo usa tal cual. El sitio muestra las versiones (más livianas, sin datos de ubicación).
+- Los codificadores (`.wasm`) se copian a `public/wasm` al compilar o al iniciar `npm run dev` (`scripts/copiar-wasm.mjs`); no se suben al repositorio.
 - Buscar por descripción o crédito, filtrar (subidas por mí, en uso, sin usar, por álbum) y ver dónde se usa cada foto. Eliminar pide confirmación y avisa si está en uso.
 - En el editor de artículos se puede subir una foto nueva como portada o imagen.
 
@@ -104,6 +105,7 @@ Etapa 1: inicio de sesión, estructura, escritorio y artículos. Etapa 2: biblio
 - Todos los campos del modelo: año obligatorio, fecha opcional (día exacto o solo mes y año), lugar, zona, introducción, lema, cita bíblica, abreviatura.
 - Secciones (Día 1, Día 2…) con los mismos bloques que los artículos, enlaces a videos y transmisiones, y fotos ordenadas con portada. Quitar una foto no la borra de la biblioteca.
 - Vista previa obligatoria antes de publicar (misma página que el sitio). Destacar en Inicio y ordenar, y «Próximo evento» (uno solo).
+- Igual que los artículos: al editar algo **ya publicado** (actividad, álbum o video), los cambios quedan pendientes y el sitio no cambia hasta revisar la vista previa y «Publicar cambios» (o «Descartar cambios»). Lo exige la base de datos.
 
 **Galerías y videos** (Superadmin y Multimedia)
 - Álbumes con fotos ordenadas, portada, año, lugar y actividad opcional. Un álbum tiene fotos de un solo evento (regla 2).

@@ -2,12 +2,13 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
 import { subirFoto } from '@/lib/admin/acciones-fotos';
+import { optimizarEnNavegador } from '@/lib/admin/optimizar-navegador';
 import type { FotoElegible } from '@/lib/admin/fotos';
 
 const TIPOS = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
 const LIMITE = 10 * 1024 * 1024;
 
-type Pendiente = { clave: string; archivo: File; vista: string; alt: string; credito: string; estado: 'lista' | 'subiendo' | 'error'; error?: string };
+type Pendiente = { clave: string; archivo: File; vista: string; alt: string; credito: string; estado: 'lista' | 'subiendo' | 'error'; error?: string; avance?: string };
 
 /**
  * Subir fotos arrastrando o eligiendo archivos. Cada foto necesita su texto
@@ -49,11 +50,25 @@ export function Subidor({ alSubir, una = false, compacto = false }: {
   const subirTodas = async () => {
     const hechas: FotoElegible[] = [];
     for (const p of lista) {
-      cambiar(p.clave, { estado: 'subiendo', error: undefined });
+      cambiar(p.clave, { estado: 'subiendo', error: undefined, avance: 'optimizando en tu dispositivo…' });
       const d = new FormData();
       d.set('archivo', p.archivo);
       d.set('texto_alternativo', p.alt);
       d.set('credito', p.credito);
+      // Versiones WebP y AVIF creadas aquí mismo (WebAssembly). Si el navegador
+      // no puede, se sube solo el original y el sitio lo usa tal cual.
+      try {
+        const o = await optimizarEnNavegador(p.archivo, (avance) => cambiar(p.clave, { avance }));
+        d.set('ancho', String(o.ancho));
+        d.set('alto', String(o.alto));
+        for (const v of o.versiones) {
+          d.set(`webp-${v.ancho}`, new File([v.webp], `${v.ancho}.webp`, { type: 'image/webp' }));
+          d.set(`avif-${v.ancho}`, new File([v.avif], `${v.ancho}.avif`, { type: 'image/avif' }));
+        }
+      } catch {
+        // sin versiones optimizadas
+      }
+      cambiar(p.clave, { avance: 'subiendo…' });
       const r = await subirFoto(d).catch(() => ({ ok: false as const, error: `No se pudo subir «${p.archivo.name}».` }));
       if (r.ok) {
         hechas.push(r.foto);
@@ -76,7 +91,7 @@ export function Subidor({ alSubir, una = false, compacto = false }: {
         <strong className="text-texto">{una ? 'Arrastra una foto aquí o' : 'Arrastra fotos aquí o'}{' '}
           <button type="button" className="enlace" onClick={() => entrada.current?.click()}>elige {una ? 'un archivo' : 'archivos'}</button>
         </strong>
-        <span>JPG, PNG, WebP o AVIF · hasta 10 MB · se optimizan y se crean versiones para celular automáticamente</span>
+        <span>JPG, PNG, WebP o AVIF · hasta 10 MB · se optimizan en tu dispositivo y se crean versiones para celular automáticamente</span>
         <label htmlFor={id} className="sr-only">Elegir fotos para subir</label>
         <input ref={entrada} id={id} type="file" accept={TIPOS.join(',')} multiple={!una} className="sr-only"
           onChange={(e) => { if (e.target.files) agregar(e.target.files); e.target.value = ''; }} />
@@ -103,7 +118,7 @@ export function Subidor({ alSubir, una = false, compacto = false }: {
                     aria-label={`No subir ${p.archivo.name}`}>Quitar</button>
                   <span className="text-[12.5px] text-texto-3 sm:col-span-3">
                     {p.archivo.name} · {(p.archivo.size / 1024 / 1024).toFixed(1)} MB
-                    {p.estado === 'subiendo' && ' · subiendo y optimizando…'}
+                    {p.estado === 'subiendo' && ` · ${p.avance ?? 'subiendo…'}`}
                     {p.error && <span className="ml-1 font-semibold text-rojo-oscuro">· {p.error}</span>}
                   </span>
                 </div>

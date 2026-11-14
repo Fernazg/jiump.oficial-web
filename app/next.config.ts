@@ -7,9 +7,9 @@ const config: NextConfig = {
   // forbidden(): 403 real en las secciones del panel sin permiso.
   experimental: {
     authInterrupts: true,
-    // Fotos del panel: hasta 10 MB cada una (más el resto del formulario).
-    serverActions: { bodySizeLimit: '11mb' },
-    proxyClientMaxBodySize: '11mb',
+    // Fotos del panel: original de hasta 10 MB + sus versiones optimizadas.
+    serverActions: { bodySizeLimit: '20mb' },
+    proxyClientMaxBodySize: '20mb',
   },
 };
 
