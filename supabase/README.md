@@ -53,7 +53,7 @@ Las claves locales las entrega `supabase status`; **nunca** se copian al reposit
 **Roles y permisos**
 - `perfiles` se crea solo al crear la cuenta en `auth.users`. El registro público está desactivado (`enable_signup = false`): un superadmin invita a cada persona desde el servidor.
 - `tiene_rol(r)` y `tiene_algun_rol(...)` (`SECURITY DEFINER`) se usan en todas las políticas. Una persona puede tener varios roles. Un rol cuenta solo si el perfil está activo **y** la sesión del token sigue abierta en `auth.sessions`: cerrar sesión o desactivar a alguien corta el acceso al instante.
-- **Doble factor obligatorio para Superadministrador, validado en la base de datos:** el rol `superadmin` solo cuenta en una sesión aal2 verificada con un factor TOTP **inscrito antes de recibir el rol** (ver «Alta del primer superadmin»). `mis_roles()` sí informa el rol, para que el panel pida el segundo factor.
+- **Doble factor obligatorio para Superadministrador, validado en la base de datos:** el rol `superadmin` solo cuenta en una sesión aal2 verificada con un factor TOTP **inscrito antes de recibir el rol** (ver «Alta de los primeros superadmins»). `mis_roles()` sí informa el rol, para que el panel pida el segundo factor.
 - Desactivar a alguien (`perfiles.activo = false`) cierra todas sus sesiones y le bloquea el inicio de sesión; reactivarlo lo desbloquea.
 - No se puede quitar ni desactivar al último superadmin activo. Los roles se asignan o se quitan, no se editan.
 - Cada persona ve solo su propio perfil y sus roles; solo el superadmin ve los de todos.
@@ -112,7 +112,11 @@ npx supabase db push
 - **Authentication → Emails / SMTP:** el correo de Supabase gratuito tiene un límite muy bajo de envíos por hora; para recuperar contraseñas con tranquilidad conviene un SMTP propio (decisión pendiente).
 - **Database → Extensions:** `pg_cron` queda activado por la migración 8 (vaciado diario de la papelera).
 
-### Alta del primer superadmin
+### Alta de los primeros superadmins (al menos dos)
+
+**Desde el inicio debe haber al menos dos superadministradores activos** (decisión de la directiva). Si solo hubiera uno y perdiera su teléfono (su doble factor) o dejara el equipo, nadie podría administrar usuarios ni roles desde el panel. Con dos, uno puede ayudar al otro: por ejemplo, cuando alguien cambia de teléfono e inscribe un factor nuevo, el otro le vuelve a asignar el rol. La base ya impide quitar o desactivar al último superadmin activo, pero eso no reemplaza tener un segundo.
+
+Para cada uno de los dos:
 
 1. Invitar a la persona (Authentication → Users → Invite). Ella entra al panel e **inscribe su factor TOTP**.
 2. Recién entonces, asignarle el rol desde el SQL Editor, usando el **id** del usuario (no el correo, que la persona puede cambiar):
@@ -123,6 +127,14 @@ select id, 'superadmin' from public.perfiles where user_id = '<id del usuario>';
 ```
 
 Un rol de superadmin asignado antes de inscribir el factor no funciona: hay que quitarlo y volver a asignarlo. Lo mismo si la persona cambia de factor.
+
+Antes del lanzamiento, comprobar que hay dos superadmins activos:
+
+```sql
+select count(*) from public.perfil_roles pr
+join public.perfiles p on p.id = pr.perfil_id
+where pr.rol = 'superadmin' and p.activo;   -- debe ser 2 o más
+```
 
 ## Revisión de seguridad
 
