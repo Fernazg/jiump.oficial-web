@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { exigirSeccion } from '@/lib/admin/acceso';
 import { crearArticulo } from '@/lib/admin/acciones-articulos';
+import { crearContenido } from '@/lib/admin/acciones-contenido';
 import { estadoInfo, estadoVisible, type EstadoArticulo } from '@/lib/admin/articulos';
 import { fechaHoraChile, haceCuanto } from '@/lib/admin/hora-chile';
 import { GRUPOS, NOMBRE_ROL, puedeEntrar } from '@/lib/admin/secciones';
@@ -80,6 +81,32 @@ export default async function Escritorio({ searchParams }: { searchParams: Promi
   ] : [];
   const proximas = GRUPOS.flatMap((g) => g.secciones).filter((s) => !s.lista && puedeEntrar(s.clave, acceso.efectivos));
 
+  // Resumen de las demás secciones del rol (etapa 2: fotos, eventos, galería y videos).
+  const contar = async (tabla: string, columna?: string, valor?: string) => {
+    let q = supabase.from(tabla).select('id', { count: 'exact', head: true });
+    if (columna && valor) q = q.eq(columna, valor);
+    return (await q).count ?? 0;
+  };
+  const otras: typeof tarjetas = [];
+  const acciones: { nombre: string; href: string }[] = [];
+  if (puedeEntrar('eventos', acceso.efectivos)) {
+    const [total, publicadas] = await Promise.all([contar('actividades'), contar('actividades', 'estado', 'publicado')]);
+    otras.push({ nombre: 'Eventos y actividades', valor: total, detalle: `${publicadas} publicadas →`, href: '/admin/eventos' });
+  }
+  if (puedeEntrar('fotos', acceso.efectivos)) {
+    const [total, mias] = await Promise.all([contar('fotos'), contar('fotos', 'creado_por', acceso.userId)]);
+    otras.push({ nombre: 'Fotos en la biblioteca', valor: total, detalle: `${mias} subidas por ti →`, href: '/admin/fotos' });
+    acciones.push({ nombre: 'Subir fotos', href: '/admin/fotos' });
+  }
+  if (puedeEntrar('galerias', acceso.efectivos)) {
+    const [total, publicados] = await Promise.all([contar('albumes'), contar('albumes', 'estado', 'publicado')]);
+    otras.push({ nombre: 'Álbumes', valor: total, detalle: `${publicados} publicados →`, href: '/admin/galerias' });
+  }
+  if (puedeEntrar('videos', acceso.efectivos)) {
+    otras.push({ nombre: 'Videos', valor: await contar('videos'), detalle: 'Ver y editar →', href: '/admin/videos' });
+  }
+  const todasTarjetas = [...tarjetas, ...otras];
+
   return (
     <>
       {aviso.clave === 'actualizada' && <p role="status" className="adm-ok">Tu contraseña se actualizó.</p>}
@@ -104,16 +131,16 @@ export default async function Escritorio({ searchParams }: { searchParams: Promi
         )}
       </div>
 
-      {veArticulos && (
-        <div className="flex flex-wrap gap-2.5">
-          <form action={crearArticulo}><button className="adm-boton adm-primario">+ Nuevo artículo</button></form>
-          <Link href="/admin/articulos/series" className="adm-boton adm-borde-azul">Series y temas</Link>
-        </div>
-      )}
+      <div className="flex flex-wrap gap-2.5">
+        {veArticulos && <form action={crearArticulo}><button className="adm-boton adm-primario">+ Nuevo artículo</button></form>}
+        {puedeEntrar('eventos', acceso.efectivos) && <form action={crearContenido.bind(null, 'actividad')}><button className="adm-boton adm-primario">+ Nuevo evento</button></form>}
+        {acciones.map((a) => <Link key={a.href} href={a.href} className="adm-boton adm-primario">+ {a.nombre}</Link>)}
+        {veArticulos && <Link href="/admin/articulos/series" className="adm-boton adm-borde-azul">Series y temas</Link>}
+      </div>
 
-      {veArticulos && (
+      {todasTarjetas.length > 0 && (
         <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,180px),1fr))] gap-4" data-resumen>
-          {tarjetas.map((t) => (
+          {todasTarjetas.map((t) => (
             <Link key={t.nombre} href={t.href} data-tarjeta={t.nombre}
               className="levantar flex flex-col gap-1.5 rounded-[18px] border-t-4 border-turquesa bg-white p-5 text-texto">
               <span className="text-[13px] text-texto-3">{t.nombre}</span>
@@ -165,7 +192,7 @@ export default async function Escritorio({ searchParams }: { searchParams: Promi
               )}
             </section>
           </div>
-        ) : (
+        ) : proximas.length > 0 && (
           <section className="adm-caja flex min-w-0 flex-[2_1_520px] flex-col gap-3 p-6">
             <h2 className="adm-h2">Tus secciones</h2>
             <p className="text-[14px] leading-relaxed text-texto-2">

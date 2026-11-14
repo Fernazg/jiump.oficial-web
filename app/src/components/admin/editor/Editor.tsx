@@ -76,6 +76,7 @@ export function Editor(p: Props) {
   const [portada, setPortada] = useState<string | null>(p.inicial.portada_foto_id);
   const [destacado, setDestacado] = useState(p.inicial.destacado_inicio);
   const [temas, setTemas] = useState<string[]>(p.inicial.temas);
+  const [fotos, setFotos] = useState<FotoBiblioteca[]>(p.fotos);
   const [bloques, setBloques] = useState<{ k: string; b: BloqueEditable }[]>(
     () => p.inicial.cuerpo.map((b) => ({ k: nuevaClave(), b: structuredClone(b) as BloqueEditable })),
   );
@@ -97,12 +98,16 @@ export function Editor(p: Props) {
     cuerpo: bloques.map((x) => x.b),
   }), [titulo, bajada, autor, slug, serie, parte, portada, destacado, temas, bloques, publico, p.slugPublico]);
 
+  // Lo último que se guardó con éxito (para saber, sin esperar a los efectos, si hay cambios).
+  const ultimoEnviado = useRef<string | null>(null);
   const guardar = useCallback(async (): Promise<boolean> => {
     if (enCurso.current) await enCurso.current;
     const tarea = (async () => {
       setGuardado('guardando');
-      const r = await guardarArticulo(p.id, datos(), version.current);
+      const enviado = datos();
+      const r = await guardarArticulo(p.id, enviado, version.current);
       if (r.ok) {
+        ultimoEnviado.current = JSON.stringify(enviado);
         version.current = r.version;
         setUltimoGuardado(r.guardadoEn);
         setGuardado('al-dia');
@@ -120,7 +125,7 @@ export function Editor(p: Props) {
   }, [datos, p.id]);
 
   useEffect(() => {
-    if (primera.current) { primera.current = false; return; }
+    if (primera.current) { primera.current = false; ultimoEnviado.current = JSON.stringify(datos()); return; }
     if (guardado === 'conflicto') return;
     setGuardado('pendiente');
     const t = setTimeout(() => { void guardar(); }, 1200);
@@ -210,12 +215,16 @@ export function Editor(p: Props) {
   const [fechaProgramada, setFechaProgramada] = useState(p.publicarEn ?? '');
   const sinGuardar = guardado !== 'al-dia';
   const puedePublicar = previaAlDia && !sinGuardar && !remoto;
+  const haySinGuardar = () => ultimoEnviado.current !== null
+    ? JSON.stringify(datos()) !== ultimoEnviado.current
+    : guardado === 'pendiente' || guardado === 'guardando';
   const irAVistaPrevia = async () => {
-    if (guardado === 'pendiente' || guardado === 'guardando') { if (!(await guardar())) return; }
+    if (enCurso.current) await enCurso.current;
+    if (haySinGuardar() || guardado === 'pendiente') { if (!(await guardar())) return; }
     router.push(`/admin/articulos/${p.id}/vista-previa`);
   };
 
-  const portadaFoto = p.fotos.find((f) => f.id === portada);
+  const portadaFoto = fotos.find((f) => f.id === portada);
   const estadoInfo = NOMBRE_ESTADO[p.estadoVisible];
   const textoGuardado = {
     'al-dia': ultimoGuardado ? `Guardado automáticamente ${haceCuanto(ultimoGuardado)}` : 'Todo guardado',
@@ -378,7 +387,7 @@ export function Editor(p: Props) {
                     <button type="button" className="adm-mini adm-mini-gris px-2.5 text-rojo-oscuro" aria-label={`Quitar bloque ${i + 1}`} onClick={() => quitar(k)}>✕</button>
                   </span>
                 </div>
-                <CamposBloque b={b} cambiar={(c) => cambiarBloque(k, c)} fotos={p.fotos}
+                <CamposBloque b={b} cambiar={(c) => cambiarBloque(k, c)} fotos={fotos}
                   alEnfocar={(el, campo, item) => { foco.current = { k, campo, item, el }; }}
                   elegirFoto={() => setElegirFoto({ para: 'bloque', k })} />
               </li>
@@ -483,7 +492,7 @@ export function Editor(p: Props) {
         </aside>
       </div>
 
-      <SelectorFoto fotos={p.fotos} abierto={elegirFoto !== null} onCerrar={() => setElegirFoto(null)}
+      <SelectorFoto fotos={fotos} alSubir={(f) => setFotos((xs) => [f, ...xs])} abierto={elegirFoto !== null} onCerrar={() => setElegirFoto(null)}
         titulo={elegirFoto?.para === 'portada' ? 'Elegir portada' : 'Elegir foto'}
         onElegir={(id) => {
           if (elegirFoto?.para === 'portada') setPortada(id);

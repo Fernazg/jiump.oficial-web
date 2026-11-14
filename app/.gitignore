@@ -6,3 +6,6 @@ next-env.d.ts
 playwright-report/
 test-results/
 *.tsbuildinfo
+
+# Codificadores WebAssembly copiados desde node_modules (scripts/copiar-wasm.mjs)
+public/wasm/

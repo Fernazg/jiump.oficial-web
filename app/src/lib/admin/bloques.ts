@@ -116,7 +116,7 @@ export function limpiarCuerpo(entrada: unknown): Bloque[] {
 /** Slug desde un título: «¿Cómo comenzó la Biblia?» → «como-comenzo-la-biblia». */
 export function slugDesde(texto: string): string {
   return texto
-    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .toLowerCase().replace(/ñ/g, 'n')
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
     .slice(0, 80).replace(/-+$/g, '') || 'articulo';

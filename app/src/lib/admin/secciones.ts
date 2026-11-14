@@ -41,7 +41,7 @@ export const GRUPOS: { titulo: string; secciones: Seccion[] }[] = [
   { titulo: 'Contenido', secciones: [
     { clave: 'articulos', nombre: 'Artículos', icono: '✎', ruta: '/admin/articulos', roles: [S, E], lista: true },
     { clave: 'series', nombre: 'Series y categorías', icono: '#', ruta: '/admin/articulos/series', roles: [S, E], lista: true },
-    { clave: 'eventos', nombre: 'Eventos y actividades', icono: '◷', ruta: '/admin/eventos', roles: [S, V], lista: false },
+    { clave: 'eventos', nombre: 'Eventos y actividades', icono: '◷', ruta: '/admin/eventos', roles: [S, V], lista: true },
   ] },
   { titulo: 'Sitio web', secciones: [
     { clave: 'pagina-web', nombre: 'Administrar página web', icono: '▤', ruta: '/admin/pagina-web', roles: [S], lista: false },
@@ -49,9 +49,9 @@ export const GRUPOS: { titulo: string; secciones: Seccion[] }[] = [
     { clave: 'menu', nombre: 'Menú, enlaces y pie', icono: '☰', ruta: '/admin/menu', roles: [S], lista: false },
   ] },
   { titulo: 'Multimedia', secciones: [
-    { clave: 'fotos', nombre: 'Biblioteca de fotos', icono: '▣', ruta: '/admin/fotos', roles: [S, M, E, V], lista: false },
-    { clave: 'galerias', nombre: 'Galerías y álbumes', icono: '❐', ruta: '/admin/galerias', roles: [S, M], lista: false },
-    { clave: 'videos', nombre: 'Videos', icono: '▶', ruta: '/admin/videos', roles: [S, M], lista: false },
+    { clave: 'fotos', nombre: 'Biblioteca de fotos', icono: '▣', ruta: '/admin/fotos', roles: [S, M, E, V], lista: true },
+    { clave: 'galerias', nombre: 'Galerías y álbumes', icono: '❐', ruta: '/admin/galerias', roles: [S, M], lista: true },
+    { clave: 'videos', nombre: 'Videos', icono: '▶', ruta: '/admin/videos', roles: [S, M], lista: true },
   ] },
   { titulo: 'Administración', secciones: [
     { clave: 'usuarios', nombre: 'Usuarios y roles', icono: '⚿', ruta: '/admin/usuarios', roles: [S], lista: false },

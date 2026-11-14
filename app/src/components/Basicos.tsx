@@ -62,7 +62,7 @@ export function Pastilla({ children, tono = 'azul' }: { children: ReactNode; ton
 export function Foto({ foto, className = '', prioridad = false, tamanos }: {
   foto: FotoFirmada; className?: string; prioridad?: boolean; tamanos?: string;
 }) {
-  return (
+  const img = (
     // eslint-disable-next-line @next/next/no-img-element -- URL firmada de Supabase (bucket privado)
     <img
       src={foto.url}
@@ -72,9 +72,18 @@ export function Foto({ foto, className = '', prioridad = false, tamanos }: {
       loading={prioridad ? 'eager' : 'lazy'}
       fetchPriority={prioridad ? 'high' : undefined}
       decoding="async"
-      sizes={tamanos}
+      sizes={foto.fuentes ? undefined : tamanos}
       className={className}
     />
+  );
+  if (!foto.fuentes) return img;
+  // Versiones optimizadas: AVIF si el navegador lo soporta, si no WebP.
+  return (
+    <picture className="contents">
+      <source type="image/avif" srcSet={foto.fuentes.avif} sizes={tamanos ?? '100vw'} />
+      <source type="image/webp" srcSet={foto.fuentes.webp} sizes={tamanos ?? '100vw'} />
+      {img}
+    </picture>
   );
 }
 

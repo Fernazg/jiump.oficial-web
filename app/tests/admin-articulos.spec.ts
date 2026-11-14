@@ -18,6 +18,8 @@ test.beforeAll(async () => {
 
 test.afterAll(async () => {
   await admin(`articulos?titulo=like.*${marca}*`, 'DELETE');
+  await admin(`articulos?creado_por=eq.${u.editor.id}`, 'DELETE');
+  await admin(`articulos?creado_por=eq.${u.editor2.id}`, 'DELETE');
   await admin(`series?nombre=like.*${marca}*`, 'DELETE');
   await admin(`temas?nombre=like.*${marca}*`, 'DELETE');
 });

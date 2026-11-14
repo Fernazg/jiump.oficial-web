@@ -8,12 +8,16 @@
     "build": "next build",
     "start": "next start -p 3000",
     "typecheck": "tsc --noEmit",
-    "test": "playwright test"
+    "test": "playwright test",
+    "predev": "node scripts/copiar-wasm.mjs",
+    "prebuild": "node scripts/copiar-wasm.mjs"
   },
   "engines": {
     "node": ">=22"
   },
   "dependencies": {
+    "@jsquash/avif": "2.1.1",
+    "@jsquash/webp": "1.5.0",
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.119.0",
     "next": "16.4.6",

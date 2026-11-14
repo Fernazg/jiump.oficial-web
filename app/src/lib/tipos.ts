@@ -7,10 +7,16 @@ export type Foto = {
   alto: number | null;
   texto_alternativo: string;
   credito: string | null;
+  /** Anchos de las versiones optimizadas (WebP y AVIF); vacío si solo hay original. */
+  anchos?: number[];
 };
 
-/** Foto lista para mostrar: con su URL firmada (el bucket es privado). */
-export type FotoFirmada = Foto & { url: string };
+/**
+ * Foto lista para mostrar: con su URL firmada (el bucket es privado). Si
+ * tiene versiones optimizadas, `url` es la WebP más grande y `fuentes` trae
+ * los srcset firmados de AVIF y WebP.
+ */
+export type FotoFirmada = Foto & { url: string; fuentes?: { avif: string; webp: string } };
 
 export type Serie = {
   id: string;
