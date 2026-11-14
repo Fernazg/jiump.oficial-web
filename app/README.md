@@ -1,4 +1,4 @@
-# Sitio público de JIUMP (Next.js)
+# Sitio público y panel /admin de JIUMP (Next.js)
 
 Next.js 16 + TypeScript + Tailwind 4. Lee **solo contenido publicado** desde Supabase con la **clave anónima** (las políticas RLS hacen el filtro). Las fotos se muestran con **URL firmadas**, porque el bucket es privado. Diseño: `docs/diseno.md` y `design/capturas/`.
 
@@ -8,6 +8,9 @@ src/app/mantenimiento/  Página independiente de mantenimiento
 src/proxy.ts            Modo mantenimiento (503) y redirecciones 301 desde las URL de Wix
 src/lib/                Cliente Supabase (solo clave anónima), consultas, fotos firmadas, formato
 src/components/         Encabezado/pie, estados vacíos, tarjetas, bloques del artículo, visor de fotos
+src/app/admin/          Panel /admin (ver «Panel /admin» más abajo)
+src/lib/admin/          Sesión, roles y secciones, consultas y acciones del servidor del panel
+src/components/admin/   Barra lateral, editor por bloques, confirmaciones
 tests/                  Pruebas Playwright (escritorio 1440 px y celular 390 px)
 ```
 
@@ -64,3 +67,31 @@ Solo funciona con las tres condiciones juntas: `next dev`, la variable y un Supa
 - **Actividades:** el lema, la cita y la abreviatura se muestran solo si tienen valor (ver `docs/modelo-datos.md`).
 - **Galería:** las fotos de cada álbum se ven dentro de `/galeria`; `/galeria/<slug>` es la misma vista, para compartir.
 - **Sin sección «Realizados»:** Eventos muestra el próximo evento y las actividades del año más reciente.
+
+## Panel /admin
+
+Etapa 1: inicio de sesión, estructura, escritorio y artículos. Eventos, fotos, galerías, videos, página web, institucional, usuarios, registro y configuración ya están en el menú (con sus permisos y 403), pero su contenido llega en la próxima etapa.
+
+**Acceso**
+- Correo y contraseña de Supabase Auth. No hay registro público.
+- Doble factor TOTP: obligatorio para Superadministrador (si no lo tiene, debe inscribirlo antes de entrar), opcional para el resto desde «Mi cuenta». Con el factor inscrito, se pide el código en cada ingreso.
+- «¿Olvidaste tu contraseña?» envía un enlace (`/admin/auth/confirmar`) para crear una nueva.
+- Cerrar sesión o desactivar a una persona corta el acceso al instante: la sesión se borra en Supabase y la base deja de reconocer sus roles.
+
+**Permisos (en el servidor, no solo en la interfaz)**
+- `src/proxy.ts` protege todo `/admin`: sin sesión → «Ingresar»; con doble factor pendiente → código; sección que no es de sus roles → **403** (también para acciones del servidor enviadas a mano).
+- Cada página y cada acción vuelve a comprobar el permiso (`exigirSeccion` / `permisoAccion`).
+- El panel usa siempre la sesión de la persona con la clave anónima: **RLS aplica sus permisos**. Nunca usa la service role.
+- Qué sección ve cada rol: `src/lib/admin/secciones.ts` (matriz de `docs/roles-permisos.md`).
+
+**Artículos**
+- Listado con filtros por estado, serie y tema, búsqueda (título, bajada, autor y texto completo del cuerpo) y papelera.
+- Editor por bloques con los 13 tipos de `docs/modelo-datos.md`, guardado automático, botón **B** para negritas, portada e imágenes elegidas desde la biblioteca existente (subir fotos llega en la próxima etapa).
+- Flujo Borrador → En revisión → Programado / Publicado. **Nada se publica sin vista previa**: la vista previa usa el mismo componente que el sitio (`ArticuloCompleto`) y la base de datos exige haberla abierto para ese mismo contenido.
+- Un artículo publicado se puede seguir editando: los cambios quedan pendientes y el sitio no cambia hasta revisarlos y publicarlos.
+- Programación con fecha y hora de Chile (`America/Santiago`, con cambio de horario).
+- Papelera por 30 días (se vacía sola con `pg_cron`), con confirmación al eliminar. Historial de versiones con «Restaurar».
+- Aviso de edición simultánea y protección contra sobrescribir: si otra persona guardó antes, se pide recargar.
+- Series y temas: crear, editar y borrar (una serie con artículos no se puede borrar).
+
+**Pruebas del panel** (`tests/admin-*.spec.ts`): crean usuarios de prueba de cada rol en el Supabase local (con TOTP simulado) y cubren qué puede y qué no puede hacer cada uno (también entrando por URL), el doble factor, cerrar sesión y desactivar, recuperar la contraseña, el flujo completo de publicación, la programación, la papelera, las versiones, la edición simultánea, series y temas, y que un borrador nunca aparezca en el sitio público.

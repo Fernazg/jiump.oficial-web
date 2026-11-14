@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { BotonEnviar, Formulario } from '@/components/admin/Formulario';
 import { obtenerAcceso } from '@/lib/admin/acceso';
-import { cerrarSesion, confirmarFactor, prepararFactor } from '@/lib/admin/acciones-acceso';
+import { confirmarFactor, prepararFactor } from '@/lib/admin/acciones-acceso';
 
 export const metadata: Metadata = { title: 'Activar el doble factor' };
 export const dynamic = 'force-dynamic';
@@ -56,7 +56,7 @@ export default async function DobleFactor() {
       )}
       <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[14px]">
         {!obligatorio && <Link href="/admin/cuenta" className="enlace">Ahora no</Link>}
-        <form action={cerrarSesion}><button className="enlace">Cerrar sesión</button></form>
+        <form method="post" action="/admin/salir"><button className="enlace">Cerrar sesión</button></form>
       </div>
     </>
   );

@@ -26,8 +26,25 @@ export async function ingresar(_: EstadoFormulario, datos: FormData): Promise<Es
     if (error.status === 429) return { error: 'Demasiados intentos. Espera unos minutos y vuelve a probar.' };
     return { error: 'El correo o la contraseña no son correctos.' };
   }
-  // El proxy decide el paso siguiente: código de doble factor, inscribirlo o entrar.
-  redirect(destinoSeguro(datos.get('siguiente')));
+  redirect(await pasoSiguiente(destinoSeguro(datos.get('siguiente'))));
+}
+
+/**
+ * Después de ingresar: pedir el código si tiene doble factor, exigir que lo
+ * inscriba si es superadmin y no lo tiene, o seguir al destino. (El proxy y
+ * las páginas lo vuelven a comprobar en cada paso.)
+ */
+async function pasoSiguiente(destino: string): Promise<string> {
+  const supabase = await clientePanel();
+  const [{ data: nivel }, { data: acceso }] = await Promise.all([
+    supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
+    supabase.rpc('mi_acceso'),
+  ]);
+  if (nivel?.nextLevel === 'aal2' && nivel.currentLevel !== 'aal2') {
+    return destino === '/admin' ? '/admin/verificar' : `/admin/verificar?siguiente=${encodeURIComponent(destino)}`;
+  }
+  if (((acceso?.roles ?? []) as string[]).includes('superadmin') && nivel?.nextLevel !== 'aal2') return '/admin/doble-factor';
+  return destino;
 }
 
 // -----------------------------------------------------------------------------
@@ -124,14 +141,4 @@ export async function nuevaClave(_: EstadoFormulario, datos: FormData): Promise<
     return { error: 'No se pudo guardar la contraseña. Pide un enlace nuevo e inténtalo otra vez.' };
   }
   redirect('/admin?clave=actualizada');
-}
-
-// -----------------------------------------------------------------------------
-// Cerrar sesión: borra la sesión en Supabase (el acceso se corta al instante,
-// también para cualquier token ya emitido) y las cookies.
-// -----------------------------------------------------------------------------
-export async function cerrarSesion(): Promise<void> {
-  const supabase = await clientePanel();
-  await supabase.auth.signOut({ scope: 'local' });
-  redirect('/admin/ingresar?motivo=salida');
 }

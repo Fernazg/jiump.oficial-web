@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { BotonEnviar, Formulario } from '@/components/admin/Formulario';
 import { obtenerAcceso } from '@/lib/admin/acceso';
-import { cerrarSesion, verificarCodigo } from '@/lib/admin/acciones-acceso';
+import { verificarCodigo } from '@/lib/admin/acciones-acceso';
 import { destinoSeguro } from '@/lib/admin/secciones';
 
 export const metadata: Metadata = { title: 'Verificación en dos pasos' };
@@ -26,7 +26,7 @@ export default async function Verificar({ searchParams }: Props) {
         </label>
         <BotonEnviar pendiente="Verificando…">Verificar</BotonEnviar>
       </Formulario>
-      <form action={cerrarSesion} className="mt-5">
+      <form method="post" action="/admin/salir" className="mt-5">
         <button className="enlace text-[14px]">Cancelar y cerrar sesión</button>
       </form>
     </>

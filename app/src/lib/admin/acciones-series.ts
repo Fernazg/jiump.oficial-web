@@ -53,9 +53,8 @@ export async function guardarSerie(_: EstadoFormulario, d: FormData): Promise<Es
   redirect(`/admin/articulos/series?aviso=${esUuid(id) ? 'serie-editada' : 'serie-creada'}`);
 }
 
-export async function borrarSerie(_: EstadoFormulario, d: FormData): Promise<EstadoFormulario> {
+export async function borrarSerie(id: string): Promise<EstadoFormulario> {
   const supabase = await exigir();
-  const id = t(d, 'id');
   if (!esUuid(id)) return { error: 'Serie no válida.' };
   // Cuenta todos los artículos, también los de la papelera (la base lo exige igual).
   const { count } = await supabase.from('articulos').select('id', { count: 'exact', head: true }).eq('serie_id', id);
@@ -78,9 +77,8 @@ export async function guardarTema(_: EstadoFormulario, d: FormData): Promise<Est
   redirect(`/admin/articulos/series?aviso=${esUuid(id) ? 'tema-editado' : 'tema-creado'}`);
 }
 
-export async function borrarTema(_: EstadoFormulario, d: FormData): Promise<EstadoFormulario> {
+export async function borrarTema(id: string): Promise<EstadoFormulario> {
   const supabase = await exigir();
-  const id = t(d, 'id');
   if (!esUuid(id)) return { error: 'Tema no válido.' };
   // Quitar un tema no borra artículos: solo deja de estar asociado.
   const r = await supabase.from('temas').delete().eq('id', id).select('id');

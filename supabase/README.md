@@ -12,11 +12,13 @@ migrations/
   …0500_datos_base           Configuración, páginas y menú del diseño (sin textos institucionales)
   …0600_seguridad            Correcciones de la revisión de seguridad (ver «Revisión de seguridad»)
   …0700_actividades_y_mantenimiento  Lema, cita y abreviatura de actividades; foto de mantenimiento
+  …0800_panel_admin          Panel: mi_acceso(), vista previa obligatoria, cambios pendientes, presencia y papelera automática
 seed.sql                    Datos de prueba SOLO para desarrollo local
 scripts/subir-fotos-diseno.sh   Sube design/fotos/ al Storage local
 tests/database/permisos.test.sql    pgTAP: reglas del modelo y permisos por rol (86)
 tests/database/seguridad.test.sql   pgTAP: revisión de seguridad, matriz completa y bucket (562)
 tests/database/actividades_mantenimiento.test.sql   pgTAP: campos de la migración 7 (20)
+tests/database/panel_admin.test.sql   pgTAP: migración 8 (28)
 tests/api/                  Prueba de integración HTTP: login, 2FA, sesiones, REST y Storage (9)
 ```
 
@@ -83,6 +85,13 @@ Las claves locales las entrega `supabase status`; **nunca** se copian al reposit
 - La Parte 2 de la Reforma queda «en revisión» porque su título está pendiente. El video de los 50 años queda en borrador.
 - Los usuarios de prueba se crean solo dentro de las pruebas, con contraseñas aleatorias que no se guardan.
 
+**Panel /admin (migración 8)**
+- `mi_acceso()`: roles asignados y roles que la base reconoce en la sesión actual (el panel arma el menú y los 403 con esto).
+- **Vista previa obligatoria, en la base:** pasar un artículo a `publicado` o `programado`, o cambiar el texto de uno ya publicado, exige que esa misma persona haya abierto la vista previa de ese mismo contenido (`articulo_vistas_previas`, con una huella que calcula la base). Solo se exige a las personas del panel; la service role y las migraciones no pasan por esa regla.
+- **Cambios pendientes** (`articulo_cambios`): al editar un artículo publicado o programado, los cambios se guardan aparte y el sitio sigue mostrando la versión publicada hasta publicarlos.
+- **Presencia** (`articulo_presencia`): quién tiene abierto cada artículo, para el aviso de edición simultánea. Guarda solo el nombre del perfil.
+- **Papelera automática:** `pg_cron` (incluido en Supabase, también en el plan gratuito) ejecuta `purgar_papelera_articulos()` todos los días. No hace falta la service role ni un servicio externo.
+
 ## Puesta en producción (cuando se autorice)
 
 Solo en el plan gratuito y con autorización de la directiva:
@@ -99,6 +108,9 @@ npx supabase db push
 
 - **Authentication → Sign In / Providers:** desactivar «Allow new users to sign up». `config.toml` solo lo desactiva en local, y con el registro abierto cualquiera crearía una cuenta (sin roles, pero con perfil).
 - **Authentication → Multi-Factor:** habilitar TOTP.
+- **Authentication → URL Configuration:** agregar `https://<dominio>/admin/auth/confirmar**` a las Redirect URLs (enlace de «Recuperar contraseña»).
+- **Authentication → Emails / SMTP:** el correo de Supabase gratuito tiene un límite muy bajo de envíos por hora; para recuperar contraseñas con tranquilidad conviene un SMTP propio (decisión pendiente).
+- **Database → Extensions:** `pg_cron` queda activado por la migración 8 (vaciado diario de la papelera).
 
 ### Alta del primer superadmin
 

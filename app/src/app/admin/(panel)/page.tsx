@@ -76,7 +76,7 @@ export default async function Escritorio({ searchParams }: { searchParams: Promi
     { nombre: 'En revisión', valor: cuenta('revision'), detalle: 'Revisar →', href: '/admin/articulos?estado=revision' },
     { nombre: 'Borradores', valor: cuenta('borrador'), detalle: 'Seguir escribiendo →', href: '/admin/articulos?estado=borrador' },
     { nombre: 'Programados', valor: cuenta('programado'), detalle: 'Ver calendario →', href: '/admin/articulos?estado=programado' },
-    { nombre: 'En la papelera', valor: cuenta('papelera'), detalle: 'Recuperables por 30 días →', href: '/admin/articulos?estado=papelera' },
+    { nombre: 'En la papelera', valor: cuenta('papelera'), detalle: 'Recuperar →', href: '/admin/articulos?estado=papelera' },
   ] : [];
   const proximas = GRUPOS.flatMap((g) => g.secciones).filter((s) => !s.lista && puedeEntrar(s.clave, acceso.efectivos));
 

@@ -68,7 +68,9 @@ export async function protegerAdmin(request: NextRequest): Promise<NextResponse>
 
   const tieneFactor = (user.factors ?? []).some((f) => f.factor_type === 'totp' && f.status === 'verified');
   if (tieneFactor && nivel?.currentLevel !== 'aal2') {
-    return ruta === '/admin/verificar' ? conCookies(respuesta) : ir('/admin/verificar');
+    if (ruta === '/admin/verificar') return conCookies(respuesta);
+    const destino = ruta !== '/admin' && !RUTAS_DE_ACCESO.includes(ruta) && !esPublica ? `?siguiente=${encodeURIComponent(ruta + request.nextUrl.search)}` : '';
+    return ir(`/admin/verificar${destino}`);
   }
   if (roles.includes('superadmin') && !tieneFactor) {
     return ruta === '/admin/doble-factor' ? conCookies(respuesta) : ir('/admin/doble-factor');
@@ -78,7 +80,11 @@ export async function protegerAdmin(request: NextRequest): Promise<NextResponse>
 
   const clave_ = seccionDeRuta(ruta);
   if (!clave_ || !puedeEntrar(clave_, efectivos, roles)) {
-    // 403 real (no solo ocultar el enlace): se muestra la página «Sin permiso».
+    // 403 real (no solo ocultar el enlace). Una acción del servidor (POST) se
+    // corta aquí mismo; una página muestra «Sin permiso».
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      return conCookies(new NextResponse('Sin permiso', { status: 403 }));
+    }
     return conCookies(NextResponse.rewrite(new URL('/admin/sin-permiso', request.url), { status: 403 }));
   }
   return conCookies(respuesta);

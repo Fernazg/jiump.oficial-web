@@ -7,14 +7,14 @@ import { useEffect, useState } from 'react';
 import { IconoCerrar, IconoMenu } from '@/components/Iconos';
 import { GRUPOS, NOMBRE_ROL, puedeEntrar, seccionDeRuta, type Rol } from '@/lib/admin/secciones';
 
-type Props = { nombre: string; roles: Rol[]; efectivos: Rol[]; cerrarSesion: () => Promise<void> };
+type Props = { nombre: string; roles: Rol[]; efectivos: Rol[] };
 
 /**
  * Barra lateral del diseño (AdminSidebar): cada persona ve solo las secciones
  * de sus roles. En pantallas angostas se abre con ☰ (enlaces de 52 px).
  * Ocultar enlaces es solo comodidad: el servidor responde 403 igual.
  */
-export function BarraLateral({ nombre, roles, efectivos, cerrarSesion }: Props) {
+export function BarraLateral({ nombre, roles, efectivos }: Props) {
   const ruta = usePathname();
   const [abierto, setAbierto] = useState(false);
   const activa = seccionDeRuta(ruta);
@@ -45,7 +45,7 @@ export function BarraLateral({ nombre, roles, efectivos, cerrarSesion }: Props) 
                   : 'text-texto hover:bg-gris-claro'}`}>
                 <span aria-hidden className="w-[18px] text-center opacity-85">{s.icono}</span>
                 {s.nombre}
-                {!s.lista && <span className="ml-auto rounded-full bg-gris-claro px-2 py-0.5 font-ui text-[10.5px] font-semibold text-texto-3">Pronto</span>}
+                {!s.lista && <span className="sr-only"> (próxima etapa)</span>}
               </Link>
             );
           })}
@@ -55,7 +55,7 @@ export function BarraLateral({ nombre, roles, efectivos, cerrarSesion }: Props) 
         <strong className="text-[14px]" data-usuario>{nombre}</strong>
         <span className="text-texto-3">Rol: {rolTexto}</span>
         <Link href="/admin/cuenta" className="mt-1 font-semibold text-azul">Mi cuenta</Link>
-        <form action={cerrarSesion}>
+        <form method="post" action="/admin/salir">
           <button className="min-h-11 font-semibold text-azul nav:min-h-0">Cerrar sesión</button>
         </form>
       </div>
