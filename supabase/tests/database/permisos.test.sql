@@ -52,6 +52,8 @@ select pg_temp.crear_usuario('44444444-4444-4444-8444-444444444444', 'multimedia
 select pg_temp.crear_usuario('55555555-5555-4555-8555-555555555555', 'inactivo@pgtap.prueba', '{editor}');
 select pg_temp.crear_usuario('66666666-6666-4666-8666-666666666666', 'eventosmm@pgtap.prueba', '{eventos,multimedia}');
 update perfiles set activo = false where correo = 'inactivo@pgtap.prueba';
+-- Estas pruebas parten con todas las páginas en borrador (el seed de desarrollo las publica).
+update paginas set estado = 'borrador';
 
 select is((select count(*)::int from perfiles where correo like '%@pgtap.prueba'), 6,
   'Se crea un perfil automáticamente por cada usuario de auth');

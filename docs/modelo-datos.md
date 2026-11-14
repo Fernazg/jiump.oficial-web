@@ -19,6 +19,32 @@ Derivado del diseño aprobado del sitio y del panel /admin. Nombres en español 
 Tipos usados en el diseño: `parrafo` (con negritas), `entradilla`, `titulo_seccion`, `pregunta_destacada`, `versiculo` (texto + referencia + etiqueta), `idea_clave` (texto + etiqueta), `para_recordar`, `lista_numerada`, `tarjetas` (título + ítems), `linea_tiempo`, `cifras`, `imagen`, `video`.
 Las referencias bíblicas dentro del texto se resaltan automáticamente.
 
+Formato que usa el sitio (`app/src/lib/tipos.ts`). `cuerpo` es una lista de bloques; las negritas van entre `**…**`:
+
+| Tipo | Campos |
+|---|---|
+| `parrafo`, `entradilla`, `titulo_seccion`, `pregunta_destacada` | `texto` |
+| `versiculo` | `texto`, `referencia`, `etiqueta` (opcional) |
+| `idea_clave`, `para_recordar` | `texto`, `etiqueta` (opcional) |
+| `lista_numerada` | `items: [texto]` |
+| `tarjetas` | `titulo` (opcional), `items: [texto]` |
+| `linea_tiempo` | `items: [{ fecha, texto }]` |
+| `cifras` | `items: [{ valor, texto }]` |
+| `imagen` | `foto_id`, `pie` (opcional) — solo se muestra si la foto es pública |
+| `video` | `url` (YouTube), `titulo` (opcional) |
+
+Un tipo desconocido no se muestra. `actividad_secciones.contenido` usa los mismos bloques.
+
+### Contenido de las secciones de página (`secciones.contenido`)
+Lo que lee hoy el sitio (Inicio y Nosotros). Si falta un campo, ese elemento no se muestra:
+
+| `tipo` | Campos |
+|---|---|
+| `portada` | `foto_id`, `titulo` (opcional; si falta, Inicio usa el nombre del movimiento) |
+| `presentacion` | `etiqueta`, `texto` (las cifras salen de `institucional`, tipo `cifra`: título = valor, texto = descripción) |
+| `que_hacemos` | `etiqueta`, `titulo`, `enlace: { texto, url }`, `tarjetas: [{ titulo, foto_id }]` |
+| `destacado` («Heme aquí») | `etiqueta`, `titulo`, `texto`, `boton: { texto, url }`, `fotos: [foto_id]` |
+
 ## Eventos y actividades
 - **actividades** — `titulo`, `slug`, `tipo` (convención, encuentro, zonal, formación, mujeres…), `fecha_inicio` (puede ser solo mes y año), `fecha_fin`, `lugar` (opcional), `zona` (opcional), `introduccion` (texto oficial), `portada_foto_id`, `estado`, `destacar_inicio bool`, `orden_inicio`, `es_proximo bool` (alimenta la barra y el bloque «Próximo evento»).
 - **actividad_secciones** — bloques editables de la página de la actividad (ej.: Día 1 / Día 2), `orden`.
@@ -57,6 +83,8 @@ La propuesta de arriba se implementó con estos ajustes (validar con la directiv
   - No se repite el n.º de `parte` dentro de una serie.
 - **articulo_versiones:** guarda título, bajada, autor, serie, parte, portada, cuerpo y estado de cada versión anterior (`guardado_en`, `guardado_por`).
 - **actividades:**
+  - Campos opcionales (migración 7): `lema` (ej.: «Heme aquí»), `cita_texto` + `cita_referencia` (la cita bíblica; un texto exige su referencia) y `abreviatura` (sigla en mayúsculas, ej.: EMJ). Nacen vacíos; el seed no les pone valores.
+  - Cómo se muestran: con lema, la página de la actividad usa el lema como titular y el nombre como etiqueta, y las tarjetas muestran «lema» como título. La referencia aparece como «Cita: …» junto a la fecha y el texto de la cita como recuadro de versículo. Con abreviatura, las etiquetas dicen «EMJ 2026»; sin ella, «Encuentro de mujeres · 2026».
   - `anio` obligatorio y `fecha_inicio` opcional.
   - `fecha_precision` (`dia` | `mes`) para cuando solo se conoce mes y año.
   - Solo una actividad puede tener `es_proximo`.
@@ -68,17 +96,21 @@ La propuesta de arriba se implementó con estos ajustes (validar con la directiv
   - `creado_por` cumple el papel de `subida_por`.
   - `archivo` debe tener la forma `<carpeta>/<nombre>.<jpg|jpeg|png|webp|avif>` y no se puede cambiar: para reemplazar una foto se sube una nueva.
   - Quien sube registra fotos solo dentro de su propia carpeta.
-- **paginas:** `seo_titulo` y `seo_descripcion`.
+- **paginas:** `seo_titulo` y `seo_descripcion`. **Una página completa solo se muestra si está publicada** (si no, 404 y sale del menú y del pie). Las subpáginas siguen a su página: un artículo depende de `articulos`, una actividad de `eventos` y un álbum de `galeria`. Las 5 páginas nacen en borrador en producción; el seed de desarrollo las publica. Para ver una página en borrador en local existe una vista previa (ver `app/README.md`), que nunca funciona en un build de producción.
 - **institucional:** `tipo` (`identidad`, `quienes_somos`, `declaracion_fe`, `cifra`, `vision`, `historia`), `orden` y `estado`. Queda vacía hasta que JIUMP entregue los textos oficiales.
 - **menu:** `ubicacion` (`principal` | `pie`), `etiqueta`, `url`, `orden`, `visible`.
-- **configuracion:** fila única; agrega `seo_titulo`, `seo_descripcion` y `seo_foto_id`.
+- **configuracion:** fila única; agrega `seo_titulo`, `seo_descripcion`, `seo_foto_id` y `mantenimiento_foto_id` (migración 7: foto de la página de mantenimiento, opcional y vacía en el seed; mientras esté configurada cuenta como foto pública).
 - **redirecciones:** `codigo` (301, 302 o 308) y validación de que origen ≠ destino.
 - **Todas las tablas:** `creado_por` y `actualizado_por` los fija el servidor; el cliente no puede falsificarlos.
 
 **Visibilidad pública**
 - El visitante ve solo artículos publicados (o programados cuya fecha ya llegó), actividades, álbumes, videos, páginas y textos institucionales publicados, secciones visibles de páginas publicadas y enlaces visibles del menú.
 - Series y temas: solo los que tienen al menos un artículo visible.
-- Fotos: solo las usadas en contenido publicado.
+- Fotos: solo las usadas en contenido publicado (o configuradas como foto de SEO o de mantenimiento).
+
+**Galería**
+- Según el diseño aprobado, `/galeria` muestra arriba las tarjetas de los álbumes publicados y, debajo, cada álbum con sus fotos («Vista de álbum»). La tarjeta lleva a esa vista dentro de la misma página.
+- Cada álbum conserva su dirección `/galeria/<slug>` solo para compartirlo, con la misma vista.
 
 **Fotos (Storage)**
 - Bucket `fotos` **privado**. El sitio muestra las fotos con URL firmadas; solo se pueden firmar las fotos usadas en contenido publicado.

@@ -1,5 +1,6 @@
-# Pruebas automáticas del backend: levanta Supabase LOCAL dentro del runner
-# (Docker) y corre las pruebas pgTAP y la prueba de integración HTTP.
+# Pruebas automáticas: levanta Supabase LOCAL dentro del runner (Docker) y
+# corre las pruebas del backend (pgTAP + HTTP) y del sitio (compilación +
+# Playwright).
 # No usa ningún proyecto de Supabase en la nube ni secretos del repositorio:
 # las claves salen de `supabase status` y solo existen durante la ejecución.
 name: Pruebas
@@ -20,15 +21,17 @@ env:
 
 jobs:
   backend:
-    name: Backend (Supabase local)
+    name: Backend y sitio (Supabase local)
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
 
       - name: Levantar Supabase local
         run: >
@@ -54,6 +57,42 @@ jobs:
           eval "$(npx --yes ${{ env.SUPABASE_CLI }} status -o env)"
           API_URL="$API_URL" ANON_KEY="$ANON_KEY" SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY" \
             node --test supabase/tests/api/permisos-api.test.mjs
+
+      # ---- Sitio público (app/) ------------------------------------------
+      - name: Instalar dependencias del sitio
+        working-directory: app
+        run: npm ci
+
+      - name: Revisar tipos
+        working-directory: app
+        run: npm run typecheck
+
+      - name: Configurar el sitio con la clave anónima local
+        run: |
+          eval "$(npx --yes ${{ env.SUPABASE_CLI }} status -o env)"
+          printf 'SUPABASE_URL=%s\nSUPABASE_ANON_KEY=%s\n' "$API_URL" "$ANON_KEY" > app/.env.local
+
+      - name: Compilar el sitio
+        working-directory: app
+        run: npm run build
+
+      - name: Instalar Chromium para Playwright
+        working-directory: app
+        run: npx playwright install --with-deps chromium
+
+      - name: Pruebas del sitio (Playwright)
+        working-directory: app
+        run: |
+          eval "$(npx --yes ${{ env.SUPABASE_CLI }} status -o env)"
+          SUPABASE_URL="$API_URL" SUPABASE_ANON_KEY="$ANON_KEY" SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY" npx playwright test
+
+      - name: Guardar el informe de Playwright si falla
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: informe-playwright
+          path: app/playwright-report
+          retention-days: 7
 
       - name: Detener Supabase
         if: always()

@@ -11,10 +11,12 @@ migrations/
   …0400_storage_fotos        Bucket «fotos» y sus políticas
   …0500_datos_base           Configuración, páginas y menú del diseño (sin textos institucionales)
   …0600_seguridad            Correcciones de la revisión de seguridad (ver «Revisión de seguridad»)
+  …0700_actividades_y_mantenimiento  Lema, cita y abreviatura de actividades; foto de mantenimiento
 seed.sql                    Datos de prueba SOLO para desarrollo local
 scripts/subir-fotos-diseno.sh   Sube design/fotos/ al Storage local
 tests/database/permisos.test.sql    pgTAP: reglas del modelo y permisos por rol (86)
 tests/database/seguridad.test.sql   pgTAP: revisión de seguridad, matriz completa y bucket (562)
+tests/database/actividades_mantenimiento.test.sql   pgTAP: campos de la migración 7 (20)
 tests/api/                  Prueba de integración HTTP: login, 2FA, sesiones, REST y Storage (9)
 ```
 

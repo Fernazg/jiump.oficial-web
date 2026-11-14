@@ -141,6 +141,7 @@ insert into albumes (id, titulo, slug, estado) values ('e6000000-0000-4000-8000-
 insert into album_fotos (album_id, foto_id) values ('e6000000-0000-4000-8000-000000000006', 'fc000000-0000-4000-8000-00000000000c');
 insert into videos (titulo, url, estado) values ('Video secreto', 'https://youtu.be/secreto', 'borrador');
 
+update paginas set estado = 'borrador';  -- el seed de desarrollo las publica
 update paginas set estado = 'publicado' where clave = 'eventos';
 insert into secciones (pagina_id, tipo, visible) select id, 'oculta', false from paginas where clave = 'eventos';
 insert into secciones (pagina_id, tipo, visible) select id, 'de_borrador', true from paginas where clave = 'inicio';
