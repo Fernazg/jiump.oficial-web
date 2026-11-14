@@ -42,3 +42,45 @@ Las referencias bíblicas dentro del texto se resaltan automáticamente.
 - Slugs únicos por tabla; redirecciones 301 desde las URL antiguas de Wix (tabla **redirecciones**: `origen`, `destino`).
 - Fotos: optimizar al subir (WebP/AVIF, varios tamaños). Nunca recortar ni retocar el original.
 - Búsqueda de artículos: índice de texto completo en español sobre `titulo`, `bajada` y texto del cuerpo.
+
+## Cambios en la implementación (`supabase/migrations/`)
+
+La propuesta de arriba se implementó con estos ajustes (validar con la directiva):
+
+**Columnas y reglas agregadas**
+- **perfil_roles:** guarda `creado_en` (cuándo se asignó el rol), que usa la regla del doble factor. Un rol solo se asigna o se quita; no se edita.
+- **registro_actividad:** también guarda `user_id`. Acciones: `crear`, `editar`, `publicar`, `papelera`, `restaurar`, `eliminar`, `asignar_rol`, `quitar_rol`. Lo llenan triggers; nadie lo puede editar ni borrar.
+- **articulos:**
+  - `estado_antes_papelera` y `en_papelera_desde`, para restaurar y vaciar la papelera a los 30 días.
+  - Columna `busqueda` (índice de texto en español, sin tildes).
+  - Un artículo `programado` se vuelve público solo cuando llega `publicar_en`.
+  - No se repite el n.º de `parte` dentro de una serie.
+- **articulo_versiones:** guarda título, bajada, autor, serie, parte, portada, cuerpo y estado de cada versión anterior (`guardado_en`, `guardado_por`).
+- **actividades:**
+  - `anio` obligatorio y `fecha_inicio` opcional.
+  - `fecha_precision` (`dia` | `mes`) para cuando solo se conoce mes y año.
+  - Solo una actividad puede tener `es_proximo`.
+- **actividad_secciones:** `titulo` + `contenido jsonb`.
+- **actividad_enlaces:** `orden`; solo URL `https://`.
+- **actividad_fotos:** a lo más una `es_portada` por actividad.
+- **albumes y videos:** `orden`. Los videos solo aceptan enlaces de YouTube.
+- **fotos:**
+  - `creado_por` cumple el papel de `subida_por`.
+  - `archivo` debe tener la forma `<carpeta>/<nombre>.<jpg|jpeg|png|webp|avif>` y no se puede cambiar: para reemplazar una foto se sube una nueva.
+  - Quien sube registra fotos solo dentro de su propia carpeta.
+- **paginas:** `seo_titulo` y `seo_descripcion`.
+- **institucional:** `tipo` (`identidad`, `quienes_somos`, `declaracion_fe`, `cifra`, `vision`, `historia`), `orden` y `estado`. Queda vacía hasta que JIUMP entregue los textos oficiales.
+- **menu:** `ubicacion` (`principal` | `pie`), `etiqueta`, `url`, `orden`, `visible`.
+- **configuracion:** fila única; agrega `seo_titulo`, `seo_descripcion` y `seo_foto_id`.
+- **redirecciones:** `codigo` (301, 302 o 308) y validación de que origen ≠ destino.
+- **Todas las tablas:** `creado_por` y `actualizado_por` los fija el servidor; el cliente no puede falsificarlos.
+
+**Visibilidad pública**
+- El visitante ve solo artículos publicados (o programados cuya fecha ya llegó), actividades, álbumes, videos, páginas y textos institucionales publicados, secciones visibles de páginas publicadas y enlaces visibles del menú.
+- Series y temas: solo los que tienen al menos un artículo visible.
+- Fotos: solo las usadas en contenido publicado.
+
+**Fotos (Storage)**
+- Bucket `fotos` **privado**. El sitio muestra las fotos con URL firmadas; solo se pueden firmar las fotos usadas en contenido publicado.
+- Cada archivo vive en la carpeta de quien lo subió (`<user_id>/<uuid>.<ext>`), con versiones optimizadas en `<user_id>/<uuid>/<ancho>.webp`.
+- Solo JPEG, PNG, WebP y AVIF, hasta 10 MB. Las transformaciones de imagen de Supabase son de pago, así que las versiones las genera la app al subir.
