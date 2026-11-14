@@ -4,7 +4,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(85);
+select plan(86);
 
 -- -----------------------------------------------------------------------------
 -- Preparación: usuarios de prueba (ficticios, solo existen dentro de esta
@@ -16,15 +16,34 @@ begin
   insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data)
   values (p_id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
           p_correo, jsonb_build_object('nombre', split_part(p_correo, '@', 1)));
+  -- El superadmin inscribe su factor TOTP antes de recibir el rol.
+  if 'superadmin' = any (p_roles) then
+    insert into auth.mfa_factors (id, user_id, factor_type, status, created_at, updated_at)
+    values (gen_random_uuid(), p_id, 'totp', 'verified', now() - interval '1 day', now() - interval '1 day');
+  end if;
   insert into perfil_roles (perfil_id, rol)
   select p.id, r from perfiles p, unnest(p_roles) r where p.user_id = p_id;
 end $$;
 
+-- Simula el token de una sesión viva: crea la sesión en auth.sessions (con el
+-- factor TOTP si es aal2), fija los claims del JWT y deja el rol authenticated.
 create function pg_temp.como(p_id uuid, p_aal text default 'aal1')
-returns void language sql as $$
-  select set_config('request.jwt.claims',
-    json_build_object('sub', p_id, 'role', 'authenticated', 'aal', p_aal)::text, true);
-$$;
+returns void language plpgsql as $$
+declare
+  sesion uuid := gen_random_uuid();
+begin
+  perform set_config('role', 'postgres', true);
+  insert into auth.sessions (id, user_id, aal, factor_id, created_at, updated_at)
+  values (sesion, p_id, p_aal::auth.aal_level,
+          case when p_aal = 'aal2' then (select id from auth.mfa_factors where user_id = p_id order by created_at limit 1) end,
+          now(), now());
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', p_id, 'role', 'authenticated', 'aal', p_aal, 'session_id', sesion)::text, true);
+  perform set_config('role', 'authenticated', true);
+end $$;
+
+-- Las funciones nuevas nacen sin EXECUTE para PUBLIC (migración 6).
+grant execute on function pg_temp.como(uuid, text) to authenticated;
 
 select pg_temp.crear_usuario('11111111-1111-4111-8111-111111111111', 'super@pgtap.prueba', '{superadmin}');
 select pg_temp.crear_usuario('22222222-2222-4222-8222-222222222222', 'editor@pgtap.prueba', '{editor}');
@@ -36,6 +55,16 @@ update perfiles set activo = false where correo = 'inactivo@pgtap.prueba';
 
 select is((select count(*)::int from perfiles where correo like '%@pgtap.prueba'), 6,
   'Se crea un perfil automáticamente por cada usuario de auth');
+
+-- Datos de prueba: regla 2 del README (no mezclar fotos de distintos eventos).
+select is((
+  with usos as (
+    select foto_id, actividad_id::text as evento from actividad_fotos
+    union select foto_id, coalesce(al.actividad_id::text, al.id::text) from album_fotos f join albumes al on al.id = f.album_id
+    union select portada_foto_id, id::text from actividades where portada_foto_id is not null
+  )
+  select count(*)::int from (select foto_id from usos group by foto_id having count(distinct evento) > 1) x),
+  0, 'Ninguna foto del seed está asociada a más de un evento');
 
 -- Fotos de prueba subidas por el editor y por multimedia (fotos reales del seed reutilizadas).
 insert into fotos (id, archivo, texto_alternativo, creado_por)
@@ -57,7 +86,7 @@ select is((select count(*)::int from videos), 0, 'Anónimo no ve videos en borra
 select is((select count(*)::int from paginas), 0, 'Anónimo no ve páginas en borrador');
 select is((select count(*)::int from configuracion), 1, 'Anónimo lee la configuración (modo mantenimiento)');
 select is((select count(*)::int from menu), 4, 'Anónimo lee el menú');
-select is((select count(*)::int from series), 6, 'Anónimo lee las series');
+select is((select count(*)::int from series), 2, 'Anónimo ve solo las series con artículos publicados');
 select throws_ok($$ select count(*) from perfiles $$, '42501', null, 'Anónimo no ve perfiles');
 select throws_ok($$ select count(*) from perfil_roles $$, '42501', null, 'Anónimo no ve roles');
 select throws_ok($$ select count(*) from articulo_versiones $$, '42501', null, 'Anónimo no ve versiones');
@@ -201,7 +230,7 @@ select lives_ok($$ insert into videos (titulo, url) values ('Video prueba', 'htt
 select throws_ok($$ insert into videos (titulo, url) values ('x', 'https://vimeo.com/1') $$, '23514', null, 'Los videos son de YouTube');
 update fotos set credito = 'mm' where id = 'f0000000-0000-4000-8000-000000000001';
 select is((select credito from fotos where id = 'f0000000-0000-4000-8000-000000000001'), 'mm', 'Multimedia edita cualquier foto');
-select is((select count(*)::int from actividades where estado = 'borrador'), 1, 'Multimedia ve actividades en borrador para vincularlas');
+select is((select count(*)::int from actividades where estado = 'borrador'), 0, 'Multimedia no ve actividades en borrador (es sección de Eventos)');
 select throws_ok($$ insert into actividades (titulo, slug, tipo, anio) values ('x', 'x-mm', 'zonal', 2026) $$, '42501', null, 'Multimedia no crea actividades');
 select throws_ok($$ insert into articulos (titulo, slug) values ('x', 'x-mm') $$, '42501', null, 'Multimedia no crea artículos');
 reset role;
