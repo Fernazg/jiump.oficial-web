@@ -1,4 +1,5 @@
 import 'server-only';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 import type {
   Actividad, Album, Articulo, Bloque, Configuracion, Enlace, FotoFirmada, Institucional, ItemMenu,
@@ -28,18 +29,26 @@ function filas<T>(resultado: { data: unknown; error: { message: string } | null 
 // -----------------------------------------------------------------------------
 // Fotos: solo las publicadas (RLS) y con URL firmada (bucket privado)
 // -----------------------------------------------------------------------------
-export async function firmarFotos(ids: Iterable<string | null | undefined>): Promise<Map<string, FotoFirmada>> {
+/**
+ * Firma las fotos con el cliente indicado: por defecto el anónimo del sitio
+ * (solo fotos publicadas). La vista previa del panel pasa el cliente con la
+ * sesión de la persona, que también ve las fotos aún no publicadas.
+ */
+export async function firmarFotos(
+  ids: Iterable<string | null | undefined>,
+  cliente: SupabaseClient = supabase(),
+): Promise<Map<string, FotoFirmada>> {
   const unicos = [...new Set([...ids].filter((x): x is string => Boolean(x)))];
   const mapa = new Map<string, FotoFirmada>();
   if (unicos.length === 0) return mapa;
 
   const fotos = filas<Omit<FotoFirmada, 'url'>>(
-    await supabase().from('fotos').select('id, archivo, ancho, alto, texto_alternativo, credito').in('id', unicos),
+    await cliente.from('fotos').select('id, archivo, ancho, alto, texto_alternativo, credito').in('id', unicos),
     'fotos',
   );
   if (fotos.length === 0) return mapa;
 
-  const { data, error } = await supabase()
+  const { data, error } = await cliente
     .storage.from('fotos')
     .createSignedUrls(fotos.map((f) => f.archivo), SEGUNDOS_URL_FIRMADA);
   if (error) throw new Error(`No se pudieron firmar las fotos: ${error.message}`);

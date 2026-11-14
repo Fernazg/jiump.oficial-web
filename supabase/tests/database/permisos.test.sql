@@ -174,12 +174,15 @@ select throws_ok($$ select purgar_papelera_articulos() $$, '42501', null, 'Solo 
 select throws_ok($$ delete from series where slug = 'mes-de-la-biblia' $$, '23503', null,
   'Una serie con artículos no se puede borrar');
 
--- Programados
+-- Programados (se crean como servidor: desde el panel, publicar o programar
+-- exige vista previa; ver tests/database/panel_admin.test.sql)
+set local role postgres;
 insert into articulos (id, titulo, slug, estado, publicar_en) values
   ('e0000000-0000-4000-8000-000000000002', 'Programado pasado', 'programado-pasado', 'programado', now() - interval '1 hour'),
   ('e0000000-0000-4000-8000-000000000003', 'Programado futuro', 'programado-futuro', 'programado', now() + interval '1 day');
 select throws_ok($$ insert into articulos (titulo, slug, estado) values ('x', 'sin-fecha', 'programado') $$,
   '23514', null, 'Un artículo programado necesita fecha');
+set local role authenticated;
 select throws_ok($$ insert into articulos (titulo, slug, serie_id, parte)
   select 'x', 'parte-repetida', id, 1 from series where slug = 'mes-de-la-biblia' $$,
   '23505', null, 'No se repite el número de parte dentro de una serie');

@@ -1,5 +1,5 @@
 # Pruebas automáticas: levanta Supabase LOCAL dentro del runner (Docker) y
-# corre las pruebas del backend (pgTAP + HTTP) y del sitio (compilación +
+# corre las pruebas del backend (pgTAP + HTTP), del sitio y del panel /admin (compilación +
 # Playwright).
 # No usa ningún proyecto de Supabase en la nube ni secretos del repositorio:
 # las claves salen de `supabase status` y solo existen durante la ejecución.
@@ -33,10 +33,11 @@ jobs:
           cache: npm
           cache-dependency-path: app/package-lock.json
 
+      # mailpit queda encendido: recibe los correos de «Recuperar contraseña» del panel.
       - name: Levantar Supabase local
         run: >
           npx --yes ${{ env.SUPABASE_CLI }} start
-          -x studio,imgproxy,realtime,edge-runtime,logflare,vector,supavisor,mailpit,postgres-meta
+          -x studio,imgproxy,realtime,edge-runtime,logflare,vector,supavisor,postgres-meta
 
       - name: Base limpia (migraciones + seed)
         run: npx --yes ${{ env.SUPABASE_CLI }} db reset
@@ -80,7 +81,7 @@ jobs:
         working-directory: app
         run: npx playwright install --with-deps chromium
 
-      - name: Pruebas del sitio (Playwright)
+      - name: Pruebas del sitio y del panel /admin (Playwright)
         working-directory: app
         run: |
           eval "$(npx --yes ${{ env.SUPABASE_CLI }} status -o env)"
