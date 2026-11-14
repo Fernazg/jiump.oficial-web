@@ -1,0 +1,60 @@
+# Pruebas automáticas del backend: levanta Supabase LOCAL dentro del runner
+# (Docker) y corre las pruebas pgTAP y la prueba de integración HTTP.
+# No usa ningún proyecto de Supabase en la nube ni secretos del repositorio:
+# las claves salen de `supabase status` y solo existen durante la ejecución.
+name: Pruebas
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pruebas-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SUPABASE_CLI: supabase@3.1.0
+
+jobs:
+  backend:
+    name: Backend (Supabase local)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Levantar Supabase local
+        run: >
+          npx --yes ${{ env.SUPABASE_CLI }} start
+          -x studio,imgproxy,realtime,edge-runtime,logflare,vector,supavisor,mailpit,postgres-meta
+
+      - name: Base limpia (migraciones + seed)
+        run: npx --yes ${{ env.SUPABASE_CLI }} db reset
+
+      - name: Lint del esquema
+        run: npx --yes ${{ env.SUPABASE_CLI }} db lint --fail-on error
+
+      - name: Pruebas pgTAP
+        run: npx --yes ${{ env.SUPABASE_CLI }} test db
+
+      - name: Subir fotos del diseño al Storage local
+        run: |
+          eval "$(npx --yes ${{ env.SUPABASE_CLI }} status -o env)"
+          SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY" supabase/scripts/subir-fotos-diseno.sh
+
+      - name: Prueba de integración HTTP
+        run: |
+          eval "$(npx --yes ${{ env.SUPABASE_CLI }} status -o env)"
+          API_URL="$API_URL" ANON_KEY="$ANON_KEY" SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY" \
+            node --test supabase/tests/api/permisos-api.test.mjs
+
+      - name: Detener Supabase
+        if: always()
+        run: npx --yes ${{ env.SUPABASE_CLI }} stop --no-backup

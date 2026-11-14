@@ -14,6 +14,7 @@ case "$URL" in
   *) echo "Este script es solo para el entorno local ($URL no es local)." >&2; exit 1 ;;
 esac
 
+fallas=0
 DIR="$(cd "$(dirname "$0")/../../design/fotos" && pwd)"
 for f in "$DIR"/*.jpg "$DIR"/*.png; do
   nombre="$(basename "$f")"
@@ -24,4 +25,10 @@ for f in "$DIR"/*.jpg "$DIR"/*.png; do
     -H "Content-Type: $tipo" -H "x-upsert: true" \
     --data-binary "@$f")
   echo "$codigo $nombre"
+  [ "$codigo" = "200" ] || fallas=$((fallas + 1))
 done
+
+if [ "$fallas" -gt 0 ]; then
+  echo "Fallaron $fallas subidas." >&2
+  exit 1
+fi
