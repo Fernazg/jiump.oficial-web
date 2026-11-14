@@ -43,18 +43,27 @@ export async function firmarFotos(
   if (unicos.length === 0) return mapa;
 
   const fotos = filas<Omit<FotoFirmada, 'url'>>(
-    await cliente.from('fotos').select('id, archivo, ancho, alto, texto_alternativo, credito').in('id', unicos),
+    await cliente.from('fotos').select('id, archivo, ancho, alto, texto_alternativo, credito, anchos').in('id', unicos),
     'fotos',
   );
   if (fotos.length === 0) return mapa;
 
+  // Original + versiones optimizadas (<carpeta>/<nombre>/<ancho>.webp|avif).
+  const version = (archivo: string, ancho: number, formato: string) => `${archivo.replace(/\.[^./]+$/, '')}/${ancho}.${formato}`;
+  const rutas = fotos.flatMap((f) => [f.archivo, ...(f.anchos ?? []).flatMap((a) => [version(f.archivo, a, 'webp'), version(f.archivo, a, 'avif')])]);
   const { data, error } = await cliente
     .storage.from('fotos')
-    .createSignedUrls(fotos.map((f) => f.archivo), SEGUNDOS_URL_FIRMADA);
+    .createSignedUrls(rutas, SEGUNDOS_URL_FIRMADA);
   if (error) throw new Error(`No se pudieron firmar las fotos: ${error.message}`);
 
   const porRuta = new Map((data ?? []).filter((d) => d.signedUrl && !d.error).map((d) => [d.path, d.signedUrl]));
   for (const f of fotos) {
+    const anchos = [...(f.anchos ?? [])].sort((a, b) => a - b).filter((a) => porRuta.has(version(f.archivo, a, 'webp')) && porRuta.has(version(f.archivo, a, 'avif')));
+    if (anchos.length) {
+      const srcset = (formato: string) => anchos.map((a) => `${porRuta.get(version(f.archivo, a, formato))} ${a}w`).join(', ');
+      mapa.set(f.id, { ...f, url: porRuta.get(version(f.archivo, anchos[anchos.length - 1], 'webp'))!, fuentes: { avif: srcset('avif'), webp: srcset('webp') } });
+      continue;
+    }
     const url = porRuta.get(f.archivo);
     if (url) mapa.set(f.id, { ...f, url });
   }

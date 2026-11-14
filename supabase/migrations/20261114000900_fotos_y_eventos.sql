@@ -80,9 +80,9 @@ create trigger albumes_un_evento
 
 -- -----------------------------------------------------------------------------
 -- Dónde se usa cada foto
--- SECURITY DEFINER para que el aviso sea completo, pero el título solo se
--- muestra si la persona puede ver ese contenido (si no, «contenido de otra
--- sección»). Solo para el equipo.
+-- SECURITY DEFINER para que el aviso sea completo, pero el título de algo no
+-- publicado solo se muestra a quien puede entrar a esa sección (si no,
+-- «contenido de otra sección»). Solo para el equipo.
 -- -----------------------------------------------------------------------------
 create or replace function public.usos_fotos(p_ids uuid[])
 returns table (foto_id uuid, tipo text, titulo text, publicado boolean, enlace text)
@@ -94,7 +94,8 @@ as $$
   with usos as (
     -- Artículos (portada o imagen del cuerpo) y sus cambios sin publicar
     select f.id as foto_id, 'Artículo'::text as tipo, a.titulo, public.articulo_es_visible(a) as publicado,
-           '/admin/articulos/' || a.id as enlace, public.tiene_algun_rol('superadmin', 'editor') as visible
+           '/admin/articulos/' || a.id as enlace,
+           public.tiene_algun_rol('superadmin', 'editor') as accesible
     from unnest(p_ids) f(id)
     join public.articulos a on a.portada_foto_id = f.id or a.cuerpo @? format('$.** ? (@ == "%s")', f.id)::jsonpath
     union all
@@ -107,7 +108,7 @@ as $$
     union all
     select f.id, case when x.portada_foto_id = f.id then 'Portada de actividad' else 'Fotos de actividad' end,
            x.titulo, x.estado = 'publicado', '/admin/eventos/' || x.id,
-           public.tiene_algun_rol('superadmin', 'eventos') or x.estado = 'publicado'
+           public.tiene_algun_rol('superadmin', 'eventos')
     from unnest(p_ids) f(id)
     join public.actividades x on x.portada_foto_id = f.id
       or exists (select 1 from public.actividad_fotos af where af.actividad_id = x.id and af.foto_id = f.id)
@@ -116,7 +117,7 @@ as $$
     union all
     select f.id, case when al.portada_foto_id = f.id then 'Portada de álbum' else 'Álbum' end,
            al.titulo, al.estado = 'publicado', '/admin/galerias/' || al.id,
-           public.tiene_algun_rol('superadmin', 'multimedia') or al.estado = 'publicado'
+           public.tiene_algun_rol('superadmin', 'multimedia')
     from unnest(p_ids) f(id)
     join public.albumes al on al.portada_foto_id = f.id
       or exists (select 1 from public.album_fotos af where af.album_id = al.id and af.foto_id = f.id)
@@ -134,10 +135,12 @@ as $$
     from unnest(p_ids) f(id)
     join public.configuracion c on c.seo_foto_id = f.id or c.mantenimiento_foto_id = f.id
   )
+  -- El título se ve si la persona puede entrar a esa sección o si ya está
+  -- publicado (es público); el enlace al panel, solo con acceso a la sección.
   select u.foto_id, u.tipo,
-         case when u.visible then u.titulo end,
+         case when u.accesible or u.publicado then u.titulo end,
          u.publicado,
-         case when u.visible then u.enlace end
+         case when u.accesible then u.enlace end
   from usos u
   where public.es_equipo();
 $$;

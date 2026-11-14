@@ -1,15 +1,18 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { Subidor } from '@/components/admin/fotos/Subidor';
 
 export type FotoBiblioteca = { id: string; url: string; texto_alternativo: string; ancho: number | null; alto: number | null };
 
 /**
- * Elegir una foto de la biblioteca existente (la subida de fotos llega en la
- * próxima etapa). Muestra miniaturas con búsqueda por texto alternativo.
+ * Elegir una foto de la biblioteca (o subir una nueva, que queda en la
+ * biblioteca). Muestra miniaturas con búsqueda por texto alternativo.
  */
-export function SelectorFoto({ fotos, abierto, onCerrar, onElegir, titulo }: {
+export function SelectorFoto({ fotos, abierto, onCerrar, onElegir, titulo, alSubir }: {
   fotos: FotoBiblioteca[]; abierto: boolean; onCerrar: () => void; onElegir: (id: string) => void; titulo: string;
+  /** Si se pasa, permite subir una foto nueva (queda en la biblioteca y se elige). */
+  alSubir?: (f: FotoBiblioteca) => void;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const [q, setQ] = useState('');
@@ -19,20 +22,25 @@ export function SelectorFoto({ fotos, abierto, onCerrar, onElegir, titulo }: {
     if (abierto && !d.open) d.showModal();
     if (!abierto && d.open) d.close();
   }, [abierto]);
-  const n = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const n = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   const lista = fotos.filter((f) => n(f.texto_alternativo).includes(n(q)));
 
   return (
     <dialog ref={ref} onClose={onCerrar} aria-label={titulo}
-      className="m-auto h-[min(760px,calc(100dvh-40px))] w-[calc(100%-24px)] max-w-[960px] rounded-[22px] bg-white p-0 text-texto shadow-[0_30px_60px_rgba(0,0,0,.35)] backdrop:bg-azul-profundo/55">
+      className="m-auto max-h-[calc(100dvh-40px)] h-[min(860px,calc(100dvh-40px))] w-[calc(100%-24px)] max-w-[960px] rounded-[22px] bg-white p-0 text-texto shadow-[0_30px_60px_rgba(0,0,0,.35)] backdrop:bg-azul-profundo/55">
       <div className="flex h-full flex-col">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-linea p-5">
           <div>
             <h2 className="font-titulo text-[20px] font-extrabold">{titulo}</h2>
-            <p className="text-[13px] text-texto-3">Biblioteca de fotos de JIUMP · subir fotos nuevas llega en la próxima etapa.</p>
+            <p className="text-[13px] text-texto-3">Elige una foto de la biblioteca de JIUMP{alSubir ? ' o sube una nueva' : ''}.</p>
           </div>
           <button type="button" className="adm-boton adm-secundario" onClick={onCerrar}>Cerrar</button>
         </div>
+        {alSubir && abierto && (
+          <div className="px-5 pt-4" data-subir-desde-selector>
+            <Subidor una compacto alSubir={([f]) => { alSubir(f); onElegir(f.id); }} />
+          </div>
+        )}
         <div className="p-5 pb-0">
           <label className="sr-only" htmlFor="buscar-foto">Buscar foto</label>
           <input id="buscar-foto" type="search" className="adm-campo" placeholder="Buscar por descripción…" value={q} onChange={(e) => setQ(e.target.value)} />

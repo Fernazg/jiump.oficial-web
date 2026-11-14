@@ -49,7 +49,7 @@ export const GRUPOS: { titulo: string; secciones: Seccion[] }[] = [
     { clave: 'menu', nombre: 'Menú, enlaces y pie', icono: '☰', ruta: '/admin/menu', roles: [S], lista: false },
   ] },
   { titulo: 'Multimedia', secciones: [
-    { clave: 'fotos', nombre: 'Biblioteca de fotos', icono: '▣', ruta: '/admin/fotos', roles: [S, M, E, V], lista: false },
+    { clave: 'fotos', nombre: 'Biblioteca de fotos', icono: '▣', ruta: '/admin/fotos', roles: [S, M, E, V], lista: true },
     { clave: 'galerias', nombre: 'Galerías y álbumes', icono: '❐', ruta: '/admin/galerias', roles: [S, M], lista: false },
     { clave: 'videos', nombre: 'Videos', icono: '▶', ruta: '/admin/videos', roles: [S, M], lista: false },
   ] },

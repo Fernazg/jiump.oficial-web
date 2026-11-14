@@ -59,7 +59,7 @@ export function diasEnPapelera(desde: string | null, ahora = Date.now()): number
 }
 
 function sinTildes(s: string) {
-  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 }
 
 export type FiltrosArticulos = { estado?: string; serie?: string; tema?: string; q?: string };
