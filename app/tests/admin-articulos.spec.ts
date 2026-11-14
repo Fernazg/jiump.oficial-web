@@ -30,9 +30,15 @@ async function nuevo(page: Page, titulo: string): Promise<string> {
   await page.goto('/admin/articulos');
   await page.getByRole('button', { name: '+ Nuevo artículo' }).click();
   await expect(page).toHaveURL(/\/admin\/articulos\/[0-9a-f-]{36}$/);
+  await editorListo(page);
   await page.getByLabel('Título del artículo').fill(titulo);
   await guardado(page);
   return idDe(page);
+}
+
+/** Espera a que el editor esté activo (JavaScript cargado) antes de escribir. */
+async function editorListo(page: Page) {
+  await page.locator('[data-editor-listo]').waitFor();
 }
 
 async function guardado(page: Page) {
@@ -158,6 +164,7 @@ test('editar un artículo publicado: los cambios no llegan al sitio hasta revisa
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(titulo);
 
   await page.goto(`/admin/articulos/${id}`);
+  await editorListo(page);
   await expect(page.getByLabel('Título del artículo')).toHaveValue(`${titulo} corregido`);
   await publicarDesdeVistaPrevia(page);
   await page.goto(`/articulos/${slug}`);
@@ -171,6 +178,7 @@ test('programar en horario de Chile: no se ve antes de la fecha y sí después',
   await guardado(page);
   await page.getByRole('button', { name: 'Vista previa' }).click();
   await page.getByRole('link', { name: '← Volver al editor' }).click();
+  await editorListo(page);
 
   // Mañana a las 10:30, hora de Chile
   const manana = new Date(Date.now() + 86_400_000);
@@ -229,6 +237,7 @@ test('papelera: eliminar pide confirmación, se recupera, y el borrado definitiv
   await enPapelera.getByRole('button', { name: 'Restaurar' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Sí, restaurar' }).click();
   await expect(page).toHaveURL(new RegExp(`/admin/articulos/${id}\\?aviso=restaurado`));
+  await editorListo(page);
   expect((await leer(id)).estado).toBe('borrador'); // vuelve sin publicar: requiere vista previa otra vez
   expect(await estadoPublico(page, slug)).toBe(404);
 
@@ -249,6 +258,7 @@ test('historial de versiones: «Restaurar» vuelve al contenido anterior', async
   await page.getByLabel('Título del artículo').fill(`${titulo} cambiado`);
   await guardado(page);
   await page.reload();
+  await editorListo(page);
   const versiones = page.locator('[data-historial] [data-version]');
   await expect(versiones.filter({ hasText: `«${titulo}»` })).toHaveCount(1);
   await expect(versiones.first()).toContainText('Tú');
@@ -267,8 +277,10 @@ test('edición simultánea: avisa quién más tiene abierto el artículo y no pi
   const p2 = await otro.newPage();
   await ingresar(p2, u.editor2);
   await p2.goto(`/admin/articulos/${id}`);
+  await editorListo(p2);
   await expect(p2.locator('[data-aviso-simultaneo]')).toContainText('Elisa Redactora también tiene abierto este artículo');
   await page.reload();
+  await editorListo(page);
   await expect(page.locator('[data-aviso-simultaneo]')).toContainText('Esteban Corrector también tiene abierto este artículo');
 
   // Ambos editan: el segundo en guardar recibe el aviso en vez de sobrescribir.

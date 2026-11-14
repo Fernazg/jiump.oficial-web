@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, type ReactNode } from 'react';
+import { useActionState, useEffect, useState, type ReactNode } from 'react';
 import { useFormStatus } from 'react-dom';
 
 export type EstadoFormulario = { error?: string; ok?: string } | null;
@@ -11,8 +11,11 @@ export function Formulario({ accion, children, className = '', id }: {
   accion: Accion; children: ReactNode; className?: string; id?: string;
 }) {
   const [estado, enviar] = useActionState(accion, null);
+  // Marca el formulario cuando ya está activo en el navegador (lo usan las pruebas).
+  const [listo, setListo] = useState(false);
+  useEffect(() => setListo(true), []);
   return (
-    <form action={enviar} className={className} id={id} noValidate={false}>
+    <form action={enviar} className={className} id={id} data-listo={listo || undefined}>
       {estado?.error && <p role="alert" className="adm-error">{estado.error}</p>}
       {estado?.ok && <p role="status" className="adm-ok">{estado.ok}</p>}
       {children}

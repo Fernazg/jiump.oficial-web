@@ -123,7 +123,7 @@ export async function recuperar(_: EstadoFormulario, datos: FormData): Promise<E
     redirectTo: `${await origen()}/admin/auth/confirmar?siguiente=/admin/nueva-clave`,
   });
   // Mismo mensaje exista o no la cuenta (no revela qué correos tienen acceso).
-  return { ok: 'Si ese correo tiene acceso al panel, te enviamos un enlace para crear una contraseña nueva. Revisa tu bandeja de entrada.' };
+  redirect('/admin/recuperar?enviado=1');
 }
 
 export async function nuevaClave(_: EstadoFormulario, datos: FormData): Promise<EstadoFormulario> {

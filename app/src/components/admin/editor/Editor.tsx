@@ -140,7 +140,8 @@ export function Editor(p: Props) {
     return () => window.removeEventListener('beforeunload', avisar);
   }, [guardado]);
 
-  useEffect(() => { const t = setInterval(() => refrescar((n) => n + 1), 5000); return () => clearInterval(t); }, []);
+  const [activo, setActivo] = useState(false);
+  useEffect(() => { setActivo(true); const t = setInterval(() => refrescar((n) => n + 1), 5000); return () => clearInterval(t); }, []);
 
   // --- Edición simultánea -------------------------------------------------------
   const [otros, setOtros] = useState<string[]>([]);
@@ -225,7 +226,7 @@ export function Editor(p: Props) {
   }[guardado];
 
   return (
-    <div className="flex min-h-dvh flex-1 flex-col">
+    <div className="flex min-h-dvh flex-1 flex-col" data-editor-listo={activo || undefined}>
       <header className="sticky top-0 z-30 border-b border-[#e1e3e6] bg-white">
         <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 sm:px-8">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">

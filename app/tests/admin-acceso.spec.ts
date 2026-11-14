@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { admin } from './apoyo';
-import { codigoNuevo, crearUsuario, desactivar, enlaceRecuperacion, ingresar, totp, type Usuario } from './apoyo-admin';
+import { codigoNuevo, crearUsuario, desactivar, enlaceRecuperacion, ingresar, listo, totp, type Usuario } from './apoyo-admin';
 
 /**
  * Panel /admin: inicio de sesión, doble factor, cierre de sesión y permisos
@@ -35,6 +35,7 @@ test.describe('inicio de sesión', () => {
 
   test('contraseña incorrecta: mensaje genérico', async ({ page }) => {
     await page.goto('/admin/ingresar');
+    await listo(page);
     await page.getByLabel('Correo').fill(u.editor.correo);
     await page.getByLabel('Contraseña').fill('no-es-la-clave');
     await page.getByRole('button', { name: 'Ingresar' }).click();
@@ -63,6 +64,7 @@ test.describe('inicio de sesión', () => {
     await desactivar(temporal);
     await page.goto('/admin/articulos');
     await expect(page).toHaveURL(/\/admin\/ingresar\?.*motivo=inactivo/);
+    await listo(page);
     // Y no puede volver a ingresar
     await page.getByLabel('Correo').fill(temporal.correo);
     await page.getByLabel('Contraseña').fill(temporal.clave);
@@ -73,13 +75,17 @@ test.describe('inicio de sesión', () => {
   test('recuperar la contraseña: mensaje genérico y enlace para crear una nueva', async ({ page }) => {
     const olvidadiza = await crearUsuario('Olga Olvido', ['editor']);
     await page.goto('/admin/ingresar');
+    await listo(page);
     await page.getByRole('link', { name: '¿Olvidaste tu contraseña?' }).click();
+    await expect(page).toHaveURL(/\/admin\/recuperar/);
+    await listo(page);
     await page.getByLabel('Correo').fill('nadie-existe@prueba.test');
     await page.getByRole('button', { name: 'Enviar enlace' }).click();
     await expect(page.getByRole('status')).toContainText('Si ese correo tiene acceso al panel', { timeout: 20_000 });
 
     await page.goto(await enlaceRecuperacion(olvidadiza.correo));
     await expect(page).toHaveURL(/\/admin\/nueva-clave/);
+    await listo(page);
     const nueva = `Nueva-${Date.now()}-clave`;
     await page.getByLabel('Contraseña nueva').fill(nueva);
     await page.getByLabel('Repite la contraseña').fill(nueva);
@@ -95,14 +101,17 @@ test.describe('inicio de sesión', () => {
 test.describe('doble factor', () => {
   test('Superadministrador: sin el código no entra; con el código sí', async ({ page }) => {
     await page.goto('/admin/ingresar');
+    await listo(page);
     await page.getByLabel('Correo').fill(u.super.correo);
     await page.getByLabel('Contraseña').fill(u.super.clave);
     await page.getByRole('button', { name: 'Ingresar' }).click();
     await expect(page).toHaveURL(/\/admin\/verificar/);
+    await listo(page);
 
     // Sin verificar, ninguna sección: vuelve a pedir el código.
     await page.goto('/admin/usuarios');
     await expect(page).toHaveURL(/\/admin\/verificar/);
+    await listo(page);
 
     await page.getByLabel('Código').fill(totp(u.super.secreto!, -5) === totp(u.super.secreto!) ? '000000' : totp(u.super.secreto!, -5));
     await page.getByRole('button', { name: 'Verificar' }).click();
@@ -117,15 +126,18 @@ test.describe('doble factor', () => {
   test('Superadministrador sin factor: debe inscribirlo antes de entrar', async ({ page }) => {
     const nuevo = await crearUsuario('Samuel Sinfactor', ['superadmin'], { dobleFactor: false });
     await page.goto('/admin/ingresar');
+    await listo(page);
     await page.getByLabel('Correo').fill(nuevo.correo);
     await page.getByLabel('Contraseña').fill(nuevo.clave);
     await page.getByRole('button', { name: 'Ingresar' }).click();
     await expect(page).toHaveURL(/\/admin\/doble-factor/);
+    await listo(page);
     await expect(page.getByText('Para Superadministrador es obligatorio')).toBeVisible();
     await expect(page.getByRole('link', { name: 'Ahora no' })).toHaveCount(0);
 
     await page.goto('/admin/articulos');
     await expect(page).toHaveURL(/\/admin\/doble-factor/);
+    await listo(page);
 
     await page.getByText('¿No puedes escanear?').click();
     const secreto = (await page.locator('[data-secreto-totp]').innerText()).trim();
@@ -145,6 +157,7 @@ test.describe('doble factor', () => {
     await expect(page.locator('[data-doble-factor="inactivo"]')).toBeVisible();
     await page.getByRole('link', { name: 'Activar doble factor' }).click();
     await expect(page.getByText('Es opcional para tu rol')).toBeVisible();
+    await listo(page);
     await page.getByText('¿No puedes escanear?').click();
     const secreto = (await page.locator('[data-secreto-totp]').innerText()).trim();
     await page.getByLabel('Código de la app').fill(await codigoNuevo(secreto));

@@ -94,13 +94,20 @@ export async function codigoNuevo(secreto: string): Promise<string> {
 }
 
 /** Inicia sesión por la interfaz (y el segundo factor si lo tiene). */
+/** Espera a que los formularios de la página estén activos (JavaScript cargado). */
+export async function listo(page: Page) {
+  await page.locator('form[data-listo]').first().waitFor();
+}
+
 export async function ingresar(page: Page, u: Usuario, destino = '/admin') {
   await page.goto(`/admin/ingresar${destino !== '/admin' ? `?siguiente=${encodeURIComponent(destino)}` : ''}`);
+  await listo(page);
   await page.getByLabel('Correo').fill(u.correo);
   await page.getByLabel('Contraseña').fill(u.clave);
   await page.getByRole('button', { name: 'Ingresar' }).click();
   if (u.secreto) {
     await expect(page).toHaveURL(/\/admin\/verificar/);
+    await listo(page);
     await page.getByLabel('Código').fill(await codigoNuevo(u.secreto));
     await page.getByRole('button', { name: 'Verificar' }).click();
   }
