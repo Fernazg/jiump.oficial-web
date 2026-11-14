@@ -113,3 +113,35 @@ export async function ingresar(page: Page, u: Usuario, destino = '/admin') {
   }
   await expect(page).not.toHaveURL(/\/admin\/(ingresar|verificar)/);
 }
+
+// ---------------------------------------------------------------------------
+// Storage (fotos de prueba)
+// ---------------------------------------------------------------------------
+export async function listarArchivos(carpeta: string): Promise<string[]> {
+  exigirLocal();
+  const r = await fetch(`${URL_API}/storage/v1/object/list/fotos`, {
+    method: 'POST',
+    headers: { apikey: SERVICIO, Authorization: `Bearer ${SERVICIO}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prefix: carpeta, limit: 1000 }),
+  });
+  const lista = (await r.json()) as { name: string; id: string | null }[];
+  const salida: string[] = [];
+  for (const x of lista) {
+    if (x.id) salida.push(`${carpeta}/${x.name}`);
+    else salida.push(...(await listarArchivos(`${carpeta}/${x.name}`)));
+  }
+  return salida;
+}
+
+/** Borra las fotos de prueba de una persona: filas y archivos (original y versiones). */
+export async function borrarFotosDe(u: Usuario) {
+  await admin(`fotos?creado_por=eq.${u.id}`, 'DELETE');
+  const archivos = await listarArchivos(u.id);
+  if (archivos.length) {
+    await fetch(`${URL_API}/storage/v1/object/fotos`, {
+      method: 'DELETE',
+      headers: { apikey: SERVICIO, Authorization: `Bearer ${SERVICIO}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prefixes: archivos }),
+    });
+  }
+}

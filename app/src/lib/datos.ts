@@ -43,18 +43,27 @@ export async function firmarFotos(
   if (unicos.length === 0) return mapa;
 
   const fotos = filas<Omit<FotoFirmada, 'url'>>(
-    await cliente.from('fotos').select('id, archivo, ancho, alto, texto_alternativo, credito').in('id', unicos),
+    await cliente.from('fotos').select('id, archivo, ancho, alto, texto_alternativo, credito, anchos').in('id', unicos),
     'fotos',
   );
   if (fotos.length === 0) return mapa;
 
+  // Original + versiones optimizadas (<carpeta>/<nombre>/<ancho>.webp|avif).
+  const version = (archivo: string, ancho: number, formato: string) => `${archivo.replace(/\.[^./]+$/, '')}/${ancho}.${formato}`;
+  const rutas = fotos.flatMap((f) => [f.archivo, ...(f.anchos ?? []).flatMap((a) => [version(f.archivo, a, 'webp'), version(f.archivo, a, 'avif')])]);
   const { data, error } = await cliente
     .storage.from('fotos')
-    .createSignedUrls(fotos.map((f) => f.archivo), SEGUNDOS_URL_FIRMADA);
+    .createSignedUrls(rutas, SEGUNDOS_URL_FIRMADA);
   if (error) throw new Error(`No se pudieron firmar las fotos: ${error.message}`);
 
   const porRuta = new Map((data ?? []).filter((d) => d.signedUrl && !d.error).map((d) => [d.path, d.signedUrl]));
   for (const f of fotos) {
+    const anchos = [...(f.anchos ?? [])].sort((a, b) => a - b).filter((a) => porRuta.has(version(f.archivo, a, 'webp')) && porRuta.has(version(f.archivo, a, 'avif')));
+    if (anchos.length) {
+      const srcset = (formato: string) => anchos.map((a) => `${porRuta.get(version(f.archivo, a, formato))} ${a}w`).join(', ');
+      mapa.set(f.id, { ...f, url: porRuta.get(version(f.archivo, anchos[anchos.length - 1], 'webp'))!, fuentes: { avif: srcset('avif'), webp: srcset('webp') } });
+      continue;
+    }
     const url = porRuta.get(f.archivo);
     if (url) mapa.set(f.id, { ...f, url });
   }
@@ -165,13 +174,13 @@ export async function actividadPorSlug(slug: string): Promise<Actividad | null> 
   return r.data as Actividad | null;
 }
 
-export async function detalleActividad(id: string) {
+export async function detalleActividad(id: string, cliente: SupabaseClient = supabase()) {
   const [secciones, enlaces, fotos, videos, albumes] = await Promise.all([
-    supabase().from('actividad_secciones').select('id, titulo, contenido, orden').eq('actividad_id', id).order('orden'),
-    supabase().from('actividad_enlaces').select('id, url, titulo, orden').eq('actividad_id', id).order('orden'),
-    supabase().from('actividad_fotos').select('foto_id, orden, es_portada').eq('actividad_id', id).order('orden'),
-    supabase().from('videos').select('id, url, titulo, descripcion, album_id, actividad_id').eq('actividad_id', id).order('orden'),
-    supabase().from('albumes').select(COLUMNAS_ALBUM).eq('actividad_id', id).order('orden'),
+    cliente.from('actividad_secciones').select('id, titulo, contenido, orden').eq('actividad_id', id).order('orden'),
+    cliente.from('actividad_enlaces').select('id, url, titulo, orden').eq('actividad_id', id).order('orden'),
+    cliente.from('actividad_fotos').select('foto_id, orden, es_portada').eq('actividad_id', id).order('orden'),
+    cliente.from('videos').select('id, url, titulo, descripcion, album_id, actividad_id').eq('actividad_id', id).order('orden'),
+    cliente.from('albumes').select(COLUMNAS_ALBUM).eq('actividad_id', id).order('orden'),
   ]);
   return {
     secciones: filas<SeccionActividad>(secciones, 'las secciones de la actividad'),
@@ -198,9 +207,9 @@ export async function albumes(): Promise<(Album & { fotoIds: string[] })[]> {
   return lista.map((a) => ({ ...a, fotoIds: rel.filter((r) => r.album_id === a.id).map((r) => r.foto_id) }));
 }
 
-export async function videosDeAlbum(albumId: string): Promise<Video[]> {
+export async function videosDeAlbum(albumId: string, cliente: SupabaseClient = supabase()): Promise<Video[]> {
   return filas<Video>(
-    await supabase().from('videos').select('id, url, titulo, descripcion, album_id, actividad_id').eq('album_id', albumId).order('orden'),
+    await cliente.from('videos').select('id, url, titulo, descripcion, album_id, actividad_id').eq('album_id', albumId).order('orden'),
     'los videos del álbum',
   );
 }

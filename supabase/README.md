@@ -13,12 +13,14 @@ migrations/
   …0600_seguridad            Correcciones de la revisión de seguridad (ver «Revisión de seguridad»)
   …0700_actividades_y_mantenimiento  Lema, cita y abreviatura de actividades; foto de mantenimiento
   …0800_panel_admin          Panel: mi_acceso(), vista previa obligatoria, cambios pendientes, presencia y papelera automática
+  …0900_fotos_y_eventos      Panel etapa 2: versiones de fotos, regla 2, usos de fotos, vista previa de actividades/álbumes/videos, próximo evento
 seed.sql                    Datos de prueba SOLO para desarrollo local
 scripts/subir-fotos-diseno.sh   Sube design/fotos/ al Storage local
 tests/database/permisos.test.sql    pgTAP: reglas del modelo y permisos por rol (86)
 tests/database/seguridad.test.sql   pgTAP: revisión de seguridad, matriz completa y bucket (562)
 tests/database/actividades_mantenimiento.test.sql   pgTAP: campos de la migración 7 (20)
 tests/database/panel_admin.test.sql   pgTAP: migración 8 (28)
+tests/database/fotos_eventos.test.sql pgTAP: migración 9 (45)
 tests/api/                  Prueba de integración HTTP: login, 2FA, sesiones, REST y Storage (9)
 ```
 
@@ -91,6 +93,15 @@ Las claves locales las entrega `supabase status`; **nunca** se copian al reposit
 - **Cambios pendientes** (`articulo_cambios`): al editar un artículo publicado o programado, los cambios se guardan aparte y el sitio sigue mostrando la versión publicada hasta publicarlos.
 - **Presencia** (`articulo_presencia`): quién tiene abierto cada artículo, para el aviso de edición simultánea. Guarda solo el nombre del perfil.
 - **Papelera automática:** `pg_cron` (incluido en Supabase, también en el plan gratuito) ejecuta `purgar_papelera_articulos()` todos los días. No hace falta la service role ni un servicio externo.
+
+**Panel /admin, etapa 2 (migración 9)**
+- **Fotos optimizadas:** al subir, el panel guarda el original sin cambios y crea versiones WebP y AVIF de 480, 960 y 1600 px de ancho (nunca más grandes que el original, sin recortar). `fotos.anchos` dice cuáles existen; el sitio las usa con `srcset`.
+- **Regla 2 (no mezclar eventos), en la base:** una foto está en a lo más una actividad y un álbum, y un álbum asociado a una actividad solo tiene fotos de esa actividad (los álbumes sin actividad, solo fotos sin actividad).
+- **`usos_fotos()`:** dónde se usa cada foto, para avisar antes de eliminarla. El título de algo no publicado solo se muestra a quien puede entrar a esa sección.
+- **Vista previa obligatoria** también para actividades, álbumes y videos (`vistas_previas_contenido` + trigger). La huella incluye secciones, enlaces y fotos: si algo cambia después de la vista previa, hay que verla de nuevo. Editar algo ya publicado se aplica al guardar.
+- **`guardar_actividad()` y `guardar_album()`:** guardan datos, secciones, enlaces y fotos en una sola transacción, y rechazan el guardado si otra persona guardó antes.
+- **`marcar_proximo()`:** marca el «Próximo evento» y desmarca el anterior (siempre uno solo).
+- **Corrección:** ahora se puede borrar la cuenta de alguien que creó contenido (su contenido queda, sin autor). Antes la base lo impedía por error.
 
 ## Puesta en producción (cuando se autorice)
 

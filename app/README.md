@@ -70,7 +70,7 @@ Solo funciona con las tres condiciones juntas: `next dev`, la variable y un Supa
 
 ## Panel /admin
 
-Etapa 1: inicio de sesión, estructura, escritorio y artículos. Eventos, fotos, galerías, videos, página web, institucional, usuarios, registro y configuración ya están en el menú (con sus permisos y 403), pero su contenido llega en la próxima etapa.
+Etapa 1: inicio de sesión, estructura, escritorio y artículos. Etapa 2: biblioteca de fotos, eventos y actividades, galerías y videos. Página web, institucional, menú, usuarios, registro y configuración ya están en el menú (con sus permisos y 403), pero su contenido llega en la próxima etapa.
 
 **Acceso**
 - Correo y contraseña de Supabase Auth. No hay registro público.
@@ -94,4 +94,19 @@ Etapa 1: inicio de sesión, estructura, escritorio y artículos. Eventos, fotos,
 - Aviso de edición simultánea y protección contra sobrescribir: si otra persona guardó antes, se pide recargar.
 - Series y temas: crear, editar y borrar (una serie con artículos no se puede borrar).
 
-**Pruebas del panel** (`tests/admin-*.spec.ts`): crean usuarios de prueba de cada rol en el Supabase local (con TOTP simulado) y cubren qué puede y qué no puede hacer cada uno (también entrando por URL), el doble factor, cerrar sesión y desactivar, recuperar la contraseña, el flujo completo de publicación, la programación, la papelera, las versiones, la edición simultánea, series y temas, y que un borrador nunca aparezca en el sitio público.
+**Biblioteca de fotos** (todo el equipo; ◐ Editor y Eventos solo editan o borran las suyas)
+- Subir arrastrando o eligiendo archivos: JPG, PNG, WebP o AVIF de hasta 10 MB, con texto alternativo obligatorio y crédito opcional.
+- Al subir se guardan el original sin cambios y versiones WebP y AVIF de varios anchos (`sharp`, en el servidor). El sitio muestra esas versiones (más livianas, sin datos de ubicación).
+- Buscar por descripción o crédito, filtrar (subidas por mí, en uso, sin usar, por álbum) y ver dónde se usa cada foto. Eliminar pide confirmación y avisa si está en uso.
+- En el editor de artículos se puede subir una foto nueva como portada o imagen.
+
+**Eventos y actividades** (Superadmin y Eventos)
+- Todos los campos del modelo: año obligatorio, fecha opcional (día exacto o solo mes y año), lugar, zona, introducción, lema, cita bíblica, abreviatura.
+- Secciones (Día 1, Día 2…) con los mismos bloques que los artículos, enlaces a videos y transmisiones, y fotos ordenadas con portada. Quitar una foto no la borra de la biblioteca.
+- Vista previa obligatoria antes de publicar (misma página que el sitio). Destacar en Inicio y ordenar, y «Próximo evento» (uno solo).
+
+**Galerías y videos** (Superadmin y Multimedia)
+- Álbumes con fotos ordenadas, portada, año, lugar y actividad opcional. Un álbum tiene fotos de un solo evento (regla 2).
+- Videos de YouTube asignados a un álbum o una actividad. Vista previa obligatoria antes de publicar.
+
+**Pruebas del panel** (`tests/admin-*.spec.ts`): crean usuarios de prueba de cada rol en el Supabase local (con TOTP simulado) y cubren qué puede y qué no puede hacer cada uno (también entrando por URL), la subida y optimización de fotos, eventos, álbumes y videos con su vista previa, el doble factor, cerrar sesión y desactivar, recuperar la contraseña, el flujo completo de publicación, la programación, la papelera, las versiones, la edición simultánea, series y temas, y que lo no publicado nunca aparezca en el sitio público. Al terminar, borran todo lo que crearon (contenido, fotos, archivos y cuentas de prueba; queda solo la última cuenta de prueba con rol de superadmin, porque la base nunca deja el sitio sin uno).

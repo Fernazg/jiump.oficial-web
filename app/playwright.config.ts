@@ -6,6 +6,7 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests',
+  globalTeardown: './tests/limpieza-global.ts',
   workers: 1, // algunas pruebas cambian datos compartidos (mantenimiento, borradores)
   fullyParallel: false,
   retries: process.env.CI ? 1 : 0,
