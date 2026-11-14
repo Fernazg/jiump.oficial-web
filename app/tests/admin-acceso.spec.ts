@@ -76,7 +76,7 @@ test.describe('inicio de sesión', () => {
     await page.getByRole('link', { name: '¿Olvidaste tu contraseña?' }).click();
     await page.getByLabel('Correo').fill('nadie-existe@prueba.test');
     await page.getByRole('button', { name: 'Enviar enlace' }).click();
-    await expect(page.getByRole('status')).toContainText('Si ese correo tiene acceso al panel');
+    await expect(page.getByRole('status')).toContainText('Si ese correo tiene acceso al panel', { timeout: 20_000 });
 
     await page.goto(await enlaceRecuperacion(olvidadiza.correo));
     await expect(page).toHaveURL(/\/admin\/nueva-clave/);

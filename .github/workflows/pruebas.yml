@@ -33,10 +33,11 @@ jobs:
           cache: npm
           cache-dependency-path: app/package-lock.json
 
+      # mailpit queda encendido: recibe los correos de «Recuperar contraseña» del panel.
       - name: Levantar Supabase local
         run: >
           npx --yes ${{ env.SUPABASE_CLI }} start
-          -x studio,imgproxy,realtime,edge-runtime,logflare,vector,supavisor,mailpit,postgres-meta
+          -x studio,imgproxy,realtime,edge-runtime,logflare,vector,supavisor,postgres-meta
 
       - name: Base limpia (migraciones + seed)
         run: npx --yes ${{ env.SUPABASE_CLI }} db reset
