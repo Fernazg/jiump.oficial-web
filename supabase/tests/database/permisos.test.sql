@@ -267,6 +267,9 @@ select is((select array_agg(r)::text from mis_roles() r), '{superadmin}', 'mis_r
 select pg_temp.como('11111111-1111-4111-8111-111111111111', 'aal2');
 update configuracion set modo_mantenimiento = true;
 select is((select modo_mantenimiento from configuracion), true, 'Superadmin con doble factor activa el modo mantenimiento');
+-- Publicar una página exige su vista previa (migración 10).
+insert into vistas_previas_contenido (tipo, registro_id, huella)
+select 'pagina', id, huella_contenido('pagina', id) from paginas where clave = 'inicio';
 select lives_ok($$ update paginas set estado = 'publicado' where clave = 'inicio' $$, 'Superadmin publica páginas');
 select lives_ok($$ insert into perfil_roles (perfil_id, rol) select id, 'multimedia' from perfiles where correo = 'editor@pgtap.prueba' $$,
   'Superadmin asigna roles');

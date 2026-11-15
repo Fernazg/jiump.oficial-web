@@ -228,9 +228,10 @@ insert into acciones values
   ('foto de álbum', $$ insert into album_fotos (album_id, foto_id) values ('e6000000-0000-4000-8000-000000000006', 'fa000000-0000-4000-8000-00000000000a') $$, '{superadmin,multimedia,eventos_multimedia}'),
   ('crear video', $$ insert into videos (titulo, url) values ('m', 'https://youtu.be/m') $$, '{superadmin,multimedia,eventos_multimedia}'),
   ('editar página', $$ update paginas set titulo = titulo where clave = 'eventos' $$, '{superadmin}'),
-  ('sección de página', $$ insert into secciones (pagina_id, tipo) select id, 'm' from paginas where clave = 'eventos' $$, '{superadmin}'),
-  ('institucional', $$ insert into institucional (tipo, titulo) values ('vision', 'm') $$, '{superadmin}'),
-  ('menú', $$ insert into menu (ubicacion, etiqueta, url) values ('pie', 'm', '/m') $$, '{superadmin}'),
+  -- Página en borrador: lo publicado (secciones, menú, institucional) solo cambia publicando cambios con vista previa (migración 10).
+  ('sección de página', $$ insert into secciones (pagina_id, tipo) select id, 'm' from paginas where clave = 'galeria' $$, '{superadmin}'),
+  ('institucional', $$ select set_config('jiump.aplicando_cambios', 'on', true); insert into institucional (tipo, titulo) values ('vision', 'm') $$, '{superadmin}'),
+  ('menú', $$ select set_config('jiump.aplicando_cambios', 'on', true); insert into menu (ubicacion, etiqueta, url) values ('pie', 'm', '/m') $$, '{superadmin}'),
   ('redirección', $$ insert into redirecciones (origen, destino) values ('/m', '/n') $$, '{superadmin}'),
   ('modo mantenimiento', $$ update configuracion set modo_mantenimiento = not modo_mantenimiento $$, '{superadmin}'),
   ('editar perfil ajeno', $$ update perfiles set nombre = 'm' where user_id = 'b8000000-0000-4000-8000-000000000008' $$, '{superadmin}'),
@@ -306,7 +307,7 @@ select set_eq(
 select is((select array_agg(p.proname::text order by p.proname) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
            where n.nspname = 'public' and p.prosecdef and has_function_privilege('authenticated', p.oid, 'execute')
              and p.proname not in ('es_equipo', 'tiene_rol', 'tiene_algun_rol', 'mis_roles', 'foto_es_publica', 'objeto_foto_es_publico',
-                                 'usos_fotos')), -- usos_fotos: migración 9, oculta títulos sin permiso (ver fotos_eventos.test.sql)
+                                 'usos_fotos', 'usuarios_panel')), -- usos_fotos: migración 9, oculta títulos sin permiso (ver fotos_eventos.test.sql)
   null, '4 · Ninguna otra función SECURITY DEFINER (triggers, purga) es ejecutable desde la API');
 select ok(not exists (select 1 from pg_class c join pg_namespace n on n.oid = c.relnamespace
                       where n.nspname = 'public' and c.relkind in ('r', 'p') and not c.relrowsecurity),
