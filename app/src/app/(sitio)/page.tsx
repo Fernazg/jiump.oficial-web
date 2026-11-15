@@ -1,10 +1,11 @@
 import { AvisoVistaPrevia } from '@/components/AvisoVistaPrevia';
 import { fotosDeInicio, InicioCompleto } from '@/components/InicioCompleto';
 import { actividades, albumes, articulos, configuracion, firmarFotos, institucional, series, seccionesDePagina } from '@/lib/datos';
-import { exigirPagina } from '@/lib/paginas';
+import { exigirPagina, metadataDePagina } from '@/lib/paginas';
 import { fotosDeSecciones } from '@/lib/secciones';
 
 export const dynamic = 'force-dynamic';
+export const generateMetadata = () => metadataDePagina('inicio', null);
 
 export default async function Inicio() {
   const { vistaPrevia } = await exigirPagina('inicio');

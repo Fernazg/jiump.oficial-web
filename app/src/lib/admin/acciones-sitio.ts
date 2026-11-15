@@ -104,7 +104,7 @@ export async function guardarMenu(items: ItemMenuEditable[], version: string): P
 // -----------------------------------------------------------------------------
 // Información institucional (textos oficiales; los vacíos no se guardan)
 // -----------------------------------------------------------------------------
-export const TIPOS_INSTITUCIONAL = ['identidad', 'quienes_somos', 'declaracion_fe', 'cifra', 'vision', 'historia'] as const;
+const TIPOS_INSTITUCIONAL = ['identidad', 'quienes_somos', 'declaracion_fe', 'cifra', 'vision', 'historia'] as const;
 export type ItemInstitucional = { tipo: (typeof TIPOS_INSTITUCIONAL)[number]; titulo: string; texto: string };
 
 export async function guardarInstitucional(items: ItemInstitucional[], version: string): Promise<ResultadoGuardar> {

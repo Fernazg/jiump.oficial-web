@@ -44,9 +44,9 @@ export const GRUPOS: { titulo: string; secciones: Seccion[] }[] = [
     { clave: 'eventos', nombre: 'Eventos y actividades', icono: '◷', ruta: '/admin/eventos', roles: [S, V], lista: true },
   ] },
   { titulo: 'Sitio web', secciones: [
-    { clave: 'pagina-web', nombre: 'Administrar página web', icono: '▤', ruta: '/admin/pagina-web', roles: [S], lista: false },
-    { clave: 'institucional', nombre: 'Información institucional', icono: 'ℹ', ruta: '/admin/institucional', roles: [S], lista: false },
-    { clave: 'menu', nombre: 'Menú, enlaces y pie', icono: '☰', ruta: '/admin/menu', roles: [S], lista: false },
+    { clave: 'pagina-web', nombre: 'Administrar página web', icono: '▤', ruta: '/admin/pagina-web', roles: [S], lista: true },
+    { clave: 'institucional', nombre: 'Información institucional', icono: 'ℹ', ruta: '/admin/institucional', roles: [S], lista: true },
+    { clave: 'menu', nombre: 'Menú, enlaces y pie', icono: '☰', ruta: '/admin/menu', roles: [S], lista: true },
   ] },
   { titulo: 'Multimedia', secciones: [
     { clave: 'fotos', nombre: 'Biblioteca de fotos', icono: '▣', ruta: '/admin/fotos', roles: [S, M, E, V], lista: true },
@@ -54,9 +54,9 @@ export const GRUPOS: { titulo: string; secciones: Seccion[] }[] = [
     { clave: 'videos', nombre: 'Videos', icono: '▶', ruta: '/admin/videos', roles: [S, M], lista: true },
   ] },
   { titulo: 'Administración', secciones: [
-    { clave: 'usuarios', nombre: 'Usuarios y roles', icono: '⚿', ruta: '/admin/usuarios', roles: [S], lista: false },
-    { clave: 'registro', nombre: 'Registro de actividad', icono: '≡', ruta: '/admin/registro', roles: [S], lista: false },
-    { clave: 'configuracion', nombre: 'Configuración', icono: '⚙', ruta: '/admin/configuracion', roles: [S], lista: false },
+    { clave: 'usuarios', nombre: 'Usuarios y roles', icono: '⚿', ruta: '/admin/usuarios', roles: [S], lista: true },
+    { clave: 'registro', nombre: 'Registro de actividad', icono: '≡', ruta: '/admin/registro', roles: [S], lista: true },
+    { clave: 'configuracion', nombre: 'Configuración', icono: '⚙', ruta: '/admin/configuracion', roles: [S], lista: true },
   ] },
 ];
 
@@ -77,7 +77,7 @@ export function puedeEntrar(clave: ClaveSeccion, efectivos: readonly Rol[], asig
 }
 
 /** Rutas del panel que no exigen sesión. */
-export const RUTAS_PUBLICAS = ['/admin/ingresar', '/admin/recuperar', '/admin/auth/confirmar'];
+export const RUTAS_PUBLICAS = ['/admin/ingresar', '/admin/recuperar', '/admin/auth/confirmar', '/admin/bienvenida'];
 
 /** Rutas con sesión pero fuera de las secciones (pasos de acceso y 403). */
 export const RUTAS_DE_ACCESO = ['/admin/verificar', '/admin/doble-factor', '/admin/nueva-clave', '/admin/salir', '/admin/sin-permiso'];

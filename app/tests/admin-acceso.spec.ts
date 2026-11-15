@@ -120,7 +120,7 @@ test.describe('doble factor', () => {
     await page.getByLabel('Código').fill(await codigoNuevo(u.super.secreto!));
     await page.getByRole('button', { name: 'Verificar' }).click();
     await expect(page).toHaveURL(/\/admin\/usuarios$/);
-    await expect(page.locator('[data-proxima-etapa]')).toBeVisible();
+    await expect(page.locator('[data-lista-usuarios]')).toBeVisible();
   });
 
   test('Superadministrador sin factor: debe inscribirlo antes de entrar', async ({ page }) => {

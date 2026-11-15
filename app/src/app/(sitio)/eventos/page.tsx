@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { AvisoVistaPrevia } from '@/components/AvisoVistaPrevia';
-import { exigirPagina } from '@/lib/paginas';
+import { exigirPagina, metadataDePagina } from '@/lib/paginas';
 import Link from 'next/link';
 import { EstadoVacio, Etiqueta, Flecha, Foto, Pastilla } from '@/components/Basicos';
 import { IconoCalendario, IconoUbicacion } from '@/components/Iconos';
@@ -9,7 +9,7 @@ import { actividades, configuracion, firmarFotos } from '@/lib/datos';
 import { etiquetaActividad, fechaActividad } from '@/lib/formato';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = { title: 'Eventos' };
+export const generateMetadata = (): Promise<Metadata> => metadataDePagina('eventos', 'Eventos');
 
 /**
  * Eventos: el próximo evento (si hay uno marcado) y las actividades del año más

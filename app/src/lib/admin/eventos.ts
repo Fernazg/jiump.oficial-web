@@ -14,6 +14,7 @@ export const TIPOS_ACTIVIDAD: { clave: string; nombre: string }[] = [
   { clave: 'mujeres', nombre: 'Encuentro de mujeres' },
 ];
 
+export type TipoContenido = 'actividad' | 'album' | 'video' | 'pagina' | 'menu' | 'institucional';
 export type EstadoContenido = 'borrador' | 'publicado' | 'archivado';
 
 export type ActividadPanel = {
@@ -93,7 +94,7 @@ export async function miniaturas(ids: string[]): Promise<FotoElegible[]> {
 }
 
 /** ¿Esta persona vio la vista previa del contenido guardado? */
-export async function vistaPreviaContenidoAlDia(tipo: 'actividad' | 'album' | 'video', id: string): Promise<boolean> {
+export async function vistaPreviaContenidoAlDia(tipo: TipoContenido, id: string): Promise<boolean> {
   const supabase = await clientePanel();
   const { data: huella } = await supabase.rpc('huella_contenido', { p_tipo: tipo, p_id: id });
   if (!huella) return false;
@@ -106,7 +107,7 @@ export const puedeEventos = (a: Acceso) => a.efectivos.some((r) => r === 'supera
 
 /** Cambios pendientes de algo ya publicado (null si no hay). */
 export type Cambios = { datos: Record<string, unknown>; actualizado_en: string };
-export async function cambiosPendientes(tipo: 'actividad' | 'album' | 'video', id: string): Promise<Cambios | null> {
+export async function cambiosPendientes(tipo: TipoContenido, id: string): Promise<Cambios | null> {
   const supabase = await clientePanel();
   const { data } = await supabase.from('contenido_cambios').select('datos, actualizado_en').eq('tipo', tipo).eq('registro_id', id).maybeSingle();
   return (data as Cambios | null) ?? null;

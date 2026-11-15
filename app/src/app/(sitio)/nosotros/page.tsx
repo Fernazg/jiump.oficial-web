@@ -2,11 +2,11 @@ import type { Metadata } from 'next';
 import { AvisoVistaPrevia } from '@/components/AvisoVistaPrevia';
 import { NosotrosCompleto } from '@/components/NosotrosCompleto';
 import { firmarFotos, institucional, seccionesDePagina } from '@/lib/datos';
-import { exigirPagina } from '@/lib/paginas';
+import { exigirPagina, metadataDePagina } from '@/lib/paginas';
 import { fotosDeSecciones } from '@/lib/secciones';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = { title: 'Nosotros' };
+export const generateMetadata = (): Promise<Metadata> => metadataDePagina('nosotros', 'Nosotros');
 
 export default async function Nosotros() {
   const { vistaPrevia } = await exigirPagina('nosotros');

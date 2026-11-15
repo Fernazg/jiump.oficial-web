@@ -28,8 +28,9 @@ export function usuarioInstagram(url: string | null): string | null {
   return m ? `@${m[1]}` : null;
 }
 
-export async function Encabezado({ acento }: { acento?: 'rojo' }) {
-  const items = (await menuVisible()).filter((i) => i.ubicacion === 'principal');
+/** `items`: solo para la vista previa del menú (cambios sin publicar). */
+export async function Encabezado({ acento, items: previa }: { acento?: 'rojo'; items?: ItemMenu[] }) {
+  const items = (previa ?? (await menuVisible())).filter((i) => i.ubicacion === 'principal');
   return (
     <header className={`sticky top-0 z-40 bg-white/95 backdrop-blur ${acento === 'rojo' ? 'border-b-2 border-rojo' : 'border-b border-linea'}`}>
       <div className="contenedor relative flex h-[76px] items-center justify-between">
@@ -42,8 +43,8 @@ export async function Encabezado({ acento }: { acento?: 'rojo' }) {
   );
 }
 
-export async function Pie() {
-  const [items, conf] = await Promise.all([menuVisible(), configuracion()]);
+export async function Pie({ items: previa }: { items?: ItemMenu[] } = {}) {
+  const [items, conf] = await Promise.all([previa ?? menuVisible(), configuracion()]);
   const explora = items.filter((i) => i.ubicacion === 'principal');
   const pie = items.filter((i) => i.ubicacion === 'pie');
   const ig = usuarioInstagram(conf.instagram_url);

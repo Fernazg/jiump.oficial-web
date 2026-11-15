@@ -21,3 +21,22 @@ export async function exigirPagina(clave: ClavePagina): Promise<{ vistaPrevia: b
   if (vistaPreviaActiva()) return { vistaPrevia: true };
   notFound();
 }
+
+/**
+ * SEO de una página: el suyo (Administrar página web) o, si falta, el de
+ * Configuración. Sin ninguno, se usan el nombre y el lema del sitio.
+ */
+export async function metadataDePagina(clave: ClavePagina, nombre: string | null): Promise<import('next').Metadata> {
+  const [p, c] = await Promise.all([
+    supabase().from('paginas').select('seo_titulo, seo_descripcion').eq('clave', clave).maybeSingle(),
+    supabase().from('configuracion').select('seo_titulo, seo_descripcion').maybeSingle(),
+  ]);
+  const pagina = (p.data ?? {}) as { seo_titulo?: string | null; seo_descripcion?: string | null };
+  const conf = (c.data ?? {}) as { seo_titulo?: string | null; seo_descripcion?: string | null };
+  const titulo = pagina.seo_titulo || (nombre ?? conf.seo_titulo);
+  const descripcion = pagina.seo_descripcion || conf.seo_descripcion;
+  return {
+    ...(titulo ? { title: pagina.seo_titulo || !nombre ? { absolute: titulo } : titulo } : {}),
+    ...(descripcion ? { description: descripcion } : {}),
+  };
+}

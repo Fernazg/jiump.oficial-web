@@ -90,7 +90,7 @@ export type SeccionActividad = { id: string; titulo: string; contenido: Bloque[]
 
 export type Institucional = { id: string; tipo: string; titulo: string; texto: string | null; orden: number };
 
-export type SeccionPagina = { id: string; tipo: string; orden: number; contenido: Record<string, unknown> };
+export type SeccionPagina = { id: string; tipo: string; orden: number; visible?: boolean; contenido: Record<string, unknown> };
 
 export type ItemMenu = { id: string; ubicacion: 'principal' | 'pie'; etiqueta: string; url: string; orden: number };
 

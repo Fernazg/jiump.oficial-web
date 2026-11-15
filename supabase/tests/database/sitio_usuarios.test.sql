@@ -5,7 +5,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(27);
+select plan(31);
 
 create function pg_temp.crear_usuario(p_id uuid, p_correo text, p_roles rol_app[], p_factor boolean default false)
 returns void language plpgsql as $$
@@ -39,6 +39,29 @@ grant execute on function pg_temp.como(uuid, text) to authenticated;
 
 select pg_temp.crear_usuario('5a000000-0000-4000-8000-000000000001', 'supersitio@pgtap.prueba', '{superadmin}');
 select pg_temp.crear_usuario('5a000000-0000-4000-8000-000000000002', 'editorsitio@pgtap.prueba', '{editor}');
+select pg_temp.crear_usuario('5a000000-0000-4000-8000-000000000004', 'eventossitio@pgtap.prueba', '{eventos}', true);
+select pg_temp.crear_usuario('5a000000-0000-4000-8000-000000000005', 'multisitio@pgtap.prueba', '{multimedia}');
+
+-- Lo que un rol que no es Superadmin intenta en estas secciones; devuelve lo que logró.
+create function pg_temp.intentos() returns text language plpgsql as $$
+declare
+  logrado text[] := '{}';
+  n int;
+begin
+  begin perform guardar_contenido('pagina', (select id from paginas where clave = 'inicio'), 'epoch', '{}'); logrado := array_append(logrado, 'pagina'); exception when others then null; end;
+  begin perform guardar_contenido('menu', '00000000-0000-0000-0000-000000000000', 'epoch', '{"items":[]}'); logrado := array_append(logrado, 'menu'); exception when others then null; end;
+  begin perform guardar_contenido('institucional', '00000000-0000-0000-0000-000000000000', 'epoch', '{"items":[]}'); logrado := array_append(logrado, 'institucional'); exception when others then null; end;
+  begin update paginas set estado = 'borrador' where clave = 'eventos'; get diagnostics n = row_count; if n > 0 then logrado := array_append(logrado, 'retirar'); end if; exception when others then null; end;
+  begin update secciones set visible = false; get diagnostics n = row_count; if n > 0 then logrado := array_append(logrado, 'secciones'); end if; exception when others then null; end;
+  begin update configuracion set modo_mantenimiento = true; get diagnostics n = row_count; if n > 0 then logrado := array_append(logrado, 'mantenimiento'); end if; exception when others then null; end;
+  begin insert into redirecciones (origen, destino) values ('/intento', '/'); logrado := array_append(logrado, 'redireccion'); exception when others then null; end;
+  begin insert into perfil_roles (perfil_id, rol) select id, 'superadmin' from perfiles where user_id = auth.uid(); logrado := array_append(logrado, 'rol'); exception when others then null; end;
+  begin update perfiles set activo = false where user_id <> auth.uid(); get diagnostics n = row_count; if n > 0 then logrado := array_append(logrado, 'desactivar'); end if; exception when others then null; end;
+  if (select count(*) from registro_actividad) > 0 then logrado := array_append(logrado, 'registro'); end if;
+  if (select count(*) from usuarios_panel()) > 0 then logrado := array_append(logrado, 'usuarios'); end if;
+  return array_to_string(logrado, ',');
+end $$;
+grant execute on function pg_temp.intentos() to authenticated;
 -- Superadmin cuyo rol se asignó ANTES de su factor: no vigente
 insert into auth.users (id, instance_id, aud, role, email) values
   ('5a000000-0000-4000-8000-000000000003', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'tardio@pgtap.prueba');
@@ -125,7 +148,14 @@ select is((select doble_factor::text || superadmin_vigente::text from usuarios_p
 select is((select doble_factor::text || superadmin_vigente::text from usuarios_panel() where correo = 'tardio@pgtap.prueba'), 'truefalse',
   'Un superadmin cuyo factor es posterior al rol no está vigente');
 
+select pg_temp.como('5a000000-0000-4000-8000-000000000004', 'aal2');
+select is(pg_temp.intentos(), '', 'Eventos (con doble factor) no edita páginas, menú, institucional, usuarios, registro ni configuración');
+reset role;
+select pg_temp.como('5a000000-0000-4000-8000-000000000005');
+select is(pg_temp.intentos(), '', 'Multimedia tampoco');
+reset role;
 select pg_temp.como('5a000000-0000-4000-8000-000000000002');
+select is(pg_temp.intentos(), '', 'Editor tampoco');
 select is((select count(*)::int from usuarios_panel()), 0, 'Editor no ve la lista de usuarios');
 select throws_ok($$ select guardar_contenido('menu', '00000000-0000-0000-0000-000000000000', 'epoch', '{"items":[]}') $$,
   '42501', null, 'Editor no edita el menú');
@@ -133,6 +163,11 @@ reset role;
 set local role anon;
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
 select throws_ok($$ select * from usuarios_panel() $$, '42501', null, 'El visitante no consulta usuarios');
+reset role;
+
+-- Control: el Superadmin sí logra esas acciones (la prueba de arriba no pasa «en vacío»).
+select pg_temp.como('5a000000-0000-4000-8000-000000000001', 'aal2');
+select matches(pg_temp.intentos(), 'menu,institucional.*mantenimiento,redireccion.*registro,usuarios', 'El Superadmin sí puede (control de la prueba)');
 reset role;
 
 select * from finish();

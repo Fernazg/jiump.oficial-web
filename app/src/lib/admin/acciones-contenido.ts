@@ -21,8 +21,6 @@ const SECCION: Record<Tipo, ClaveSeccion> = {
 const RUTA: Record<Tipo, string> = {
   actividad: '/admin/eventos', album: '/admin/galerias', video: '/admin/videos', pagina: '/admin/pagina-web', menu: '/admin/menu', institucional: '/admin/institucional',
 };
-/** «menu» e «institucional» son un solo conjunto cada uno (ver migración 10). */
-export const ID_CONJUNTO = '00000000-0000-0000-0000-000000000000';
 
 /** Dónde volver después de una acción (la página web se edita por su clave). */
 async function destino(tipo: Tipo, id: string, aviso: string, supabase: Awaited<ReturnType<typeof clientePanel>>): Promise<string> {
