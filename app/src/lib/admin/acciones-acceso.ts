@@ -1,10 +1,10 @@
 'use server';
 
-import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import type { EstadoFormulario } from '@/components/admin/Formulario';
 import { obtenerAcceso } from './acceso';
 import { destinoSeguro } from './secciones';
+import { origen } from './origen';
 import { clientePanel } from './supabase-panel';
 
 const texto = (d: FormData, k: string) => String(d.get(k) ?? '').trim();
@@ -109,13 +109,6 @@ export async function quitarFactor(): Promise<EstadoFormulario> {
 // -----------------------------------------------------------------------------
 // Recuperar la contraseña
 // -----------------------------------------------------------------------------
-async function origen(): Promise<string> {
-  const h = await headers();
-  const host = h.get('x-forwarded-host') ?? h.get('host') ?? 'localhost:3000';
-  const proto = h.get('x-forwarded-proto') ?? (host.startsWith('localhost') || host.startsWith('127.') ? 'http' : 'https');
-  return `${proto}://${host}`;
-}
-
 export async function recuperar(_: EstadoFormulario, datos: FormData): Promise<EstadoFormulario> {
   const correo = texto(datos, 'correo');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) return { error: 'Escribe un correo válido.' };

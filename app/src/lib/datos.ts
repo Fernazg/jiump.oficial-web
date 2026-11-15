@@ -1,6 +1,7 @@
 import 'server-only';
 import { cache } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { leerTodo } from './leer-todo';
 import { supabase } from './supabase';
 import type {
   Actividad, Album, Articulo, Bloque, Configuracion, Enlace, FotoFirmada, Institucional, ItemMenu,
@@ -250,8 +251,9 @@ export const albumes = cache(async (): Promise<(Album & { fotoIds: string[] })[]
     'los álbumes',
   );
   if (lista.length === 0) return [];
-  const rel = filas<{ album_id: string; foto_id: string; orden: number }>(
-    await supabase().from('album_fotos').select('album_id, foto_id, orden').in('album_id', lista.map((a) => a.id)).order('orden'),
+  // Por tramos: una consulta sola se corta en 1.000 filas sin avisar.
+  const rel = await leerTodo<{ album_id: string; foto_id: string; orden: number }>(
+    (d, h) => supabase().from('album_fotos').select('album_id, foto_id, orden').in('album_id', lista.map((a) => a.id)).order('orden').order('album_id').order('foto_id').range(d, h),
     'las fotos de los álbumes',
   );
   return lista.map((a) => ({ ...a, fotoIds: rel.filter((r) => r.album_id === a.id).map((r) => r.foto_id) }));

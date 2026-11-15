@@ -1,6 +1,7 @@
 import 'server-only';
 import { firmarMiniaturas, type FotoElegible } from './fotos';
 import { clientePanel } from './supabase-panel';
+import { leerTodo } from '../leer-todo';
 
 /** Galerías, álbumes y videos (Superadmin y Multimedia; RLS lo exige). */
 
@@ -41,10 +42,11 @@ export type FotoCatalogo = FotoElegible & { actividad_id: string | null; album_i
 /** Todas las fotos con su evento actual (para respetar la regla 2 al elegir). */
 export async function catalogoFotos(): Promise<FotoCatalogo[]> {
   const supabase = await clientePanel();
-  const [{ data: fotos }, { data: enActividad }, { data: enAlbum }] = await Promise.all([
-    supabase.from('fotos').select('id, archivo, anchos, texto_alternativo, ancho, alto').order('creado_en', { ascending: false }),
-    supabase.from('actividad_fotos').select('foto_id, actividad_id'),
-    supabase.from('album_fotos').select('foto_id, album_id'),
+  // Por tramos: una consulta sola se corta en 1.000 filas sin avisar.
+  const [fotos, enActividad, enAlbum] = await Promise.all([
+    leerTodo((d, h) => supabase.from('fotos').select('id, archivo, anchos, texto_alternativo, ancho, alto').order('creado_en', { ascending: false }).order('id').range(d, h), 'las fotos'),
+    leerTodo((d, h) => supabase.from('actividad_fotos').select('foto_id, actividad_id').order('actividad_id').order('foto_id').range(d, h), 'las fotos de actividades'),
+    leerTodo((d, h) => supabase.from('album_fotos').select('foto_id, album_id').order('album_id').order('foto_id').range(d, h), 'las fotos de álbumes'),
   ]);
   const act = new Map(((enActividad ?? []) as { foto_id: string; actividad_id: string }[]).map((x) => [x.foto_id, x.actividad_id]));
   const alb = new Map(((enAlbum ?? []) as { foto_id: string; album_id: string }[]).map((x) => [x.foto_id, x.album_id]));

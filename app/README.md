@@ -100,6 +100,13 @@ Solo funciona con las tres condiciones juntas: `next dev`, la variable y un Supa
 - **Base de datos caída:** el sitio responde en menos de un segundo con ese aviso (cada consulta tiene un tope de 8 s y no se reintenta). «Ingresar» avisa que no hay conexión en vez de culpar a la contraseña.
 - **Parámetros de la URL:** pasan por `parametros()` (`src/lib/parametros.ts`), que deja textos cortos y sin caracteres de control. Úsalo en cada página nueva que lea `searchParams`.
 
+## Para que siga funcionando cuando crezca
+
+- **Listas largas:** Supabase entrega como máximo 1.000 filas por consulta y no avisa cuando corta. Toda lista que pueda pasar de ahí (fotos, fotos de álbumes) se lee con `leerTodo()` (`src/lib/leer-todo.ts`). Úsalo en cualquier listado nuevo sin límite.
+- **Biblioteca de fotos:** paginada de a 60; solo se firman y dibujan las fotos de la página.
+- **Índices:** cada columna nueva que apunte a otra tabla necesita su índice (ver la migración 13).
+- **Dependencias:** Dependabot (`.github/dependabot.yml`) propone las actualizaciones una vez al mes. Si el workflow «Pruebas» queda en verde, se pueden mezclar.
+
 ## Panel /admin
 
 Etapa 1: inicio de sesión, estructura, escritorio y artículos. Etapa 2: biblioteca de fotos, eventos y actividades, galerías y videos. Etapa 3: página web, menú y pie, información institucional, usuarios y roles, registro de actividad y configuración. Con eso el panel queda completo.

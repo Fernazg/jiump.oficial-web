@@ -3,6 +3,7 @@ import type { Bloque } from '@/lib/tipos';
 import type { Acceso } from './acceso';
 import { firmarMiniaturas, type FotoElegible } from './fotos';
 import { clientePanel } from './supabase-panel';
+import { leerTodo } from '../leer-todo';
 
 /** Eventos y actividades en el panel (Superadmin y Eventos; RLS lo exige). */
 
@@ -66,10 +67,11 @@ export async function actividadParaEditar(id: string) {
  */
 export async function fotosParaActividad(actividadId: string): Promise<FotoElegible[]> {
   const supabase = await clientePanel();
-  const [{ data: fotos }, { data: enActividad }, { data: enAlbum }] = await Promise.all([
-    supabase.from('fotos').select('id, archivo, anchos, texto_alternativo, ancho, alto').order('creado_en', { ascending: false }),
-    supabase.from('actividad_fotos').select('foto_id, actividad_id'),
-    supabase.from('album_fotos').select('foto_id, albumes(actividad_id)'),
+  // Por tramos: una consulta sola se corta en 1.000 filas sin avisar.
+  const [fotos, enActividad, enAlbum] = await Promise.all([
+    leerTodo((d, h) => supabase.from('fotos').select('id, archivo, anchos, texto_alternativo, ancho, alto').order('creado_en', { ascending: false }).order('id').range(d, h), 'las fotos'),
+    leerTodo((d, h) => supabase.from('actividad_fotos').select('foto_id, actividad_id').order('actividad_id').order('foto_id').range(d, h), 'las fotos de actividades'),
+    leerTodo((d, h) => supabase.from('album_fotos').select('foto_id, albumes(actividad_id)').order('album_id').order('foto_id').range(d, h), 'las fotos de álbumes'),
   ]);
   const ocupada = new Set<string>();
   for (const x of (enActividad ?? []) as { foto_id: string; actividad_id: string }[]) if (x.actividad_id !== actividadId) ocupada.add(x.foto_id);
