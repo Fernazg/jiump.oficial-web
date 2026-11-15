@@ -16,7 +16,12 @@ export type Foto = {
  * tiene versiones optimizadas, `url` es la WebP más grande y `fuentes` trae
  * los srcset firmados de AVIF y WebP.
  */
-export type FotoFirmada = Foto & { url: string; fuentes?: { avif: string; webp: string } };
+export type FotoFirmada = Foto & {
+  url: string;
+  fuentes?: { avif: string; webp: string };
+  /** Dirección del archivo original (JPG o PNG): para compartir en redes, que no siempre aceptan WebP. */
+  original?: string;
+};
 
 export type Serie = {
   id: string;
@@ -33,6 +38,8 @@ export type Serie = {
 export type Tema = { id: string; nombre: string; slug: string };
 
 export type Articulo = {
+  /** Última modificación (para el mapa del sitio y los buscadores). */
+  actualizado_en?: string;
   id: string;
   titulo: string;
   slug: string;
@@ -49,6 +56,8 @@ export type Articulo = {
 };
 
 export type Actividad = {
+  /** Última modificación (para el mapa del sitio y los buscadores). */
+  actualizado_en?: string;
   id: string;
   titulo: string;
   slug: string;
@@ -71,6 +80,8 @@ export type Actividad = {
 };
 
 export type Album = {
+  /** Última modificación (para el mapa del sitio y los buscadores). */
+  actualizado_en?: string;
   id: string;
   titulo: string;
   slug: string;
@@ -101,6 +112,7 @@ export type Configuracion = {
   mostrar_barra_proximo_evento: boolean;
   seo_titulo: string | null;
   seo_descripcion: string | null;
+  seo_foto_id: string | null;
   mantenimiento_foto_id: string | null;
 };
 

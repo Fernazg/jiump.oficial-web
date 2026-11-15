@@ -37,12 +37,14 @@ export async function exigirPagina(clave: ClavePagina): Promise<{ vistaPrevia: b
  * Configuración. Sin ninguno, se usan el nombre y el lema del sitio.
  */
 export async function metadataDePagina(clave: ClavePagina, nombre: string | null): Promise<import('next').Metadata> {
+  const { metadatos } = await import('./seo');
   const [paginas, conf] = await Promise.all([filasDePaginas(), configuracion()]);
   const pagina: Partial<FilaPagina> = paginas.find((p) => p.clave === clave) ?? {};
-  const titulo = pagina.seo_titulo || (nombre ?? conf.seo_titulo);
-  const descripcion = pagina.seo_descripcion || conf.seo_descripcion;
-  return {
-    ...(titulo ? { title: pagina.seo_titulo || !nombre ? { absolute: titulo } : titulo } : {}),
-    ...(descripcion ? { description: descripcion } : {}),
-  };
+  const propio = Boolean(pagina.seo_titulo) || !nombre;
+  return metadatos({
+    titulo: pagina.seo_titulo || (nombre ?? conf.seo_titulo),
+    tituloAbsoluto: propio,
+    descripcion: pagina.seo_descripcion,
+    ruta: clave === 'inicio' ? '/' : `/${clave}`,
+  });
 }
