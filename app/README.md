@@ -52,6 +52,13 @@ Qué cubren:
 
 El workflow `.github/workflows/pruebas.yml` corre todo esto en cada push y pull request.
 
+## Seguridad en el navegador
+
+- **Cabeceras en todas las respuestas** (`next.config.ts` y `src/lib/seguridad/cabeceras.ts`): nadie puede mostrar el sitio dentro de un marco (`X-Frame-Options`), el navegador no adivina tipos de archivo (`nosniff`), solo HTTPS en producción (`Strict-Transport-Security`), y cámara, micrófono, ubicación y pagos quedan bloqueados.
+- **Política de contenido (CSP)**, puesta por `src/proxy.ts` con un valor distinto en cada visita: solo se ejecutan los scripts del propio sitio; las fotos solo vienen del sitio y del almacenamiento de Supabase; los videos, solo de YouTube sin cookies. Si un texto trajera código inyectado, el navegador no lo ejecuta. El panel además permite WebAssembly (optimiza las fotos al subirlas).
+- **Si agregas un servicio externo** (otro proveedor de video, una fuente, un mapa), hay que permitirlo en `politicaContenido()`; si no, el navegador lo bloquea y `tests/seguridad.spec.ts` falla.
+- `/admin/salir` solo cierra la sesión con el botón (POST). Abrirlo como enlace no saca del panel a quien tiene su acceso al día.
+
 ## Vista previa local
 
 Una página completa solo se muestra si está **publicada** en `paginas`; si no, responde 404. Para ver una página en borrador mientras desarrollas:

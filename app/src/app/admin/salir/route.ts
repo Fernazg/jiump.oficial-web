@@ -6,6 +6,8 @@ import { clientePanel } from '@/lib/admin/supabase-panel';
  * también para cualquier token ya emitido) y las cookies.
  *  · POST: botón «Cerrar sesión» (formulario normal, funciona en cualquier página).
  *  · GET: lo usa el proxy cuando la cuenta fue desactivada o no tiene roles.
+ *    Solo cierra la sesión en esos casos: un enlace o una imagen puesta en otra
+ *    página no puede sacar del panel a alguien con su acceso al día.
  */
 async function salir(request: NextRequest, motivo: string) {
   const supabase = await clientePanel();
@@ -21,5 +23,12 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  const supabase = await clientePanel();
+  const { data: acceso } = await supabase.rpc('mi_acceso');
+  if (acceso?.activo === true && ((acceso.roles ?? []) as string[]).length > 0) {
+    const r = NextResponse.redirect(new URL('/admin', request.url), 303);
+    r.headers.set('Cache-Control', 'private, no-store');
+    return r;
+  }
   return salir(request, request.nextUrl.searchParams.get('motivo') === 'sin-roles' ? 'sin-roles' : 'inactivo');
 }
