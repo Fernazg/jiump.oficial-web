@@ -13,10 +13,26 @@ import { clientePanel } from './supabase-panel';
  * con la sesión de la persona: RLS aplica la matriz de roles y la base exige
  * la vista previa antes de publicar y la regla 2 (un evento por foto).
  */
-type Tipo = 'actividad' | 'album' | 'video';
-const TABLA: Record<Tipo, string> = { actividad: 'actividades', album: 'albumes', video: 'videos' };
-const SECCION: Record<Tipo, ClaveSeccion> = { actividad: 'eventos', album: 'galerias', video: 'videos' };
-const RUTA: Record<Tipo, string> = { actividad: '/admin/eventos', album: '/admin/galerias', video: '/admin/videos' };
+type Tipo = 'actividad' | 'album' | 'video' | 'pagina' | 'menu' | 'institucional';
+const TABLA: Partial<Record<Tipo, string>> = { actividad: 'actividades', album: 'albumes', video: 'videos', pagina: 'paginas' };
+const SECCION: Record<Tipo, ClaveSeccion> = {
+  actividad: 'eventos', album: 'galerias', video: 'videos', pagina: 'pagina-web', menu: 'menu', institucional: 'institucional',
+};
+const RUTA: Record<Tipo, string> = {
+  actividad: '/admin/eventos', album: '/admin/galerias', video: '/admin/videos', pagina: '/admin/pagina-web', menu: '/admin/menu', institucional: '/admin/institucional',
+};
+/** «menu» e «institucional» son un solo conjunto cada uno (ver migración 10). */
+export const ID_CONJUNTO = '00000000-0000-0000-0000-000000000000';
+
+/** Dónde volver después de una acción (la página web se edita por su clave). */
+async function destino(tipo: Tipo, id: string, aviso: string, supabase: Awaited<ReturnType<typeof clientePanel>>): Promise<string> {
+  if (tipo === 'menu' || tipo === 'institucional') return `${RUTA[tipo]}?aviso=${aviso}`;
+  if (tipo === 'pagina') {
+    const { data } = await supabase.from('paginas').select('clave').eq('id', id).maybeSingle();
+    return `${RUTA.pagina}?pagina=${data?.clave ?? 'inicio'}&aviso=${aviso}`;
+  }
+  return `${RUTA[tipo]}/${id}?aviso=${aviso}`;
+}
 const SIN_PERMISO = 'No tienes permiso para hacer esto.';
 
 async function exigir(tipo: Tipo) {
@@ -55,7 +71,7 @@ export async function crearContenido(tipo: Tipo): Promise<void> {
       ? { titulo: 'Álbum sin título', slug: `borrador-${sufijo}` }
       : null;
   if (!fila) return;
-  const { data, error } = await supabase.from(TABLA[tipo]).insert(fila).select('id').single();
+  const { data, error } = await supabase.from(TABLA[tipo]!).insert(fila).select('id').single();
   if (error || !data) throw new Error(mensaje(error, 'No se pudo crear.'));
   redirect(`${RUTA[tipo]}/${data.id}`);
 }
@@ -184,17 +200,21 @@ export async function guardarVideo(_: EstadoFormulario, f: FormData): Promise<Es
 // -----------------------------------------------------------------------------
 export async function publicar(tipo: Tipo, id: string): Promise<EstadoFormulario> {
   const supabase = await exigir(tipo);
-  const { data: fila } = await supabase.from(TABLA[tipo]).select('estado').eq('id', id).maybeSingle();
-  if (!fila) return { error: 'No se encontró o no tienes acceso.' };
-  if (fila.estado === 'publicado') {
+  let estado = 'publicado'; // menú e institucional: siempre a la vista del público
+  if (TABLA[tipo]) {
+    const { data: fila } = await supabase.from(TABLA[tipo]!).select('estado').eq('id', id).maybeSingle();
+    if (!fila) return { error: 'No se encontró o no tienes acceso.' };
+    estado = fila.estado;
+  }
+  if (estado === 'publicado') {
     // Ya publicado: publicar los cambios pendientes (la base exige su vista previa).
     const { error } = await supabase.rpc('publicar_cambios', { p_tipo: tipo, p_id: id });
     if (error) return { error: mensaje(error, 'No se pudieron publicar los cambios.') };
-    redirect(`${RUTA[tipo]}/${id}?aviso=cambios-publicados`);
+    redirect(await destino(tipo, id, 'cambios-publicados', supabase));
   }
-  const { data, error } = await supabase.from(TABLA[tipo]).update({ estado: 'publicado' }).eq('id', id).select('id');
+  const { data, error } = await supabase.from(TABLA[tipo]!).update({ estado: 'publicado' }).eq('id', id).select('id');
   if (error || !data?.length) return { error: mensaje(error, 'No se pudo publicar.') };
-  redirect(`${RUTA[tipo]}/${id}?aviso=publicado`);
+  redirect(await destino(tipo, id, 'publicado', supabase));
 }
 
 /** Retirar del sitio: vuelve a borrador (los cambios pendientes quedan en el borrador). */
@@ -202,20 +222,21 @@ export async function despublicar(tipo: Tipo, id: string): Promise<EstadoFormula
   const supabase = await exigir(tipo);
   const { error } = await supabase.rpc('despublicar_contenido', { p_tipo: tipo, p_id: id });
   if (error) return { error: mensaje(error, 'No se pudo retirar del sitio.') };
-  redirect(`${RUTA[tipo]}/${id}?aviso=borrador`);
+  redirect(await destino(tipo, id, 'borrador', supabase));
 }
 
 export async function descartarCambios(tipo: Tipo, id: string): Promise<EstadoFormulario> {
   const supabase = await exigir(tipo);
   const { error } = await supabase.from('contenido_cambios').delete().eq('tipo', tipo).eq('registro_id', id);
   if (error) return { error: mensaje(error, 'No se pudieron descartar los cambios.') };
-  redirect(`${RUTA[tipo]}/${id}?aviso=descartados`);
+  redirect(await destino(tipo, id, 'descartados', supabase));
 }
 
 /** Eliminar: las fotos quedan en la biblioteca (solo se quita la relación). */
 export async function eliminar(tipo: Tipo, id: string): Promise<EstadoFormulario> {
   const supabase = await exigir(tipo);
-  const { data, error } = await supabase.from(TABLA[tipo]).delete().eq('id', id).select('id');
+  if (!TABLA[tipo] || tipo === 'pagina') return { error: 'Esto no se puede eliminar.' };
+  const { data, error } = await supabase.from(TABLA[tipo]!).delete().eq('id', id).select('id');
   if (error || !data?.length) return { error: mensaje(error, 'No se pudo eliminar.') };
   redirect(`${RUTA[tipo]}?aviso=eliminado`);
 }

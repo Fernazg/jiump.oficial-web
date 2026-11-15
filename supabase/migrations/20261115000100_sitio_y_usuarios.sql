@@ -388,3 +388,22 @@ as $$
 $$;
 revoke execute on function public.usuarios_panel() from public, anon;
 grant execute on function public.usuarios_panel() to authenticated, service_role;
+
+-- -----------------------------------------------------------------------------
+-- Secciones de Inicio y Nosotros (solo estructura, sin textos)
+-- Cada bloque de la página es una sección con orden y visibilidad, para poder
+-- ordenarlos u ocultarlos desde el panel. Los bloques editables nacen vacíos
+-- (no se muestran hasta que JIUMP entregue sus textos); los automáticos
+-- (actividades, eventos, artículos, álbumes, textos institucionales) muestran
+-- lo que ya está publicado.
+-- -----------------------------------------------------------------------------
+insert into public.secciones (pagina_id, tipo, orden, visible, contenido)
+select p.id, v.tipo, v.orden, true, '{}'::jsonb
+from public.paginas p
+join (values
+  ('inicio', 'portada', 1), ('inicio', 'presentacion', 2), ('inicio', 'que_hacemos', 3), ('inicio', 'destacado', 4),
+  ('inicio', 'actividades_destacadas', 5), ('inicio', 'eventos', 6), ('inicio', 'articulos_recientes', 7), ('inicio', 'momentos', 8),
+  ('nosotros', 'portada', 1), ('nosotros', 'identidad', 2), ('nosotros', 'historia', 3), ('nosotros', 'que_hacemos', 4),
+  ('nosotros', 'que_creemos', 5), ('nosotros', 'invitacion', 6)
+) as v(clave, tipo, orden) on v.clave = p.clave
+where not exists (select 1 from public.secciones s where s.pagina_id = p.id);

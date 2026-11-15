@@ -5,7 +5,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(26);
+select plan(27);
 
 create function pg_temp.crear_usuario(p_id uuid, p_correo text, p_roles rol_app[], p_factor boolean default false)
 returns void language plpgsql as $$
@@ -48,8 +48,8 @@ values (gen_random_uuid(), '5a000000-0000-4000-8000-000000000003', 'totp', 'veri
 
 update paginas set estado = 'publicado' where clave = 'inicio';
 update paginas set estado = 'borrador' where clave = 'galeria';
-insert into secciones (pagina_id, tipo, contenido, orden)
-select id, 'portada', '{"titulo":"Título publicado"}', 1 from paginas where clave = 'inicio';
+update secciones set contenido = '{"titulo":"Título publicado"}'
+where tipo = 'portada' and pagina_id = (select id from paginas where clave = 'inicio');
 
 -- -----------------------------------------------------------------------------
 -- Páginas: lo publicado no cambia hasta publicar los cambios
@@ -64,7 +64,7 @@ select lives_ok(format($$ select guardar_contenido('pagina', %L, %L,
   '{"seo_titulo":"SEO nuevo","secciones":[{"tipo":"portada","visible":true,"contenido":{"titulo":"Título nuevo"}},{"tipo":"presentacion","visible":false,"contenido":{}}]}') $$,
   (select id from paginas where clave = 'inicio'), (select actualizado_en from paginas where clave = 'inicio')),
   'Guardar una página publicada…');
-select is((select contenido ->> 'titulo' from secciones s join paginas p on p.id = s.pagina_id where p.clave = 'inicio'), 'Título publicado',
+select is((select contenido ->> 'titulo' from secciones s join paginas p on p.id = s.pagina_id where p.clave = 'inicio' and s.tipo = 'portada'), 'Título publicado',
   '…deja el sitio igual (cambio pendiente)');
 select throws_ok(format($$ select publicar_cambios('pagina', %L) $$, (select id from paginas where clave = 'inicio')),
   'P0001', 'Antes de publicar hay que revisar la vista previa de este contenido', 'Publicar exige la vista previa');
@@ -75,6 +75,8 @@ select is((select string_agg(s.tipo || ':' || s.visible || ':' || coalesce(s.con
            from secciones s join paginas p on p.id = s.pagina_id where p.clave = 'inicio'),
   'portada:true:Título nuevo,presentacion:false:', 'Secciones, orden y visibilidad publicados');
 select is((select seo_titulo from paginas where clave = 'inicio'), 'SEO nuevo', 'SEO publicado');
+select is((select count(*)::int from secciones s join paginas p on p.id = s.pagina_id where p.clave = 'nosotros'), 6,
+  'Nosotros nace con sus 6 secciones (solo estructura)');
 
 -- Página en borrador: se guarda directo; publicarla exige vista previa
 select lives_ok(format($$ select guardar_contenido('pagina', %L, %L, '{"secciones":[]}') $$,
