@@ -56,7 +56,11 @@ export function FilaArticulo({ articulo, serie, total }: { articulo: Articulo; s
 }
 
 /** Tarjeta de álbum: portada + tres miniaturas, o «Fotos próximamente». */
-export function TarjetaAlbum({ album, fotos, href }: { album: Album & { fotoIds: string[] }; fotos: Map<string, FotoFirmada>; href?: string }) {
+export function TarjetaAlbum({ album, fotos, href, titulo: Titulo = 'h3' }: {
+  album: Album & { fotoIds: string[] }; fotos: Map<string, FotoFirmada>; href?: string;
+  /** Nivel del título: h2 si la tarjeta cuelga directo del h1 de la página (Galería). */
+  titulo?: 'h2' | 'h3';
+}) {
   const ids = album.fotoIds.filter((id) => fotos.has(id));
   const portada = (album.portada_foto_id && fotos.get(album.portada_foto_id)) || (ids[0] ? fotos.get(ids[0]) : undefined);
   const resto = ids.filter((id) => id !== portada?.id).slice(0, 3).map((id) => fotos.get(id)!);
@@ -81,7 +85,7 @@ export function TarjetaAlbum({ album, fotos, href }: { album: Album & { fotoIds:
         </div>
       )}
       <div className="mt-4 flex items-start justify-between gap-4">
-        <h3 className="t-h4 group-hover:text-azul">{album.titulo}</h3>
+        <Titulo className="t-h4 group-hover:text-azul">{album.titulo}</Titulo>
         {n > 0 && <span className="t-meta shrink-0 pt-1 text-texto-2">{n} {n === 1 ? 'foto' : 'fotos'}</span>}
       </div>
     </Link>

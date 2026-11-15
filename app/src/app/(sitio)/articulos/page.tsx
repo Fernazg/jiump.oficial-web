@@ -173,7 +173,7 @@ function SerieDelMes({ serie, lista, total, fotos }: { serie: Serie; lista: Arti
                 <Link href={`/articulos/${a.slug}`} data-articulo={a.slug} className="levantar group block">
                   <div className="relative">
                     <NumeroParte parte={a.parte} color={serie.color} tam="grande" />
-                    <span className="t-etiqueta absolute left-4 top-4 text-[11px] text-white/90">{serie.nombre}</span>
+                    <span className="t-etiqueta absolute left-4 top-4 text-[11px] text-white">{serie.nombre}</span>
                   </div>
                   <p className="t-meta mt-3 text-azul-oscuro">Parte {a.parte} de {total}</p>
                   <h3 className="t-h4 mt-1 group-hover:text-azul">{a.titulo}</h3>

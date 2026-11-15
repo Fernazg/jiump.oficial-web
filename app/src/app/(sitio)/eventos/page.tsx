@@ -60,7 +60,7 @@ export default async function Eventos() {
       </section>
 
       {delAnio.length > 0 && (
-        <section id="actividades" className="scroll-mt-24 bg-gris-claro py-20" data-seccion="actividades">
+        <section id="actividades" className="bg-gris-claro py-20" data-seccion="actividades">
           <div className="contenedor">
             <Etiqueta>{anio === new Date().getFullYear() ? 'Este año' : 'Actividades'}</Etiqueta>
             <h2 className="t-h2 mt-3">Actividades {anio}</h2>

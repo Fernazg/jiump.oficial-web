@@ -75,7 +75,7 @@ export function BarraLateral({ nombre, roles, efectivos }: Props) {
       </nav>
 
       {/* Celular: barra superior con ☰ */}
-      <div className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-linea bg-white px-5 nav:hidden">
+      <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-linea bg-white px-5 nav:hidden">
         <Link href="/admin" className="flex items-center gap-2">
           <Image src="/marca/logo-jiump.png" alt="JIUMP" width={42} height={37} priority />
           <span className="font-ui text-[12px] font-semibold tracking-[0.08em] text-azul">ADMIN</span>
@@ -84,7 +84,7 @@ export function BarraLateral({ nombre, roles, efectivos }: Props) {
           aria-label={abierto ? 'Cerrar menú del panel' : 'Abrir menú del panel'} className="grid size-11 place-items-center rounded-xl text-texto">
           {abierto ? <IconoCerrar /> : <IconoMenu />}
         </button>
-      </div>
+      </header>
       {abierto && (
         <nav id="menu-panel-movil" aria-label="Menú del panel"
           className="fixed inset-x-0 bottom-0 top-16 z-40 flex flex-col gap-0.5 overflow-y-auto bg-white px-4 pb-6 nav:hidden">

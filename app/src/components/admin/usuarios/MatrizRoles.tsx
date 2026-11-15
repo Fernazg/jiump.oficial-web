@@ -19,7 +19,7 @@ export function MatrizRoles() {
         <h2 className="adm-h2">Qué puede hacer cada rol</h2>
         <span className="text-[13px] text-texto-3">Se valida en el servidor y en la base de datos, no solo ocultando botones.</span>
       </div>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Qué puede hacer cada rol">
         <table className="w-full min-w-[560px] text-[14px]">
           <thead><tr className="border-b border-linea text-left text-texto-3">
             <th className="py-2.5 font-semibold">Sección</th>
