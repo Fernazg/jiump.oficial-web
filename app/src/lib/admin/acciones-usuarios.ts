@@ -17,7 +17,9 @@ import { listarUsuarios, superadminsActivos } from './usuarios';
  */
 const ROLES: Rol[] = ['superadmin', 'editor', 'eventos', 'multimedia'];
 const SIN_PERMISO = 'No tienes permiso para hacer esto.';
+/** Lo exige también la base de datos (migración 11): el panel avisa antes, la base no deja pasar. */
 const MINIMO_SUPERADMINS = 2;
+const MENSAJE_MINIMO = 'Deben quedar al menos dos Superadministradores activos. Nombra otro antes de quitar este rol o desactivar a esta persona.';
 
 async function origen(): Promise<string> {
   const h = await headers();
@@ -70,7 +72,7 @@ export async function cambiarRol(perfilId: string, rol: Rol, asignar: boolean): 
     ? await supabase.from('perfil_roles').insert({ perfil_id: perfilId, rol })
     : await supabase.from('perfil_roles').delete().eq('perfil_id', perfilId).eq('rol', rol);
   if (error && error.code !== '23505') {
-    return { error: /Superadministrador/.test(error.message) ? 'Debe quedar al menos un Superadministrador activo.' : 'No se pudo cambiar el rol.' };
+    return { error: error.hint === 'minimo_superadmins' ? MENSAJE_MINIMO : 'No se pudo cambiar el rol.' };
   }
   redirect(`/admin/usuarios/${perfilId}?aviso=${asignar ? 'rol-asignado' : 'rol-quitado'}`);
 }
@@ -89,6 +91,7 @@ export async function cambiarActivo(perfilId: string, activo: boolean): Promise<
   }
   const supabase = await clientePanel();
   const { data, error } = await supabase.from('perfiles').update({ activo }).eq('id', perfilId).select('id');
+  if (error?.hint === 'minimo_superadmins') return { error: MENSAJE_MINIMO };
   if (error || !data?.length) return { error: 'No se pudo cambiar el estado.' };
   redirect(`/admin/usuarios/${perfilId}?aviso=${activo ? 'reactivado' : 'desactivado'}`);
 }

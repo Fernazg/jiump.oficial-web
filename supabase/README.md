@@ -57,7 +57,7 @@ Las claves locales las entrega `supabase status`; **nunca** se copian al reposit
 - `tiene_rol(r)` y `tiene_algun_rol(...)` (`SECURITY DEFINER`) se usan en todas las políticas. Una persona puede tener varios roles. Un rol cuenta solo si el perfil está activo **y** la sesión del token sigue abierta en `auth.sessions`: cerrar sesión o desactivar a alguien corta el acceso al instante.
 - **Doble factor obligatorio para Superadministrador, validado en la base de datos:** el rol `superadmin` solo cuenta en una sesión aal2 verificada con un factor TOTP **inscrito antes de recibir el rol** (ver «Alta de los primeros superadmins»). `mis_roles()` sí informa el rol, para que el panel pida el segundo factor.
 - Desactivar a alguien (`perfiles.activo = false`) cierra todas sus sesiones y le bloquea el inicio de sesión; reactivarlo lo desbloquea.
-- No se puede quitar ni desactivar al último superadmin activo. Los roles se asignan o se quitan, no se editan.
+- **Al menos dos superadmins activos** (migración 11): no se puede quitar el rol ni desactivar a un superadmin activo si quedarían menos de dos. Agregar nunca se bloquea, así que se parte de cero y se van sumando. Los roles se asignan o se quitan, no se editan.
 - Cada persona ve solo su propio perfil y sus roles; solo el superadmin ve los de todos.
 - ◐ Editor y Eventos suben fotos a su propia carpeta y las usan en su contenido, pero solo editan o borran **las propias** (`fotos.creado_por`, `storage.objects.owner_id`). Superadmin y Multimedia gestionan todas.
 - Multimedia no ve actividades en borrador ni gestiona sus fotos (es sección de Eventos); puede vincular álbumes y videos a actividades publicadas.
@@ -109,6 +109,7 @@ Las claves locales las entrega `supabase status`; **nunca** se copian al reposit
 - **Páginas, menú y textos institucionales con cambios pendientes y vista previa**, igual que actividades, álbumes y videos: `guardar_contenido()` acepta `pagina`, `menu` e `institucional`; `publicar_cambios()` exige la vista previa; `proteger_publicado` impide cambiarlos directo. El menú y los textos institucionales siempre están a la vista del público, así que siempre pasan por cambios pendientes.
 - Cada bloque de Inicio y Nosotros es una fila de `secciones` (orden y visibilidad). Se crean **solo con su estructura**, sin textos.
 - **`usuarios_panel()`:** lista de personas con roles, doble factor, si su rol de superadmin está vigente e invitación pendiente. Solo responde a un Superadmin vigente.
+- **Migración 11 · mínimo dos superadmins:** `proteger_ultimo_superadmin()` ahora exige dos activos al quitar un rol o desactivar a alguien (agregar nunca se bloquea). Desactivar a quien no es superadmin, o quitar el rol a alguien ya desactivado, no cuenta.
 - Pruebas por rol (`sitio_usuarios.test.sql`): Editor, Eventos y Multimedia no pueden editar páginas, menú, institucional, configuración, redirecciones ni roles, ni leer usuarios o el registro; con un control que verifica que el Superadmin sí puede.
 
 ## Puesta en producción (cuando se autorice)
@@ -134,7 +135,7 @@ npx supabase db push
 
 ### Alta de los primeros superadmins (al menos dos)
 
-**Desde el inicio debe haber al menos dos superadministradores activos** (decisión de la directiva). Si solo hubiera uno y perdiera su teléfono (su doble factor) o dejara el equipo, nadie podría administrar usuarios ni roles desde el panel. Con dos, uno puede ayudar al otro: por ejemplo, cuando alguien cambia de teléfono e inscribe un factor nuevo, el otro le vuelve a asignar el rol. La base ya impide quitar o desactivar al último superadmin activo, pero eso no reemplaza tener un segundo.
+**Desde el inicio debe haber al menos dos superadministradores activos** (decisión de la directiva). Si solo hubiera uno y perdiera su teléfono (su doble factor) o dejara el equipo, nadie podría administrar usuarios ni roles desde el panel. Con dos, uno puede ayudar al otro: por ejemplo, cuando alguien cambia de teléfono e inscribe un factor nuevo, el otro le vuelve a asignar el rol. La base lo exige: mientras haya uno solo, se puede agregar el segundo; una vez que hay dos, no deja quitar el rol ni desactivar a ninguno si quedarían menos de dos (para reemplazar a alguien, primero se nombra al nuevo).
 
 Para cada uno de los dos:
 

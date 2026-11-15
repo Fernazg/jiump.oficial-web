@@ -5,7 +5,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(31);
+select plan(40);
 
 create function pg_temp.crear_usuario(p_id uuid, p_correo text, p_roles rol_app[], p_factor boolean default false)
 returns void language plpgsql as $$
@@ -37,6 +37,7 @@ begin
 end $$;
 grant execute on function pg_temp.como(uuid, text) to authenticated;
 
+select is((select count(*)::int from perfil_roles where rol = 'superadmin'), 0, 'La base parte sin superadmins');
 select pg_temp.crear_usuario('5a000000-0000-4000-8000-000000000001', 'supersitio@pgtap.prueba', '{superadmin}');
 select pg_temp.crear_usuario('5a000000-0000-4000-8000-000000000002', 'editorsitio@pgtap.prueba', '{editor}');
 select pg_temp.crear_usuario('5a000000-0000-4000-8000-000000000004', 'eventossitio@pgtap.prueba', '{eventos}', true);
@@ -68,6 +69,38 @@ insert into auth.users (id, instance_id, aud, role, email) values
 insert into perfil_roles (perfil_id, rol) select id, 'superadmin' from perfiles where user_id = '5a000000-0000-4000-8000-000000000003';
 insert into auth.mfa_factors (id, user_id, factor_type, status, created_at, updated_at)
 values (gen_random_uuid(), '5a000000-0000-4000-8000-000000000003', 'totp', 'verified', now() + interval '1 minute', now() + interval '1 minute');
+
+-- -----------------------------------------------------------------------------
+-- Al menos dos Superadministradores activos (migración 11)
+-- Partir de cero e ir agregando nunca se bloquea; quitar el rol o desactivar
+-- no puede dejar menos de dos activos. Cada intento se revierte si falla.
+-- -----------------------------------------------------------------------------
+create function pg_temp.intentar(p_sql text) returns text language plpgsql as $$
+begin
+  execute p_sql;
+  set constraints all immediate;
+  set constraints all deferred;
+  return 'ok';
+exception when check_violation then
+  return sqlerrm;
+end $$;
+select pg_temp.crear_usuario('5a000000-0000-4000-8000-000000000006', 'auxsuper@pgtap.prueba', '{editor}', true);
+select pg_temp.crear_usuario('5a000000-0000-4000-8000-000000000007', 'auxeditor@pgtap.prueba', '{editor}');
+
+select is(pg_temp.intentar('select 1'), 'ok', 'Desde cero se asignaron el primero y el segundo sin bloqueo');
+select is((select count(*)::int from perfil_roles pr join perfiles p on p.id = pr.perfil_id where pr.rol = 'superadmin' and p.activo), 2, 'Hay dos activos');
+select is(pg_temp.intentar($$ delete from perfil_roles where rol = 'superadmin' and perfil_id = (select id from perfiles where correo = 'tardio@pgtap.prueba') $$),
+  'Deben quedar al menos dos Superadministradores activos', 'Con dos, no se puede quitar el rol a uno');
+select is(pg_temp.intentar($$ update perfiles set activo = false where correo = 'tardio@pgtap.prueba' $$),
+  'Deben quedar al menos dos Superadministradores activos', 'Con dos, no se puede desactivar a uno');
+select is(pg_temp.intentar($$ insert into perfil_roles (perfil_id, rol) select id, 'superadmin' from perfiles where correo = 'auxsuper@pgtap.prueba' $$), 'ok',
+  'Se agrega un tercero');
+select is(pg_temp.intentar($$ update perfiles set activo = false where correo = 'auxsuper@pgtap.prueba' $$), 'ok',
+  'Con tres, se puede desactivar a uno (quedan dos)');
+select is(pg_temp.intentar($$ delete from perfil_roles where rol = 'superadmin' and perfil_id = (select id from perfiles where correo = 'auxsuper@pgtap.prueba') $$), 'ok',
+  'Quitar el rol a alguien ya desactivado no cuenta');
+select is(pg_temp.intentar($$ update perfiles set activo = false where correo = 'auxeditor@pgtap.prueba' $$), 'ok',
+  'Desactivar a quien no es superadmin no se bloquea');
 
 update paginas set estado = 'publicado' where clave = 'inicio';
 update paginas set estado = 'borrador' where clave = 'galeria';

@@ -280,9 +280,9 @@ select ok(exists (select 1 from registro_actividad r join perfiles p on p.id = r
   'El registro guarda quién envió a la papelera');
 select is((select count(*)::int from articulos), 9, 'Superadmin ve todos los artículos, incluidos los programados');
 
--- No se puede quitar el último superadmin
+-- No se puede quitar el último superadmin (regla completa en sitio_usuarios.test.sql)
 delete from perfil_roles where rol = 'superadmin';
-select throws_ok($$ set constraints all immediate $$, '23514', null, 'No se puede quitar el último superadmin');
+select throws_ok($$ set constraints all immediate $$, '23514', 'Deben quedar al menos dos Superadministradores activos', 'No se puede quitar el último superadmin');
 
 reset role;
 
