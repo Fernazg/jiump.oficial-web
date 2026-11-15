@@ -8,6 +8,7 @@ import { seccion } from '@/lib/admin/secciones';
 import { listarPaginas, paginaParaEditar } from '@/lib/admin/sitio';
 import { CATALOGO, PAGINAS_WEB, type ClavePaginaWeb } from '@/lib/catalogo-secciones';
 import { parametros } from '@/lib/parametros';
+import { Ayuda } from '@/components/admin/Ayuda';
 
 export const metadata: Metadata = { title: seccion('pagina-web').nombre };
 
@@ -28,6 +29,13 @@ export default async function PaginaWeb({ searchParams }: Props) {
       <div className="flex flex-col gap-1">
         <h1 className="adm-h1">Páginas y secciones</h1>
         <span className="text-[15px] text-texto-3">Edita textos, fotos y botones. El diseño se mantiene solo.</span>
+        <Ayuda>
+          <ul>
+            <li>Elige una página en las pestañas. Cada sección se puede subir o bajar (↑ ↓), ocultar y editar.</li>
+            <li>Lo que guardas queda pendiente: el sitio no cambia hasta que revises la «Vista previa» y publiques.</li>
+            <li>«Retirar» una página la saca del sitio y del menú; se puede volver a publicar.</li>
+          </ul>
+        </Ayuda>
       </div>
       <nav aria-label="Páginas del sitio" className="flex flex-wrap gap-2 border-b border-linea pb-3" data-pestanas-paginas>
         {PAGINAS_WEB.map((x) => (

@@ -12,6 +12,7 @@ import { fechaChile } from '@/lib/admin/hora-chile';
 import { puedeEntrar } from '@/lib/admin/secciones';
 import { clientePanel } from '@/lib/admin/supabase-panel';
 import { parametros } from '@/lib/parametros';
+import { Ayuda } from '@/components/admin/Ayuda';
 
 export const metadata: Metadata = { title: 'Biblioteca de fotos' };
 
@@ -47,6 +48,15 @@ export default async function Fotos({ searchParams }: Props) {
         <div className="flex flex-col gap-1">
           <h1 className="adm-h1">Biblioteca de fotos</h1>
           <span className="text-[15px] text-texto-3">Todas las fotos de JIUMP en un solo lugar. Solo fotos reales de JIUMP, sin retocar.</span>
+          <Ayuda>
+            <ul>
+              <li>Sube fotos JPG, PNG, WebP o AVIF de hasta 10 MB, arrastrándolas o eligiéndolas.</li>
+              <li>El texto alternativo es obligatorio: describe la foto en una frase para quienes no pueden verla.</li>
+              <li>Al subir se quitan la ubicación (GPS) y los datos de la cámara. La imagen no se modifica.</li>
+              <li>El sitio usa versiones livianas que se crean solas al subir; por eso conviene subir siempre desde aquí.</li>
+              <li>Antes de eliminar una foto, el panel avisa si está en uso.</li>
+            </ul>
+          </Ayuda>
         </div>
         {puedeEntrar('galerias', acceso.efectivos) && (
           <form action={crearContenido.bind(null, 'album')}>
