@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { admin } from './apoyo';
-import { codigoNuevo, crearUsuario, desactivar, enlaceRecuperacion, ingresar, listo, totp, type Usuario } from './apoyo-admin';
+import { codigoActual, crearUsuario, desactivar, enlaceRecuperacion, ingresar, listo, totp, type Usuario } from './apoyo-admin';
 
 /**
  * Panel /admin: inicio de sesión, doble factor, cierre de sesión y permisos
@@ -117,7 +117,7 @@ test.describe('doble factor', () => {
     await page.getByRole('button', { name: 'Verificar' }).click();
     await expect(page.locator('p[role=alert]')).toContainText('El código no es correcto');
 
-    await page.getByLabel('Código').fill(await codigoNuevo(u.super.secreto!));
+    await page.getByLabel('Código').fill(codigoActual(u.super.secreto!));
     await page.getByRole('button', { name: 'Verificar' }).click();
     await expect(page).toHaveURL(/\/admin\/usuarios$/);
     await expect(page.locator('[data-lista-usuarios]')).toBeVisible();
@@ -141,7 +141,7 @@ test.describe('doble factor', () => {
 
     await page.getByText('¿No puedes escanear?').click();
     const secreto = (await page.locator('[data-secreto-totp]').innerText()).trim();
-    await page.getByLabel('Código de la app').fill(await codigoNuevo(secreto));
+    await page.getByLabel('Código de la app').fill(codigoActual(secreto));
     await page.getByRole('button', { name: 'Activar doble factor' }).click();
     await expect(page).toHaveURL(/\/admin\/cuenta\?doble-factor=activado/);
     // El rol se asignó ANTES del factor: la base no lo reconoce hasta reasignarlo.
@@ -160,13 +160,25 @@ test.describe('doble factor', () => {
     await listo(page);
     await page.getByText('¿No puedes escanear?').click();
     const secreto = (await page.locator('[data-secreto-totp]').innerText()).trim();
-    await page.getByLabel('Código de la app').fill(await codigoNuevo(secreto));
+    await page.getByLabel('Código de la app').fill(codigoActual(secreto));
     await page.getByRole('button', { name: 'Activar doble factor' }).click();
     await expect(page.locator('[data-doble-factor="activo"]')).toBeVisible();
 
     await page.getByRole('button', { name: 'Cerrar sesión' }).first().click();
     await ingresar(page, { ...ed, secreto });
     await expect(page.getByRole('heading', { name: /Hola, Edgar Opcional/ })).toBeVisible();
+  });
+
+  test('ingresar varias veces seguidas con doble factor no espera al reloj', async ({ browser }) => {
+    // Antes, cada ingreso repetido de la misma persona dentro de la misma ventana
+    // de 30 s esperaba a que cambiara el código y dejaba la prueba al límite.
+    const inicio = Date.now();
+    for (let i = 0; i < 3; i++) {
+      const contexto = await browser.newContext();
+      await ingresar(await contexto.newPage(), u.super);
+      await contexto.close();
+    }
+    expect(Date.now() - inicio).toBeLessThan(15_000);
   });
 });
 

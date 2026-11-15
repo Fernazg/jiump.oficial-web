@@ -8,8 +8,6 @@ import { crearUsuario, ingresar, type Usuario } from './apoyo-admin';
  * vista previa y publicar; ordenar, ocultar y editar secciones; retirar una
  * página (deja de verse y sale del menú). Al final se restaura todo como estaba.
  */
-// Cada prueba vuelve a ingresar con doble factor: el código TOTP no se repite y puede esperar hasta 30 s.
-test.describe.configure({ timeout: 120_000 });
 const marca = Date.now().toString(36);
 const u: Record<string, Usuario> = {};
 

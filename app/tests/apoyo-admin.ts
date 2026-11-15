@@ -83,22 +83,25 @@ export async function enlaceRecuperacion(correo: string): Promise<string> {
   return `/admin/auth/confirmar?token_hash=${r.hashed_token}&type=recovery&siguiente=/admin/nueva-clave`;
 }
 
-/** Último código usado por secreto: el servidor no acepta el mismo código dos veces. */
-const usados = new Map<string, string>();
-export async function codigoNuevo(secreto: string): Promise<string> {
-  for (;;) {
-    const c = totp(secreto);
-    if (usados.get(secreto) !== c) { usados.set(secreto, c); return c; }
-    await new Promise((r) => setTimeout(r, 1000));
-  }
-}
+/**
+ * Código TOTP del momento, como lo muestra la app autenticadora.
+ *
+ * Antes, las pruebas esperaban a que cambiara el código (hasta 30 s) cada vez
+ * que la misma persona ingresaba dos veces dentro de la misma ventana, por
+ * suponer que el servidor rechaza un código repetido. No es así: Supabase Auth
+ * acepta el código vigente las veces que haga falta (y también los de las
+ * ventanas vecinas, ±30 s, así que tampoco importa si el código cambia justo
+ * entre escribirlo y enviarlo). Esa espera era lo que dejaba varias pruebas al
+ * borde de su límite de tiempo.
+ */
+export const codigoActual = (secreto: string): string => totp(secreto);
 
-/** Inicia sesión por la interfaz (y el segundo factor si lo tiene). */
 /** Espera a que los formularios de la página estén activos (JavaScript cargado). */
 export async function listo(page: Page) {
   await page.locator('form[data-listo]').first().waitFor();
 }
 
+/** Inicia sesión por la interfaz (y el segundo factor si lo tiene). */
 export async function ingresar(page: Page, u: Usuario, destino = '/admin') {
   await page.goto(`/admin/ingresar${destino !== '/admin' ? `?siguiente=${encodeURIComponent(destino)}` : ''}`);
   await listo(page);
@@ -108,7 +111,7 @@ export async function ingresar(page: Page, u: Usuario, destino = '/admin') {
   if (u.secreto) {
     await expect(page).toHaveURL(/\/admin\/verificar/);
     await listo(page);
-    await page.getByLabel('Código').fill(await codigoNuevo(u.secreto));
+    await page.getByLabel('Código').fill(codigoActual(u.secreto));
     await page.getByRole('button', { name: 'Verificar' }).click();
   }
   await expect(page).not.toHaveURL(/\/admin\/(ingresar|verificar)/);
