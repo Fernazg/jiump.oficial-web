@@ -4,11 +4,17 @@ import { BotonAccion } from '@/components/admin/BotonAccion';
 import { Confirmar } from '@/components/admin/Confirmar';
 import { descartarCambios, despublicar, eliminar, publicar } from '@/lib/admin/acciones-contenido';
 
-type Tipo = 'actividad' | 'album';
+type Tipo = 'actividad' | 'album' | 'pagina' | 'menu' | 'institucional';
 const NOMBRE: Record<Tipo, { cosa: string; donde: string }> = {
   actividad: { cosa: 'la actividad', donde: 'Su página y su tarjeta en Inicio dejarán de verse.' },
   album: { cosa: 'el álbum', donde: 'Dejará de verse en la Galería.' },
+  pagina: { cosa: 'la página', donde: 'Dejará de verse en el sitio y su enlace se quitará del menú.' },
+  menu: { cosa: 'el menú', donde: '' },
+  institucional: { cosa: 'los textos', donde: '' },
 };
+/** Menú e institucional siempre están a la vista: no se retiran ni se eliminan. Las páginas no se eliminan. */
+const SIEMPRE = new Set<Tipo>(['menu', 'institucional']);
+const SIN_ELIMINAR = new Set<Tipo>(['pagina', 'menu', 'institucional']);
 
 /**
  * Botones y avisos de publicación (igual que en los artículos):
@@ -33,18 +39,20 @@ export function AccionesPublicacion({ tipo, id, titulo, publicado, hayCambios, p
               <BotonAccion accion={publicar.bind(null, tipo, id)} disabled={!listo} data-publicar-cambios
                 titulo={listo ? undefined : 'Primero guarda y revisa la vista previa'}>Publicar cambios</BotonAccion>
             )}
-            <Confirmar boton="Despublicar" claseBoton={borde} peligro={false} titulo={`¿Retirar ${n.cosa} del sitio?`} confirmar="Sí, despublicar"
+            {!SIEMPRE.has(tipo) && <Confirmar boton={tipo === 'pagina' ? 'Retirar página' : 'Despublicar'} claseBoton={borde} peligro={false} titulo={`¿Retirar ${n.cosa} del sitio?`} confirmar="Sí, despublicar"
               accion={despublicar.bind(null, tipo, id)}>
               {n.donde} Podrás publicarlo otra vez después de la vista previa.{hayCambios ? ' Los cambios sin publicar quedan en el borrador.' : ''}
-            </Confirmar>
+            </Confirmar>}
           </>
         ) : (
           <BotonAccion accion={publicar.bind(null, tipo, id)} disabled={!listo} data-publicar
             titulo={listo ? undefined : 'Primero guarda y revisa la vista previa'}>Publicar</BotonAccion>
         )}
-        <Confirmar boton="Eliminar" claseBoton={borde} titulo={`¿Eliminar «${titulo || n.cosa}»?`} accion={eliminar.bind(null, tipo, id)}>
-          {n.donde} Las fotos quedan en la biblioteca.
-        </Confirmar>
+        {!SIN_ELIMINAR.has(tipo) && (
+          <Confirmar boton="Eliminar" claseBoton={borde} titulo={`¿Eliminar «${titulo || n.cosa}»?`} accion={eliminar.bind(null, tipo, id)}>
+            {n.donde} Las fotos quedan en la biblioteca.
+          </Confirmar>
+        )}
       </div>
       {!publicado && !listo && (
         <p className="adm-aviso basis-full" data-falta-previa>

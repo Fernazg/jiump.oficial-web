@@ -267,6 +267,9 @@ select is((select array_agg(r)::text from mis_roles() r), '{superadmin}', 'mis_r
 select pg_temp.como('11111111-1111-4111-8111-111111111111', 'aal2');
 update configuracion set modo_mantenimiento = true;
 select is((select modo_mantenimiento from configuracion), true, 'Superadmin con doble factor activa el modo mantenimiento');
+-- Publicar una página exige su vista previa (migración 10).
+insert into vistas_previas_contenido (tipo, registro_id, huella)
+select 'pagina', id, huella_contenido('pagina', id) from paginas where clave = 'inicio';
 select lives_ok($$ update paginas set estado = 'publicado' where clave = 'inicio' $$, 'Superadmin publica páginas');
 select lives_ok($$ insert into perfil_roles (perfil_id, rol) select id, 'multimedia' from perfiles where correo = 'editor@pgtap.prueba' $$,
   'Superadmin asigna roles');
@@ -277,9 +280,9 @@ select ok(exists (select 1 from registro_actividad r join perfiles p on p.id = r
   'El registro guarda quién envió a la papelera');
 select is((select count(*)::int from articulos), 9, 'Superadmin ve todos los artículos, incluidos los programados');
 
--- No se puede quitar el último superadmin
+-- No se puede quitar el último superadmin (regla completa en sitio_usuarios.test.sql)
 delete from perfil_roles where rol = 'superadmin';
-select throws_ok($$ set constraints all immediate $$, '23514', null, 'No se puede quitar el último superadmin');
+select throws_ok($$ set constraints all immediate $$, '23514', 'Deben quedar al menos dos Superadministradores activos', 'No se puede quitar el último superadmin');
 
 reset role;
 

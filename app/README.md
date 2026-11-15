@@ -70,7 +70,7 @@ Solo funciona con las tres condiciones juntas: `next dev`, la variable y un Supa
 
 ## Panel /admin
 
-Etapa 1: inicio de sesión, estructura, escritorio y artículos. Etapa 2: biblioteca de fotos, eventos y actividades, galerías y videos. Página web, institucional, menú, usuarios, registro y configuración ya están en el menú (con sus permisos y 403), pero su contenido llega en la próxima etapa.
+Etapa 1: inicio de sesión, estructura, escritorio y artículos. Etapa 2: biblioteca de fotos, eventos y actividades, galerías y videos. Etapa 3: página web, menú y pie, información institucional, usuarios y roles, registro de actividad y configuración. Con eso el panel queda completo.
 
 **Acceso**
 - Correo y contraseña de Supabase Auth. No hay registro público.
@@ -81,7 +81,7 @@ Etapa 1: inicio de sesión, estructura, escritorio y artículos. Etapa 2: biblio
 **Permisos (en el servidor, no solo en la interfaz)**
 - `src/proxy.ts` protege todo `/admin`: sin sesión → «Ingresar»; con doble factor pendiente → código; sección que no es de sus roles → **403** (también para acciones del servidor enviadas a mano).
 - Cada página y cada acción vuelve a comprobar el permiso (`exigirSeccion` / `permisoAccion`).
-- El panel usa siempre la sesión de la persona con la clave anónima: **RLS aplica sus permisos**. Nunca usa la service role.
+- El panel usa siempre la sesión de la persona con la clave anónima: **RLS aplica sus permisos**. La única excepción es **invitar a alguien** (ver «Usuarios y roles»).
 - Qué sección ve cada rol: `src/lib/admin/secciones.ts` (matriz de `docs/roles-permisos.md`).
 
 **Artículos**
@@ -96,7 +96,8 @@ Etapa 1: inicio de sesión, estructura, escritorio y artículos. Etapa 2: biblio
 
 **Biblioteca de fotos** (todo el equipo; ◐ Editor y Eventos solo editan o borran las suyas)
 - Subir arrastrando o eligiendo archivos: JPG, PNG, WebP o AVIF de hasta 10 MB, con texto alternativo obligatorio y crédito opcional.
-- Al subir se guardan el original sin cambios y versiones WebP y AVIF de 480, 960 y 1600 px. **Las versiones las crea el navegador de quien sube** (WebAssembly: codificadores de Squoosh vía jSquash, licencia Apache 2.0), así que no dependen del alojamiento: funciona igual en Cloudflare, Vercel o un servidor propio, sin servicios pagados. El servidor solo verifica, con JavaScript puro (`src/lib/admin/imagen.ts`), que el original y cada versión sean imágenes reales del tipo y ancho esperados, y las guarda. Si un navegador no pudiera optimizar, se guarda solo el original y el sitio lo usa tal cual. El sitio muestra las versiones (más livianas, sin datos de ubicación).
+- **Privacidad:** al subir, el servidor quita del original la ubicación GPS y los demás metadatos personales (EXIF, XMP, comentarios, IPTC) **sin recodificar**: los píxeles quedan idénticos y solo se conserva la orientación (para que la foto no se vea girada) y el perfil de color (`src/lib/admin/metadatos.ts`). Si no se pueden quitar sin alterar la foto (un AVIF con EXIF), la subida se rechaza con un mensaje claro. Las fotos del seed (`design/fotos`) se revisaron: no traen datos personales (lo comprueba `tests/metadatos.spec.ts`).
+- Al subir se guardan el original (ya limpio) y versiones WebP y AVIF de 480, 960 y 1600 px. **Las versiones las crea el navegador de quien sube** (WebAssembly: codificadores de Squoosh vía jSquash, licencia Apache 2.0), así que no dependen del alojamiento: funciona igual en Cloudflare, Vercel o un servidor propio, sin servicios pagados. El servidor solo verifica, con JavaScript puro (`src/lib/admin/imagen.ts`), que el original y cada versión sean imágenes reales del tipo y ancho esperados, y las guarda. Si un navegador no pudiera optimizar, se guarda solo el original y el sitio lo usa tal cual. El sitio muestra las versiones (más livianas, sin datos de ubicación).
 - Los codificadores (`.wasm`) se copian a `public/wasm` al compilar o al iniciar `npm run dev` (`scripts/copiar-wasm.mjs`); no se suben al repositorio.
 - Buscar por descripción o crédito, filtrar (subidas por mí, en uso, sin usar, por álbum) y ver dónde se usa cada foto. Eliminar pide confirmación y avisa si está en uso.
 - En el editor de artículos se puede subir una foto nueva como portada o imagen.
@@ -111,4 +112,26 @@ Etapa 1: inicio de sesión, estructura, escritorio y artículos. Etapa 2: biblio
 - Álbumes con fotos ordenadas, portada, año, lugar y actividad opcional. Un álbum tiene fotos de un solo evento (regla 2).
 - Videos de YouTube asignados a un álbum o una actividad. Vista previa obligatoria antes de publicar.
 
-**Pruebas del panel** (`tests/admin-*.spec.ts`): crean usuarios de prueba de cada rol en el Supabase local (con TOTP simulado) y cubren qué puede y qué no puede hacer cada uno (también entrando por URL), la subida y optimización de fotos, eventos, álbumes y videos con su vista previa, el doble factor, cerrar sesión y desactivar, recuperar la contraseña, el flujo completo de publicación, la programación, la papelera, las versiones, la edición simultánea, series y temas, y que lo no publicado nunca aparezca en el sitio público. Al terminar, borran todo lo que crearon (contenido, fotos, archivos y cuentas de prueba; queda solo la última cuenta de prueba con rol de superadmin, porque la base nunca deja el sitio sin uno).
+**Administrar página web** (solo Superadmin)
+- Pestañas por página (Inicio, Nosotros, Eventos, Artículos, Galería). Cada sección de Inicio y Nosotros se ordena (↑ ↓), se muestra u oculta y se editan sus textos, botones, fotos y tarjetas. El diseño de cada sección es fijo (`src/lib/catalogo-secciones.ts`): así la página siempre se ve bien. Las secciones automáticas (actividades destacadas, próximo evento, artículos recientes, álbumes, textos institucionales) solo se ordenan u ocultan.
+- SEO de cada página y **publicar o retirar** la página completa (retirada: 404 y su enlace sale del menú).
+- **Menú, enlaces y pie:** enlaces ordenables que se pueden ocultar. Un enlace a una página no publicada nunca aparece.
+- Igual que el resto del panel: si la página ya está publicada, lo que se guarda queda **pendiente** hasta revisar la vista previa (la misma página del sitio) y publicar. Lo exige la base de datos.
+
+**Información institucional** (solo Superadmin)
+- Identidad, «Quiénes somos», visión, historia, declaraciones de fe y cifras. Todos los campos parten **vacíos**: se llenan con los textos oficiales cuando JIUMP los entregue; mientras tanto, el sitio no muestra esos bloques. Cambios pendientes y vista previa (en Nosotros) antes de publicar.
+
+**Usuarios y roles** (solo Superadmin)
+- Lista con roles, doble factor, último ingreso, invitación pendiente y la tabla «Qué puede hacer cada rol».
+- **Invitar por correo:** se crea la cuenta y Supabase envía un correo; la persona abre el enlace (`/admin/bienvenida`), crea su contraseña y entra con los roles asignados.
+- Asignar y quitar roles; desactivar (corta sus sesiones al instante) y reactivar.
+- Reglas: Superadministrador solo se asigna a quien ya inscribió su doble factor (la base además exige que el factor sea anterior al rol); deben quedar **al menos dos** Superadministradores activos (lo exigen el panel y la base de datos: no se puede quitar el rol ni desactivar a un superadmin si quedarían menos de dos; agregar siempre se puede, partiendo de cero); nadie se quita su propio rol de Superadministrador ni se desactiva a sí mismo.
+- **Por qué invitar usa la service role:** crear la cuenta de otra persona y enviarle la invitación es una operación de administración de Supabase Auth; ninguna sesión normal puede hacerlo (el registro público está cerrado a propósito). Por eso, solo esa acción usa la clave de servicio (`src/lib/admin/invitar.ts`, solo servidor), después de comprobar que quien invita es Superadmin con doble factor vigente. Los roles se asignan luego con la sesión de quien invita (RLS normal). Requiere la variable de entorno del servidor `SUPABASE_SERVICE_ROLE_KEY` (nunca en el repositorio ni en el navegador); sin ella, el resto del panel funciona y «Invitar» muestra un aviso.
+
+**Registro de actividad** (solo Superadmin): quién hizo qué y cuándo, con filtros por persona, acción, tipo de contenido y fechas. Solo lectura: lo escriben triggers de la base.
+
+**Configuración** (solo Superadmin)
+- Modo mantenimiento con confirmación (el sitio responde 503 con la página de mantenimiento; el panel sigue funcionando), su foto, enlace de Instagram, barra «Próximo evento» y SEO por defecto (título y descripción del sitio).
+- Redirecciones 301 desde las direcciones antiguas de Wix (se acepta la URL completa y se guarda su ruta).
+
+**Pruebas del panel** (`tests/admin-*.spec.ts`): crean usuarios de prueba de cada rol en el Supabase local (con TOTP simulado) y cubren qué puede y qué no puede hacer cada uno (también entrando por URL), la subida y optimización de fotos, eventos, álbumes y videos con su vista previa, el doble factor, cerrar sesión y desactivar, recuperar la contraseña, el flujo completo de publicación, la programación, la papelera, las versiones, la edición simultánea, series y temas, las secciones de página web, menú, institucional, la invitación por correo (Mailpit local), los cambios de rol, el modo mantenimiento, las redirecciones, y que lo no publicado nunca aparezca en el sitio público. Al terminar, borran todo lo que crearon (contenido, fotos, archivos y cuentas de prueba; quedan las dos últimas cuentas de prueba con rol de superadmin, porque la base nunca deja menos de dos).

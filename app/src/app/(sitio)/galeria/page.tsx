@@ -6,10 +6,10 @@ import { IconoImagen } from '@/components/Iconos';
 import { TarjetaAlbum } from '@/components/Tarjetas';
 import { VistaAlbum } from '@/components/VistaAlbum';
 import { actividades, albumes, firmarFotos } from '@/lib/datos';
-import { exigirPagina } from '@/lib/paginas';
+import { exigirPagina, metadataDePagina } from '@/lib/paginas';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = { title: 'Galería' };
+export const generateMetadata = (): Promise<Metadata> => metadataDePagina('galeria', 'Galería');
 
 type Busqueda = { filtro?: string };
 

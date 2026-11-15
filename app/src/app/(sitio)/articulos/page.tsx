@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { AvisoVistaPrevia } from '@/components/AvisoVistaPrevia';
-import { exigirPagina } from '@/lib/paginas';
+import { exigirPagina, metadataDePagina } from '@/lib/paginas';
 import Link from 'next/link';
 import { EstadoVacio, Flecha, Foto } from '@/components/Basicos';
 import { IconoAntorcha, IconoBuscar, IconoLibro } from '@/components/Iconos';
@@ -10,7 +10,7 @@ import { fechaLarga, nombreMes } from '@/lib/formato';
 import type { Articulo, FotoFirmada, Serie } from '@/lib/tipos';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = { title: 'Artículos' };
+export const generateMetadata = (): Promise<Metadata> => metadataDePagina('articulos', 'Artículos');
 
 type Busqueda = { q?: string; serie?: string; tema?: string };
 

@@ -5,7 +5,8 @@ import type { EstadoFormulario } from '@/components/admin/Formulario';
 import { permisoAccion } from './acceso';
 import { esUuid } from './bloques';
 import { firmarMiniaturas, rutaVersion, type FotoElegible } from './fotos';
-import { dimensionesDe, EXTENSION, formatoDe, MIME } from './imagen';
+import { dimensionesDe, EXTENSION, formatoDe, type Formato, MIME } from './imagen';
+import { MetadatosNoRemovibles, quitarMetadatos } from './metadatos';
 import { clientePanel } from './supabase-panel';
 
 /**
@@ -28,6 +29,8 @@ const ANCHOS = [480, 960, 1600];
  * funciona en cualquier alojamiento:
  *  · el original es de verdad JPG, PNG, WebP o AVIF, de hasta 10 MB, y sus
  *    medidas coinciden con las informadas;
+ *  · al original se le quitan los datos personales (GPS, EXIF, XMP…), sin
+ *    recodificarlo; si no se puede, se rechaza;
  *  · cada versión es WebP o AVIF real, del ancho esperado y nunca más grande
  *    que el original.
  * Si el navegador no pudo crear versiones, se guarda solo el original.
@@ -44,9 +47,17 @@ export async function subirFoto(datos: FormData): Promise<ResultadoSubida> {
   if (archivo.size > LIMITE_BYTES) return { ok: false, error: `${nombre} pesa más de 10 MB.` };
   if (!alt) return { ok: false, error: 'Escribe el texto alternativo: describe la foto para quienes no pueden verla.' };
 
-  const original = new Uint8Array(await archivo.arrayBuffer());
-  const formato = formatoDe(original);
-  if (!formato) return { ok: false, error: `${nombre} no es una imagen JPG, PNG, WebP ni AVIF válida.` };
+  const recibido = new Uint8Array(await archivo.arrayBuffer());
+  if (!formatoDe(recibido)) return { ok: false, error: `${nombre} no es una imagen JPG, PNG, WebP ni AVIF válida.` };
+  // Privacidad: se quitan la ubicación GPS y demás datos personales (EXIF, XMP,
+  // IPTC, comentarios) también del original, sin recodificar la imagen.
+  let original: Uint8Array;
+  let formato: Formato;
+  try {
+    ({ bytes: original, formato } = quitarMetadatos(recibido));
+  } catch (e) {
+    return { ok: false, error: `${nombre}: ${e instanceof MetadatosNoRemovibles ? e.message : 'no se pudieron quitar los datos personales de la foto.'}` };
+  }
   const medidas = dimensionesDe(original, formato);
   if (!medidas || !medidas.ancho || !medidas.alto) return { ok: false, error: `${nombre}: no se pudo leer el tamaño de la imagen.` };
 
@@ -82,7 +93,7 @@ export async function subirFoto(datos: FormData): Promise<ResultadoSubida> {
     subidas.push(destino);
   };
   try {
-    await subir(ruta, original, MIME[formato]); // original, sin cambios
+    await subir(ruta, original, MIME[formato]); // original sin metadatos personales; la imagen, intacta
     for (const v of versiones) {
       await subir(rutaVersion(ruta, v.ancho, 'webp'), v.webp, 'image/webp');
       await subir(rutaVersion(ruta, v.ancho, 'avif'), v.avif, 'image/avif');

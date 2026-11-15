@@ -199,3 +199,32 @@ test('en el editor de artículos se puede subir una foto nueva como portada, y e
   await expect(picture.locator('img')).toHaveAttribute('alt', `Portada nueva ${marca}`);
   expect(await picture.locator('img').evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0)).toBe(true);
 });
+
+test('privacidad: el original subido pierde el GPS y los datos personales, sin alterar la imagen', async ({ page }) => {
+  const { jpgConGps, avifConExif } = await import('./apoyo-imagenes');
+  const { datosDeImagen, tieneMetadatosPersonales } = await import('../src/lib/admin/metadatos');
+  await ingresar(page, u.editor);
+  await page.goto('/admin/fotos');
+  await page.locator('[data-subidor][data-listo]').first().waitFor();
+  const sucio = jpgConGps(6);
+  await page.getByLabel('Elegir fotos para subir').setInputFiles({ name: 'con-gps.jpg', mimeType: 'image/jpeg', buffer: Buffer.from(sucio) });
+  await page.locator('[data-por-subir] [data-pendiente]').getByLabel('Texto alternativo (obligatorio)').fill(`Foto con GPS ${marca}`);
+  await page.locator('[data-subir-fotos]').click();
+  await expect(page.locator('[data-aviso-subida]')).toBeVisible({ timeout: 60_000 });
+
+  const [f] = await admin<{ archivo: string; ancho: number; alto: number }[]>(`fotos?texto_alternativo=eq.${encodeURIComponent(`Foto con GPS ${marca}`)}&select=archivo,ancho,alto`);
+  expect({ ancho: f.ancho, alto: f.alto }).toEqual({ ancho: 900, alto: 1600 }); // girada por la cámara (orientación 6)
+  const r = await fetch(`${process.env.SUPABASE_URL}/storage/v1/object/authenticated/fotos/${f.archivo}`, {
+    headers: { apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!, Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}` },
+  });
+  const guardado = new Uint8Array(await r.arrayBuffer());
+  expect(tieneMetadatosPersonales(guardado)).toBe(false);
+  for (const s of ['CamaraDePrueba', 'GPSLatitude', 'persona de prueba']) expect(Buffer.from(guardado).includes(s), s).toBe(false);
+  expect(Buffer.compare(Buffer.from(datosDeImagen(guardado)), Buffer.from(datosDeImagen(sucio)))).toBe(0); // misma imagen
+
+  // AVIF con datos personales: se rechaza con un mensaje claro
+  await page.getByLabel('Elegir fotos para subir').setInputFiles({ name: 'con-exif.avif', mimeType: 'image/avif', buffer: Buffer.from(avifConExif()) });
+  await page.locator('[data-por-subir] [data-pendiente]').getByLabel('Texto alternativo (obligatorio)').fill('AVIF con datos');
+  await page.locator('[data-subir-fotos]').click();
+  await expect(page.locator('[data-por-subir]')).toContainText('Súbela como JPG o PNG', { timeout: 30_000 });
+});
