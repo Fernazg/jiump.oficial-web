@@ -3,13 +3,14 @@ import Link from 'next/link';
 import { exigirSeccion } from '@/lib/admin/acceso';
 import { fechaHoraChile } from '@/lib/admin/hora-chile';
 import { ACCIONES, describir, leerRegistro, POR_PAGINA, TABLAS, type FiltrosRegistro } from '@/lib/admin/registro';
+import { parametros } from '@/lib/parametros';
 
 export const metadata: Metadata = { title: 'Registro de actividad' };
 
 /** Quién hizo qué y cuándo. Solo lectura: lo escriben triggers de la base. */
 export default async function Registro({ searchParams }: { searchParams: Promise<FiltrosRegistro> }) {
   await exigirSeccion('registro');
-  const f = await searchParams;
+  const f = await parametros(searchParams);
   const { filas, total, pagina, personas } = await leerRegistro(f);
   const paginas = Math.max(1, Math.ceil(total / POR_PAGINA));
   const enlace = (n: number) => `/admin/registro?${new URLSearchParams({ ...Object.fromEntries(Object.entries(f).filter(([, v]) => v)), pagina: String(n) })}`;

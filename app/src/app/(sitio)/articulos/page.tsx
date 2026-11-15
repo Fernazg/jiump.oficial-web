@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { AvisoVistaPrevia } from '@/components/AvisoVistaPrevia';
+import { parametros } from '@/lib/parametros';
 import { exigirPagina, metadataDePagina } from '@/lib/paginas';
 import Link from 'next/link';
 import { EstadoVacio, Flecha, Foto } from '@/components/Basicos';
@@ -16,8 +17,8 @@ type Busqueda = { q?: string; serie?: string; tema?: string };
 
 export default async function Articulos({ searchParams }: { searchParams: Promise<Busqueda> }) {
   const { vistaPrevia } = await exigirPagina('articulos');
-  const params = await searchParams;
-  const q = (params.q ?? '').trim().slice(0, 100);
+  const params = await parametros(searchParams, 100);
+  const q = params.q ?? '';
   const [todos, listaSeries, listaTemas] = await Promise.all([articulos(), series(), temas()]);
   const serieDe = new Map(listaSeries.map((s) => [s.id, s]));
   const totalSerie = (s: Serie) => Math.max(0, ...todos.filter((a) => a.serie_id === s.id).map((a) => a.parte ?? 0));

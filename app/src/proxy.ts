@@ -29,8 +29,10 @@ export async function proxy(request: NextRequest) {
     }
   };
 
-  let decodificada = ruta;
-  try { decodificada = decodeURIComponent(ruta); } catch { /* ruta mal codificada: se busca tal cual */ }
+  // Dirección mal codificada (por ejemplo «%E0%A4%A»): es un error de quien la
+  // pide (400), no del sitio. Sin esto, las rutas con parámetro respondían 500.
+  let decodificada: string;
+  try { decodificada = decodeURIComponent(ruta); } catch { return new NextResponse('Dirección no válida', { status: 400 }); }
   const candidatas = [...new Set([ruta, decodificada, decodificada.length > 1 ? decodificada.replace(/\/+$/, '') : decodificada])];
   const filtro = encodeURIComponent(`(${candidatas.map((r) => `"${r.replace(/["\\]/g, '')}"`).join(',')})`);
   const [conf, redir] = await Promise.all([

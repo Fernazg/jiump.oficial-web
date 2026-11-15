@@ -48,6 +48,7 @@ Qué cubren:
 - Modo mantenimiento (503) y su foto configurable, redirecciones 301 y la 404.
 - Páginas en borrador (404, fuera del menú, aun con la vista previa activada en producción), lema/cita/abreviatura y la Galería con sus álbumes.
 - En celular: sin desborde horizontal y menú ☰ con enlaces de 52 px.
+- Errores (`tests/errores.spec.ts`): las direcciones mal formadas no dan error 500, y con la base de datos caída se ve un aviso claro en español con «Reintentar». Para eso Playwright levanta un segundo servidor (puerto 3101) apuntando a una base que no responde.
 
 El workflow `.github/workflows/pruebas.yml` corre todo esto en cada push y pull request.
 
@@ -59,6 +60,12 @@ Una página completa solo se muestra si está **publicada** en `paginas`; si no,
 2. Usa `npm run dev`.
 
 Solo funciona con las tres condiciones juntas: `next dev`, la variable y un Supabase local. En un build de producción no tiene efecto; las pruebas lo verifican levantando el build con la variable activada a propósito. La página muestra el aviso «Vista previa local». Solo salta la regla de la página: el contenido en borrador (artículos, actividades, secciones) sigue sin verse, porque los datos se leen con la clave anónima.
+
+## Si algo falla
+
+- **Páginas de error propias** (`src/components/ErrorGeneral.tsx` y los `error.tsx`): si una página no se puede armar, el visitante ve «No pudimos cargar esta página» con «Reintentar», sin detalles técnicos. El «Código para soporte» permite encontrar el detalle en el registro del servidor.
+- **Base de datos caída:** el sitio responde en menos de un segundo con ese aviso (cada consulta tiene un tope de 8 s y no se reintenta). «Ingresar» avisa que no hay conexión en vez de culpar a la contraseña.
+- **Parámetros de la URL:** pasan por `parametros()` (`src/lib/parametros.ts`), que deja textos cortos y sin caracteres de control. Úsalo en cada página nueva que lea `searchParams`.
 
 ## Cómo decide qué mostrar
 
