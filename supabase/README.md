@@ -104,6 +104,13 @@ Las claves locales las entrega `supabase status`; **nunca** se copian al reposit
 - **`marcar_proximo()`:** marca el «Próximo evento» y desmarca el anterior (siempre uno solo).
 - **Corrección:** ahora se puede borrar la cuenta de alguien que creó contenido (su contenido queda, sin autor). Antes la base lo impedía por error.
 
+### Etapa 3 del panel (migración 10)
+
+- **Páginas, menú y textos institucionales con cambios pendientes y vista previa**, igual que actividades, álbumes y videos: `guardar_contenido()` acepta `pagina`, `menu` e `institucional`; `publicar_cambios()` exige la vista previa; `proteger_publicado` impide cambiarlos directo. El menú y los textos institucionales siempre están a la vista del público, así que siempre pasan por cambios pendientes.
+- Cada bloque de Inicio y Nosotros es una fila de `secciones` (orden y visibilidad). Se crean **solo con su estructura**, sin textos.
+- **`usuarios_panel()`:** lista de personas con roles, doble factor, si su rol de superadmin está vigente e invitación pendiente. Solo responde a un Superadmin vigente.
+- Pruebas por rol (`sitio_usuarios.test.sql`): Editor, Eventos y Multimedia no pueden editar páginas, menú, institucional, configuración, redirecciones ni roles, ni leer usuarios o el registro; con un control que verifica que el Superadmin sí puede.
+
 ## Puesta en producción (cuando se autorice)
 
 Solo en el plan gratuito y con autorización de la directiva:
@@ -120,7 +127,8 @@ npx supabase db push
 
 - **Authentication → Sign In / Providers:** desactivar «Allow new users to sign up». `config.toml` solo lo desactiva en local, y con el registro abierto cualquiera crearía una cuenta (sin roles, pero con perfil).
 - **Authentication → Multi-Factor:** habilitar TOTP.
-- **Authentication → URL Configuration:** agregar `https://<dominio>/admin/auth/confirmar**` a las Redirect URLs (enlace de «Recuperar contraseña»).
+- **Authentication → URL Configuration:** agregar `https://<dominio>/admin/auth/confirmar**` (enlace de «Recuperar contraseña») y `https://<dominio>/admin/bienvenida` (enlace de invitación) a las Redirect URLs.
+- **Servidor del sitio (variables de entorno):** `SUPABASE_SERVICE_ROLE_KEY` solo para «Invitar usuario» (ver `app/README.md`). Nunca en el repositorio ni en el navegador.
 - **Authentication → Emails / SMTP:** el correo de Supabase gratuito tiene un límite muy bajo de envíos por hora; para recuperar contraseñas con tranquilidad conviene un SMTP propio (decisión pendiente).
 - **Database → Extensions:** `pg_cron` queda activado por la migración 8 (vaciado diario de la papelera).
 
