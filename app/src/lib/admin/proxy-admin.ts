@@ -85,7 +85,7 @@ export async function protegerAdmin(request: NextRequest): Promise<NextResponse>
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       return conCookies(new NextResponse('Sin permiso', { status: 403 }));
     }
-    return conCookies(NextResponse.rewrite(new URL('/admin/sin-permiso', request.url), { status: 403 }));
+    return conCookies(NextResponse.rewrite(new URL('/admin/sin-permiso', request.url), { request, status: 403 }));
   }
   return conCookies(respuesta);
 }

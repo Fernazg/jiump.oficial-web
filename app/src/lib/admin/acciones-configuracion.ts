@@ -48,7 +48,8 @@ export async function agregarRedireccion(_: EstadoFormulario, f: FormData): Prom
   try { if (/^https?:\/\//.test(origen)) origen = new URL(origen).pathname; } catch { /* queda igual y falla abajo */ }
   origen = origen.replace(/\/+$/, '') || '/';
   if (!/^\/[^\s]*$/.test(origen) || origen === '/' || origen.startsWith('/admin')) return { error: 'La dirección antigua debe ser una ruta como /post/mi-articulo (no puede ser el inicio ni el panel).' };
-  if (!/^(\/[^\s]*|https:\/\/[^\s]+)$/.test(destino)) return { error: 'El destino debe empezar con / (página del sitio) o https://' };
+  // «//otro-sitio» y «/\\otro-sitio» parecen rutas, pero el navegador las lleva a otro dominio.
+  if (!/^(\/(?![/\\])[^\s]*|https:\/\/[^\s]+)$/.test(destino)) return { error: 'El destino debe empezar con / (página del sitio) o https://' };
   if (origen === destino) return { error: 'El destino no puede ser la misma dirección.' };
   const supabase = await clientePanel();
   const { error } = await supabase.from('redirecciones').insert({ origen, destino, codigo: 301 });
