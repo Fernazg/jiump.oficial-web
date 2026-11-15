@@ -1,0 +1,78 @@
+# Respaldo semanal de la base de datos de producción.
+#
+# NO HACE NADA hasta que se configuren los dos secretos del repositorio
+# (Settings → Secrets and variables → Actions). Ver docs/operacion.md:
+#   SUPABASE_DB_URL  dirección de conexión a la base (Supabase → Connect → Session pooler)
+#   RESPALDO_CLAVE   frase larga con la que se cifra el respaldo
+#
+# El respaldo incluye correos del equipo, así que se guarda CIFRADO. Queda como
+# archivo de la ejecución (Actions → Respaldo → la ejecución → Artifacts) por 90
+# días. Sin costo: usa los minutos gratuitos de GitHub Actions.
+# No incluye las fotos (ver docs/operacion.md › Respaldo de las fotos).
+name: Respaldo
+
+on:
+  schedule:
+    - cron: '17 7 * * 1' # lunes, 04:17 de Chile (aprox.)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: respaldo
+  cancel-in-progress: false
+
+jobs:
+  base-de-datos:
+    name: Base de datos (cifrado)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_CLI: supabase@3.1.0
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      RESPALDO_CLAVE: ${{ secrets.RESPALDO_CLAVE }}
+    steps:
+      - name: ¿Está configurado?
+        id: listo
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ] || [ -z "$RESPALDO_CLAVE" ]; then
+            echo "Respaldo sin configurar: faltan los secretos SUPABASE_DB_URL y RESPALDO_CLAVE (ver docs/operacion.md)." >> "$GITHUB_STEP_SUMMARY"
+            echo "configurado=no" >> "$GITHUB_OUTPUT"
+          else
+            echo "configurado=si" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v5
+        if: steps.listo.outputs.configurado == 'si'
+        with:
+          node-version: 22
+
+      - name: Volcar roles, estructura y datos
+        if: steps.listo.outputs.configurado == 'si'
+        run: |
+          mkdir respaldo
+          npx --yes "$SUPABASE_CLI" db dump --db-url "$SUPABASE_DB_URL" --role-only -f respaldo/1-roles.sql
+          npx --yes "$SUPABASE_CLI" db dump --db-url "$SUPABASE_DB_URL" -f respaldo/2-estructura.sql
+          npx --yes "$SUPABASE_CLI" db dump --db-url "$SUPABASE_DB_URL" --data-only --use-copy -f respaldo/3-datos.sql
+          # Cuentas del equipo y lista de archivos de fotos (esquemas que administra Supabase).
+          npx --yes "$SUPABASE_CLI" db dump --db-url "$SUPABASE_DB_URL" --data-only --use-copy --schema auth,storage -f respaldo/4-cuentas-y-archivos.sql
+          test -s respaldo/3-datos.sql
+
+      - name: Cifrar
+        if: steps.listo.outputs.configurado == 'si'
+        run: |
+          fecha=$(date -u +%Y-%m-%d)
+          tar -czf "jiump-respaldo-$fecha.tar.gz" respaldo
+          gpg --batch --yes --symmetric --cipher-algo AES256 --passphrase "$RESPALDO_CLAVE" "jiump-respaldo-$fecha.tar.gz"
+          rm -rf respaldo "jiump-respaldo-$fecha.tar.gz"
+          echo "Respaldo creado: jiump-respaldo-$fecha.tar.gz.gpg ($(du -h jiump-respaldo-$fecha.tar.gz.gpg | cut -f1))" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Guardar por 90 días
+        if: steps.listo.outputs.configurado == 'si'
+        uses: actions/upload-artifact@v4
+        with:
+          name: respaldo-base-de-datos
+          path: jiump-respaldo-*.tar.gz.gpg
+          retention-days: 90
+          if-no-files-found: error
