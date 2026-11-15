@@ -12,7 +12,7 @@ Nuevo sitio web de **JIUMP — Jóvenes Unidos para Adorar a Cristo**, movimient
 | Backend (base de datos, acceso, archivos) | 🚧 migraciones, RLS, fotos y pruebas listas en `supabase/` (falta validar con la directiva) |
 | Sitio público (`app/`) | 🚧 Inicio, Artículos, artículo, Nosotros, Eventos, actividad, Galería, álbum, 404 y Mantenimiento, con pruebas |
 | Panel /admin | ✅ etapas 1, 2 y 3: acceso con doble factor, roles, escritorio, artículos, fotos (sin GPS ni metadatos personales), eventos, galerías, videos, página web, menú y pie, información institucional (vacía hasta que JIUMP entregue los textos), usuarios y roles, registro de actividad y configuración |
-| Revisión profesional (seguridad, accesibilidad, rendimiento, SEO, operación) | ✅ en PRs por mezclar: ver  |
+| Revisión profesional (seguridad, accesibilidad, rendimiento, SEO, operación) | ✅ en PRs por mezclar: ver `docs/revision-profesional.md` |
 | Migración de contenido desde Wix | ⏳ |
 | Pruebas y lanzamiento (cambio de DNS) | ⏳ |
 

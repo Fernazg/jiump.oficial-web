@@ -16,7 +16,7 @@
 
 ## Plan de lanzamiento
 
-El plan detallado y actualizado está en . Resumen original:
+El plan detallado y actualizado está en `docs/lanzamiento.md`. Resumen original:
 
 1. Sitio nuevo terminado y probado en una dirección temporal (ej.: `*.pages.dev`).
 2. Respaldo completo del contenido de Wix.

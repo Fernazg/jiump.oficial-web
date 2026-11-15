@@ -114,7 +114,7 @@ Revisado sin cambios: RLS por rol, doble factor ligado a un factor anterior al r
 | Respuesta rápida con la base caída | #9 | Una caída de Supabase no deja el sitio colgado. |
 | WCAG 2.2 AA revisado en 33 páginas | #10 | Se puede usar con teclado y lector de pantalla; queda una prueba automática que avisa si algo se rompe. |
 | Fotos del tamaño justo y con dirección estable | #11 | Las páginas con fotos cargan más rápido y gastan menos datos; menos tráfico contado en el plan gratuito. |
-| Menos consultas por visita | #11 | Inicio pasó de 23 consultas a la base a menos de la mitad. |
+| Menos consultas por visita | #11 | Cada página dejó de repetir consultas (Inicio hacía 23, varias de ellas hasta 5 veces): responde antes y carga menos a la base. |
 | Canónica, Open Graph, datos estructurados, sitemap | #12 | Los enlaces compartidos se ven con foto y descripción; los buscadores entienden artículos y eventos. |
 | `/post/…` de Wix redirige solo | #12 | Los enlaces antiguos al blog no se pierden. |
 | Listas completas y biblioteca paginada | #13 | El panel sigue funcionando bien con miles de fotos. |
