@@ -22,7 +22,7 @@ for f in "$DIR"/*.jpg "$DIR"/*.png; do
   codigo=$(curl -sS -o /dev/null -w '%{http_code}' -X POST \
     "$URL/storage/v1/object/fotos/diseno/$nombre" \
     -H "Authorization: Bearer $KEY" -H "apikey: $KEY" \
-    -H "Content-Type: $tipo" -H "x-upsert: true" \
+    -H "Content-Type: $tipo" -H "x-upsert: true" -H "cache-control: max-age=31536000" \
     --data-binary "@$f")
   echo "$codigo $nombre"
   [ "$codigo" = "200" ] || fallas=$((fallas + 1))

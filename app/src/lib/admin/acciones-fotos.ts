@@ -22,6 +22,8 @@ export type ResultadoSubida = { ok: true; foto: FotoElegible } | { ok: false; er
 const LIMITE_BYTES = 10 * 1024 * 1024;
 const LIMITE_VERSION = 4 * 1024 * 1024;
 const ANCHOS = [480, 960, 1600];
+/** Cada archivo es único e inmutable (su nombre es un UUID): el navegador puede guardarlo un año. */
+const CACHE_FOTO = '31536000';
 
 /**
  * Subir una foto. El navegador ya creó las versiones optimizadas (WebAssembly,
@@ -88,7 +90,7 @@ export async function subirFoto(datos: FormData): Promise<ResultadoSubida> {
   const ruta = `${acceso.userId}/${id}.${EXTENSION[formato]}`;
   const subidas: string[] = [];
   const subir = async (destino: string, cuerpo: Uint8Array, tipo: string) => {
-    const { error } = await supabase.storage.from('fotos').upload(destino, cuerpo, { contentType: tipo, upsert: false });
+    const { error } = await supabase.storage.from('fotos').upload(destino, cuerpo, { contentType: tipo, upsert: false, cacheControl: CACHE_FOTO });
     if (error) throw new Error(error.message);
     subidas.push(destino);
   };

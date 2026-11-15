@@ -56,10 +56,12 @@ export function FilaArticulo({ articulo, serie, total }: { articulo: Articulo; s
 }
 
 /** Tarjeta de álbum: portada + tres miniaturas, o «Fotos próximamente». */
-export function TarjetaAlbum({ album, fotos, href, titulo: Titulo = 'h3' }: {
+export function TarjetaAlbum({ album, fotos, href, titulo: Titulo = 'h3', prioridad = false }: {
   album: Album & { fotoIds: string[] }; fotos: Map<string, FotoFirmada>; href?: string;
   /** Nivel del título: h2 si la tarjeta cuelga directo del h1 de la página (Galería). */
   titulo?: 'h2' | 'h3';
+  /** La portada es lo primero que se ve en la página: se carga de inmediato. */
+  prioridad?: boolean;
 }) {
   const ids = album.fotoIds.filter((id) => fotos.has(id));
   const portada = (album.portada_foto_id && fotos.get(album.portada_foto_id)) || (ids[0] ? fotos.get(ids[0]) : undefined);
@@ -69,10 +71,10 @@ export function TarjetaAlbum({ album, fotos, href, titulo: Titulo = 'h3' }: {
     <Link href={href ?? `/galeria/${album.slug}`} data-album={album.slug} className="levantar group block">
       {portada ? (
         <div className="grid gap-1.5 overflow-hidden rounded-[22px]">
-          <Foto foto={portada} className="aspect-[16/7] w-full object-cover" tamanos="(max-width: 640px) 90vw, 33vw" />
+          <Foto foto={portada} prioridad={prioridad} className="aspect-[16/7] w-full object-cover" tamanos="(max-width: 639px) 90vw, (max-width: 1023px) 45vw, 30vw" />
           {resto.length > 0 && (
             <div className="grid grid-cols-3 gap-1.5">
-              {resto.map((f) => <Foto key={f.id} foto={f} className="aspect-[4/3] w-full object-cover" tamanos="11vw" />)}
+              {resto.map((f) => <Foto key={f.id} foto={f} className="aspect-[4/3] w-full object-cover" tamanos="(max-width: 639px) 30vw, (max-width: 1023px) 15vw, 10vw" />)}
             </div>
           )}
         </div>

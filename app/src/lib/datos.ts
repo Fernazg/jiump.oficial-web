@@ -1,4 +1,5 @@
 import 'server-only';
+import { cache } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 import type {
@@ -10,16 +11,67 @@ import type {
  * Consultas del sitio público. Todas usan la clave anónima, así que Supabase
  * (RLS) solo devuelve contenido publicado; aquí no se filtra «a mano» por
  * estado salvo para ordenar o agrupar.
+ *
+ * Rendimiento: las lecturas que usan varias partes de una misma página (menú,
+ * configuración, páginas publicadas, artículos…) van envueltas en `cache()` de
+ * React: dentro de UNA visita se consultan una sola vez. No se guarda nada
+ * entre visitas: publicar o retirar contenido se nota al instante.
  */
 
-const COLUMNAS_ARTICULO =
-  'id, titulo, slug, bajada, autor, serie_id, parte, portada_foto_id, cuerpo, estado, publicado_en, minutos_lectura';
+/** Para listados y tarjetas: sin el cuerpo, que es lo más pesado de un artículo. */
+const COLUMNAS_RESUMEN = 'id, titulo, slug, bajada, autor, serie_id, parte, portada_foto_id, estado, publicado_en, minutos_lectura';
+/** Para la página del artículo: con el cuerpo completo. */
+const COLUMNAS_ARTICULO = `${COLUMNAS_RESUMEN}, cuerpo`;
 const COLUMNAS_ACTIVIDAD =
   'id, titulo, slug, tipo, anio, fecha_inicio, fecha_precision, fecha_fin, lugar, zona, introduccion, portada_foto_id, destacar_inicio, orden_inicio, es_proximo, lema, cita_texto, cita_referencia, abreviatura';
 const COLUMNAS_ALBUM = 'id, titulo, slug, descripcion, anio, pais, ciudad, actividad_id, portada_foto_id, orden';
 
-/** Duración de las URL firmadas de las fotos (las páginas se generan en cada visita). */
-const SEGUNDOS_URL_FIRMADA = 60 * 60;
+/**
+ * URL firmadas de las fotos públicas.
+ *
+ * Cada firma genera una dirección distinta. Si se firmara en cada visita, el
+ * navegador nunca reconocería una foto que ya descargó y la bajaría de nuevo en
+ * cada página. Por eso las firmas del sitio público se guardan en memoria y se
+ * reutilizan durante una hora: la misma foto mantiene su dirección y el
+ * navegador la toma de su caché.
+ *
+ * La firma dura dos horas, así que una dirección entregada siempre sirve al
+ * menos una hora más. Si una foto se retira, deja de aparecer en el sitio al
+ * instante (la consulta a «fotos» pasa por RLS en cada visita); solo quien ya
+ * tenía su dirección puede seguir abriéndola hasta que venza.
+ *
+ * Las vistas previas del panel no usan esta memoria: firman con la sesión de
+ * la persona, que ve fotos aún no publicadas.
+ */
+const SEGUNDOS_URL_FIRMADA = 2 * 60 * 60;
+const MS_REUTILIZAR_FIRMA = 60 * 60 * 1000;
+const MAX_FIRMAS_EN_MEMORIA = 20_000;
+const firmasPublicas = new Map<string, { url: string; hasta: number }>();
+
+async function firmarRutas(rutas: string[], cliente: SupabaseClient, publico: boolean): Promise<Map<string, string>> {
+  const ahora = Date.now();
+  const listas = new Map<string, string>();
+  const pendientes: string[] = [];
+  for (const ruta of rutas) {
+    const guardada = publico ? firmasPublicas.get(ruta) : undefined;
+    if (guardada && guardada.hasta > ahora) listas.set(ruta, guardada.url);
+    else pendientes.push(ruta);
+  }
+  if (pendientes.length === 0) return listas;
+
+  const { data, error } = await cliente.storage.from('fotos').createSignedUrls(pendientes, SEGUNDOS_URL_FIRMADA);
+  if (error) throw new Error(`No se pudieron firmar las fotos: ${error.message}`);
+  if (publico && firmasPublicas.size > MAX_FIRMAS_EN_MEMORIA) {
+    for (const [ruta, f] of firmasPublicas) if (f.hasta <= ahora) firmasPublicas.delete(ruta);
+    if (firmasPublicas.size > MAX_FIRMAS_EN_MEMORIA) firmasPublicas.clear();
+  }
+  for (const d of data ?? []) {
+    if (!d.path || !d.signedUrl || d.error) continue;
+    listas.set(d.path, d.signedUrl);
+    if (publico) firmasPublicas.set(d.path, { url: d.signedUrl, hasta: ahora + MS_REUTILIZAR_FIRMA });
+  }
+  return listas;
+}
 
 function filas<T>(resultado: { data: unknown; error: { message: string } | null }, que: string): T[] {
   if (resultado.error) throw new Error(`No se pudo leer ${que}: ${resultado.error.message}`);
@@ -51,12 +103,7 @@ export async function firmarFotos(
   // Original + versiones optimizadas (<carpeta>/<nombre>/<ancho>.webp|avif).
   const version = (archivo: string, ancho: number, formato: string) => `${archivo.replace(/\.[^./]+$/, '')}/${ancho}.${formato}`;
   const rutas = fotos.flatMap((f) => [f.archivo, ...(f.anchos ?? []).flatMap((a) => [version(f.archivo, a, 'webp'), version(f.archivo, a, 'avif')])]);
-  const { data, error } = await cliente
-    .storage.from('fotos')
-    .createSignedUrls(rutas, SEGUNDOS_URL_FIRMADA);
-  if (error) throw new Error(`No se pudieron firmar las fotos: ${error.message}`);
-
-  const porRuta = new Map((data ?? []).filter((d) => d.signedUrl && !d.error).map((d) => [d.path, d.signedUrl]));
+  const porRuta = await firmarRutas(rutas, cliente, cliente === supabase());
   for (const f of fotos) {
     const anchos = [...(f.anchos ?? [])].sort((a, b) => a - b).filter((a) => porRuta.has(version(f.archivo, a, 'webp')) && porRuta.has(version(f.archivo, a, 'avif')));
     if (anchos.length) {
@@ -73,7 +120,7 @@ export async function firmarFotos(
 // -----------------------------------------------------------------------------
 // Sitio
 // -----------------------------------------------------------------------------
-export async function configuracion(): Promise<Configuracion> {
+export const configuracion = cache(async (): Promise<Configuracion> => {
   const r = await supabase()
     .from('configuracion')
     .select('modo_mantenimiento, instagram_url, mostrar_barra_proximo_evento, seo_titulo, seo_descripcion, mantenimiento_foto_id')
@@ -82,14 +129,14 @@ export async function configuracion(): Promise<Configuracion> {
   return (r.data as Configuracion | null) ?? {
     modo_mantenimiento: false, instagram_url: null, mostrar_barra_proximo_evento: false, seo_titulo: null, seo_descripcion: null, mantenimiento_foto_id: null,
   };
-}
+});
 
-export async function menu(): Promise<ItemMenu[]> {
+export const menu = cache(async (): Promise<ItemMenu[]> => {
   return filas<ItemMenu>(
     await supabase().from('menu').select('id, ubicacion, etiqueta, url, orden').order('orden'),
     'el menú',
   );
-}
+});
 
 /** Secciones visibles de una página publicada (vacío si la página está en borrador). */
 export async function seccionesDePagina(clave: string): Promise<SeccionPagina[]> {
@@ -103,60 +150,62 @@ export async function seccionesDePagina(clave: string): Promise<SeccionPagina[]>
   );
 }
 
-export async function institucional(): Promise<Institucional[]> {
+export const institucional = cache(async (): Promise<Institucional[]> => {
   return filas<Institucional>(
     await supabase().from('institucional').select('id, tipo, titulo, texto, orden').order('orden'),
     'los textos institucionales',
   );
-}
+});
 
 // -----------------------------------------------------------------------------
 // Artículos
 // -----------------------------------------------------------------------------
-export async function series(): Promise<Serie[]> {
+export const series = cache(async (): Promise<Serie[]> => {
   return filas<Serie>(
     await supabase().from('series').select('id, nombre, slug, descripcion, tipo, mes, color, icono, orden').order('orden'),
     'las series',
   );
-}
+});
 
 export async function temas(): Promise<Tema[]> {
   return filas<Tema>(await supabase().from('temas').select('id, nombre, slug').order('nombre'), 'los temas');
 }
 
-export async function articulos(opciones: { limite?: number } = {}): Promise<Articulo[]> {
-  let q = supabase()
-    .from('articulos')
-    .select(COLUMNAS_ARTICULO)
-    .order('publicado_en', { ascending: false, nullsFirst: false })
-    .order('parte', { ascending: false, nullsFirst: false });
-  if (opciones.limite) q = q.limit(opciones.limite);
-  return filas<Articulo>(await q, 'los artículos');
-}
+/** Todos los artículos visibles, sin el cuerpo (listados, tarjetas y navegación de la serie). */
+export const articulos = cache(async (): Promise<Articulo[]> => {
+  return filas<Articulo>(
+    await supabase()
+      .from('articulos')
+      .select(COLUMNAS_RESUMEN)
+      .order('publicado_en', { ascending: false, nullsFirst: false })
+      .order('parte', { ascending: false, nullsFirst: false }),
+    'los artículos',
+  );
+});
 
 export async function articulosDeTema(temaId: string): Promise<Articulo[]> {
   const r = await supabase()
     .from('articulos')
-    .select(`${COLUMNAS_ARTICULO}, articulo_temas!inner(tema_id)`)
+    .select(`${COLUMNAS_RESUMEN}, articulo_temas!inner(tema_id)`)
     .eq('articulo_temas.tema_id', temaId)
     .order('publicado_en', { ascending: false, nullsFirst: false });
   return filas<Articulo>(r, 'los artículos del tema');
 }
 
 export async function buscarArticulos(q: string): Promise<Articulo[]> {
-  return filas<Articulo>(await supabase().rpc('buscar_articulos', { q }), 'la búsqueda');
+  return filas<Articulo>(await supabase().rpc('buscar_articulos', { q }).select(COLUMNAS_RESUMEN), 'la búsqueda');
 }
 
-export async function articuloPorSlug(slug: string): Promise<Articulo | null> {
+export const articuloPorSlug = cache(async (slug: string): Promise<Articulo | null> => {
   const r = await supabase().from('articulos').select(COLUMNAS_ARTICULO).eq('slug', slug).maybeSingle();
   if (r.error) throw new Error(`No se pudo leer el artículo: ${r.error.message}`);
   return r.data as Articulo | null;
-}
+});
 
 // -----------------------------------------------------------------------------
 // Actividades
 // -----------------------------------------------------------------------------
-export async function actividades(): Promise<Actividad[]> {
+export const actividades = cache(async (): Promise<Actividad[]> => {
   return filas<Actividad>(
     await supabase()
       .from('actividades')
@@ -166,13 +215,13 @@ export async function actividades(): Promise<Actividad[]> {
       .order('orden_inicio'),
     'las actividades',
   );
-}
+});
 
-export async function actividadPorSlug(slug: string): Promise<Actividad | null> {
+export const actividadPorSlug = cache(async (slug: string): Promise<Actividad | null> => {
   const r = await supabase().from('actividades').select(COLUMNAS_ACTIVIDAD).eq('slug', slug).maybeSingle();
   if (r.error) throw new Error(`No se pudo leer la actividad: ${r.error.message}`);
   return r.data as Actividad | null;
-}
+});
 
 export async function detalleActividad(id: string, cliente: SupabaseClient = supabase()) {
   const [secciones, enlaces, fotos, videos, albumes] = await Promise.all([
@@ -194,7 +243,7 @@ export async function detalleActividad(id: string, cliente: SupabaseClient = sup
 // -----------------------------------------------------------------------------
 // Galería
 // -----------------------------------------------------------------------------
-export async function albumes(): Promise<(Album & { fotoIds: string[] })[]> {
+export const albumes = cache(async (): Promise<(Album & { fotoIds: string[] })[]> => {
   const lista = filas<Album>(
     await supabase().from('albumes').select(COLUMNAS_ALBUM).order('orden'),
     'los álbumes',
@@ -205,7 +254,7 @@ export async function albumes(): Promise<(Album & { fotoIds: string[] })[]> {
     'las fotos de los álbumes',
   );
   return lista.map((a) => ({ ...a, fotoIds: rel.filter((r) => r.album_id === a.id).map((r) => r.foto_id) }));
-}
+});
 
 export async function videosDeAlbum(albumId: string, cliente: SupabaseClient = supabase()): Promise<Video[]> {
   return filas<Video>(

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FotoFirmada } from '@/lib/tipos';
+import { Foto } from './Basicos';
 import { IconoCerrar, IconoDerecha, IconoIzquierda } from './Iconos';
 
 /**
@@ -45,10 +46,10 @@ export function GaleriaFotos({ fotos, diseno = 'columnas' }: { fotos: FotoFirmad
             <button type="button" onClick={() => abrir(i)}
               className={`levantar block w-full overflow-hidden rounded-[16px] ${diseno === 'mosaico' ? 'h-full' : ''}`}
               aria-label={`Ver en pantalla completa: ${f.texto_alternativo}`}>
-              {/* Miniatura recortada solo en pantalla; el visor muestra la foto completa */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={f.url} alt={f.texto_alternativo} width={f.ancho ?? undefined} height={f.alto ?? undefined}
-                loading="lazy" decoding="async" className={diseno === 'mosaico' ? 'size-full object-cover' : 'w-full'} />
+              {/* Miniatura recortada solo en pantalla; el visor muestra la foto completa.
+                  Se pide la versión del tamaño de la miniatura, no la foto grande. */}
+              <Foto foto={f} className={diseno === 'mosaico' ? 'size-full object-cover' : 'w-full'}
+                tamanos={diseno === 'mosaico' ? '(max-width: 1023px) 50vw, 25vw' : '(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw'} />
             </button>
           </li>
         ))}
@@ -70,8 +71,7 @@ export function GaleriaFotos({ fotos, diseno = 'columnas' }: { fotos: FotoFirmad
               <button type="button" className={btn} onClick={cerrar} aria-label="Cerrar visor"><IconoCerrar /></button>
             </div>
             <div className="relative flex min-h-0 flex-1 items-center justify-center px-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={foto.url} alt={foto.texto_alternativo} className="max-h-full max-w-full rounded-xl object-contain" />
+              <Foto key={foto.id} foto={foto} prioridad tamanos="100vw" className="max-h-full max-w-full rounded-xl object-contain" />
               {fotos.length > 1 && (
                 <>
                   <button type="button" className={`${btn} absolute left-4 top-1/2 -translate-y-1/2 max-sm:hidden`} onClick={() => mover(-1)} aria-label="Foto anterior"><IconoIzquierda /></button>

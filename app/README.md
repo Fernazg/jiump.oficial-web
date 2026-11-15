@@ -61,6 +61,14 @@ Una página completa solo se muestra si está **publicada** en `paginas`; si no,
 
 Solo funciona con las tres condiciones juntas: `next dev`, la variable y un Supabase local. En un build de producción no tiene efecto; las pruebas lo verifican levantando el build con la variable activada a propósito. La página muestra el aviso «Vista previa local». Solo salta la regla de la página: el contenido en borrador (artículos, actividades, secciones) sigue sin verse, porque los datos se leen con la clave anónima.
 
+## Rendimiento
+
+- **Fotos:** el sitio pide la versión del tamaño que se va a mostrar (`<picture>` con AVIF y WebP en 480, 960 y 1600 px), también en las miniaturas de galerías. Esas versiones solo existen para las fotos **subidas desde el panel**; una foto cargada por otro camino se sirve en su tamaño original.
+- **Lo primero que se ve se carga de inmediato** (`prioridad` en `Foto`); el resto, al acercarse. Al agregar una sección con una foto grande arriba, márcala con `prioridad`.
+- **Direcciones estables:** las URL firmadas del sitio público se reutilizan durante una hora (`firmarRutas` en `src/lib/datos.ts`), así el navegador guarda las fotos en vez de bajarlas otra vez en cada página. Si una foto se retira, desaparece del sitio al instante.
+- **Consultas:** las lecturas compartidas van envueltas en `cache()` de React y se hacen una vez por visita. Los listados no piden el cuerpo de los artículos. No se guarda nada entre visitas: publicar o retirar se nota al instante.
+- `tests/rendimiento.spec.ts` lo comprueba.
+
 ## Cómo decide qué mostrar
 
 - **Textos institucionales** (presentación, cifras, «Quiénes somos», «Qué creemos»): vienen de la tabla `institucional`. Las secciones editables de Inicio y Nosotros vienen de `secciones` (página publicada + sección visible). Si no existen, la sección no se muestra, o se muestra el estado vacío del diseño. El sitio nunca completa con textos propios.
