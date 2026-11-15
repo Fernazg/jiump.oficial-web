@@ -39,6 +39,9 @@ export function verificarClaveAnonima(clave: string): void {
   }
 }
 
+/** Tiempo máximo de una consulta del sitio público a Supabase. */
+const TOPE_CONSULTA_MS = 8000;
+
 let cliente: SupabaseClient | null = null;
 
 export function supabase(): SupabaseClient {
@@ -46,7 +49,10 @@ export function supabase(): SupabaseClient {
     const { url, clave } = leerConfiguracion();
     cliente = createClient(url, clave, {
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-      global: { fetch: (input, init) => fetch(input, { ...init, cache: 'no-store' }) },
+      // Si la base no responde, el visitante ve el aviso de error en pocos segundos:
+      // sin los reintentos automáticos (que sumaban ~14 s por visita) y con un tope por consulta.
+      db: { retry: false },
+      global: { fetch: (input, init) => fetch(input, { ...init, cache: 'no-store', signal: init?.signal ?? AbortSignal.timeout(TOPE_CONSULTA_MS) }) },
     });
   }
   return cliente;

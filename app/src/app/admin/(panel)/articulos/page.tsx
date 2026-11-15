@@ -9,6 +9,7 @@ import {
 } from '@/lib/admin/articulos';
 import { fechaChile, fechaHoraChile } from '@/lib/admin/hora-chile';
 import { clientePanel } from '@/lib/admin/supabase-panel';
+import { parametros } from '@/lib/parametros';
 
 export const metadata: Metadata = { title: 'Artículos' };
 
@@ -28,7 +29,7 @@ function fechaDe(a: FilaArticulo): string {
 
 export default async function Articulos({ searchParams }: Props) {
   await exigirSeccion('articulos');
-  const f = await searchParams;
+  const f = await parametros(searchParams);
   const estadoFiltro = ESTADOS.some((e) => e.clave === f.estado) ? f.estado : undefined;
   const [lista, { series, temas }] = await Promise.all([
     listarArticulos({ ...f, estado: estadoFiltro }),

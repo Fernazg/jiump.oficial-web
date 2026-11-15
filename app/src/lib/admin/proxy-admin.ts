@@ -14,6 +14,8 @@ import { RUTAS_DE_ACCESO, RUTAS_PUBLICAS, puedeEntrar, seccionDeRuta, type Rol }
  */
 export async function protegerAdmin(request: NextRequest): Promise<NextResponse> {
   const ruta = request.nextUrl.pathname;
+  // Dirección mal codificada: error de quien la pide (400), no del panel (500).
+  try { decodeURIComponent(ruta); } catch { return new NextResponse('Dirección no válida', { status: 400 }); }
   const url = process.env.SUPABASE_URL;
   const clave = process.env.SUPABASE_ANON_KEY;
   if (!url || !clave) return new NextResponse('Panel sin configurar', { status: 503 });

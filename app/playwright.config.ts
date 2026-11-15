@@ -19,12 +19,23 @@ export default defineConfig({
     { name: 'escritorio', use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } }, grepInvert: /@celular/ },
     { name: 'celular', use: { ...devices['iPhone 13'], defaultBrowserType: 'chromium' }, grep: /@celular/ },
   ],
-  webServer: {
-    command: 'npx next start -p 3100',
-    // Se activa la vista previa A PROPÓSITO: en un build de producción no debe tener efecto.
-    env: { JIUMP_VISTA_PREVIA: '1' },
-    url: 'http://localhost:3100/articulos',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+  webServer: [
+    {
+      command: 'npx next start -p 3100',
+      // Se activa la vista previa A PROPÓSITO: en un build de producción no debe tener efecto.
+      env: { JIUMP_VISTA_PREVIA: '1' },
+      url: 'http://localhost:3100/articulos',
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+    },
+    {
+      // El mismo sitio, pero con la base de datos «caída» (una dirección local donde
+      // no responde nadie): comprueba que se vea el aviso de error (tests/errores.spec.ts).
+      command: 'npx next start -p 3101',
+      env: { SUPABASE_URL: 'http://127.0.0.1:9' },
+      url: 'http://localhost:3101/admin/ingresar',
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+    },
+  ],
 });
