@@ -44,19 +44,19 @@ export function ArticuloCompleto({ articulo, serie, hermanos, fotos }: {
       <header className={azulPalabra ? 'bg-azul text-white' : `bg-white ${rojo ? 'border-b border-linea' : ''}`}>
         <div className="contenedor grid gap-10 py-14 lg:grid-cols-[1fr_auto] lg:items-center">
           <div>
-            <nav aria-label="Ruta" data-contraste-diseno className={`t-meta font-normal ${azulPalabra ? 'text-azul-claro' : 'text-texto-2'}`}>
+            <nav aria-label="Ruta" className={`t-meta font-normal ${azulPalabra ? 'text-white' : 'text-texto-2'}`}>
               <Link href="/articulos" className="underline underline-offset-2">Artículos</Link>
               {serie && <> / <Link href={`/articulos?serie=${serie.slug}`} className="underline underline-offset-2">{[nombreMes(serie.mes), serie.nombre].filter(Boolean).join(' · ')}</Link></>}
             </nav>
             {serie && articulo.parte && (
-              <p data-contraste-diseno className={`mt-5 inline-flex items-center gap-2 rounded-full px-3 py-1 font-ui text-[13px] font-semibold ${azulPalabra ? 'bg-white/15 text-white' : rojo ? 'bg-rojo-claro text-rojo-oscuro' : 'bg-azul-claro text-azul-oscuro'}`}>
+              <p className={`mt-5 inline-flex items-center gap-2 rounded-full px-3 py-1 font-ui text-[13px] font-semibold ${azulPalabra ? 'bg-azul-oscuro text-white' : rojo ? 'bg-rojo-claro text-rojo-oscuro' : 'bg-azul-claro text-azul-oscuro'}`}>
                 {rojo ? <IconoAntorcha tam={14} /> : <IconoLibro tam={14} />} Parte {articulo.parte} de {total}
               </p>
             )}
             <h1 className="t-h1 mt-4 max-w-[18ch]">{articulo.titulo}</h1>
             {articulo.bajada && <p className={`t-entradilla mt-4 max-w-[48ch] ${azulPalabra ? 'text-white' : 'text-texto-2'}`}>{articulo.bajada}</p>}
             {meta.length > 0 && (
-              <p data-contraste-diseno className={`t-meta mt-5 flex flex-wrap gap-x-3 font-normal ${azulPalabra ? 'text-azul-claro' : 'text-texto-2'}`}>
+              <p className={`t-meta mt-5 flex flex-wrap gap-x-3 font-normal ${azulPalabra ? 'text-white' : 'text-texto-2'}`}>
                 {meta.map((m, i) => <span key={i}>{i > 0 && <span aria-hidden className="mr-3">·</span>}{m}</span>)}
               </p>
             )}

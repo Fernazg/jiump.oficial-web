@@ -21,11 +21,6 @@ async function revisar(page: Page, ruta: string) {
   await page.waitForLoadState('networkidle');
   const r = await new AxeBuilder({ page })
     .withTags(REGLAS)
-    // Cabecera azul de los artículos del Mes de la Biblia: los colores de la ruta, la pastilla
-    // «Parte 1 de 4» y los metadatos vienen tal cual del diseño aprobado (#E3F0F8 y blanco
-    // translúcido sobre #0073B1) y quedan apenas bajo el contraste AA (4,4:1 de 4,5:1).
-    // Cambiarlos altera el diseño: va en el PR de cambios visuales, que quita esta excepción.
-    .exclude('[data-contraste-diseno]')
     .analyze();
   const problemas = r.violations.flatMap((v) => v.nodes.map((n) => `${v.id}: ${n.target.join(' ')}`));
   expect(problemas, `Problemas de accesibilidad en ${ruta}`).toEqual([]);
