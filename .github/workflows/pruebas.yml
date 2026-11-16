@@ -33,11 +33,12 @@ jobs:
           cache: npm
           cache-dependency-path: app/package-lock.json
 
-      # mailpit queda encendido: recibe los correos de «Recuperar contraseña» del panel.
+      # mailpit queda encendido: recibe los correos de «Recuperar contraseña» e invitaciones del panel.
+      # Si el runner tiene un puerto ocupado, el script limpia y reintenta una vez (ver el script).
       - name: Levantar Supabase local
         run: >
-          npx --yes ${{ env.SUPABASE_CLI }} start
-          -x studio,imgproxy,realtime,edge-runtime,logflare,vector,supavisor,postgres-meta
+          .github/scripts/levantar-supabase.sh
+          studio,imgproxy,realtime,edge-runtime,logflare,vector,supavisor,postgres-meta
 
       - name: Base limpia (migraciones + seed)
         run: npx --yes ${{ env.SUPABASE_CLI }} db reset
