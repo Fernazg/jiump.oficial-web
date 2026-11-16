@@ -14,3 +14,6 @@ Se puede cargar después desde el panel /admin; el diseño ya contempla dónde v
 - [ ] Logo en formato vectorial (opcional; el PNG actual sirve para la web).
 - [ ] Decisión de alojamiento (Cloudflare vs Vercel Pro).
 - [ ] Acceso del titular del dominio en NIC Chile para el día del lanzamiento.
+- [ ] Dónde se respaldan los archivos de las fotos (recomendado: Google Drive de la cuenta de JIUMP, una carpeta por evento). Ver `docs/operacion.md`.
+- [ ] Frase para cifrar los respaldos de la base (`RESPALDO_CLAVE`) y quién la guarda.
+- [ ] Cuenta gratuita de vigilancia de disponibilidad (avisa por correo si el sitio se cae).
