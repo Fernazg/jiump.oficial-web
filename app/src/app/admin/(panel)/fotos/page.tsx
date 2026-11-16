@@ -82,12 +82,13 @@ export default async function Fotos({ searchParams }: Props) {
         <section aria-label="Fotos" className="min-w-0 flex-[3_1_480px]">
           <p className="mb-3 text-[13px] text-texto-3">{fotos.length} {fotos.length === 1 ? 'foto' : 'fotos'}</p>
           <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,150px),1fr))] gap-3" data-lista-fotos>
-            {fotos.map((x) => (
+            {fotos.map((x, i) => (
               <li key={x.id}>
                 <Link href={enlace({ foto: x.id })} scroll={false} data-foto={x.id} aria-current={elegida?.id === x.id ? 'true' : undefined}
                   className={`block overflow-hidden rounded-[14px] bg-white ${elegida?.id === x.id ? 'ring-[3px] ring-azul' : 'ring-1 ring-[#e1e3e6]'}`}>
                   {/* eslint-disable-next-line @next/next/no-img-element -- URL firmada (bucket privado) */}
-                  <img src={x.url} alt={x.texto_alternativo} loading="lazy" className="aspect-[4/3] w-full object-cover" />
+                  <img src={x.url} alt={x.texto_alternativo} loading={i < 6 ? 'eager' : 'lazy'} fetchPriority={i === 0 ? 'high' : undefined} decoding="async"
+                    className="aspect-[4/3] w-full object-cover" />
                   <span className="flex items-center justify-between gap-2 px-2.5 py-2 text-[12px] text-texto-3">
                     <span className="truncate">{x.album?.titulo ?? x.actividad?.titulo ?? 'Sin evento'}</span>
                     {x.usos.length > 0 ? <span className="shrink-0 font-semibold text-[#00665f]">En uso</span> : <span className="shrink-0">Sin usar</span>}

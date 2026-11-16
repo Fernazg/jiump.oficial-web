@@ -41,7 +41,8 @@ export type Articulo = {
   serie_id: string | null;
   parte: number | null;
   portada_foto_id: string | null;
-  cuerpo: Bloque[];
+  /** Solo viene en la página del artículo; los listados no lo piden (es lo más pesado). */
+  cuerpo?: Bloque[];
   estado: string;
   publicado_en: string | null;
   minutos_lectura: number;
