@@ -23,7 +23,12 @@ Lo que se comprobó, con una ruta y una página de diagnóstico temporales (ya r
 - El error 500 de las páginas sale de una parte del Worker donde el cliente de Supabase quedó empaquetado junto al proxy (`handler.mjs`, línea 762), no del código normal de las páginas.
 - Pasa igual con Turbopack y con webpack, y con la opción `nodejs_compat_populate_process_env`.
 
-**Sospecha, sin confirmar:** en Next.js 16, `proxy.ts` corre en el entorno Node, y el adaptador OpenNext para Cloudflare todavía no admite ese tipo de proxy; lo empaqueta como si fuera del entorno «edge», que toma una copia de las variables antes de que existan. Siguiente paso: confirmarlo en la documentación y las incidencias del adaptador. Si es así, las opciones son esperar la versión que lo admita o mover la lógica del proxy a otro lugar, lo que es un cambio grande y de seguridad.
+**Causa: no encontrada.** Dos hipótesis que se probaron y no lo explican:
+
+- *Que el adaptador no admita `proxy.ts` (entorno Node de Next.js 16).* Se compiló con el formato anterior, `middleware.ts`, que el adaptador sí admite: falla exactamente igual.
+- *Que fuera el empaquetador.* Falla igual con Turbopack y con webpack.
+
+Lo que queda por explicar es por qué una página de diagnóstico sí ve las variables y las páginas del sitio no, dentro del mismo Worker. Siguiente paso: reproducirlo en un proyecto mínimo (Next.js 16.4 + OpenNext 1.20 + un proxy que lea `process.env`) y revisar las incidencias del adaptador. No se pudo consultar su documentación desde este entorno (`opennext.js.org` está fuera de la red permitida).
 
 **Nota para probar en este tipo de entorno:** si existe la variable `HTTPS_PROXY`, `wrangler dev` envía por ese proxy también las consultas a Supabase local, y se cancelan. Hay que lanzarlo sin esas variables.
 
