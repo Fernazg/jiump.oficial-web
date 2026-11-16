@@ -7,46 +7,59 @@ Límites del plan gratuito que hay que cumplir: 10 ms de procesador por solicitu
 ## Hecho
 
 - **Adaptador OpenNext configurado** (`app/open-next.config.ts`, `app/wrangler.jsonc`), sin servicios adicionales (ni KV, ni R2, ni colas).
-- **El sitio compila para Cloudflare:** `npm run cf:build` termina bien, con Turbopack y con webpack.
+- **El sitio compila para Cloudflare** con `npm run cf:build`.
+- **El sitio funciona dentro del Worker en local** (`wrangler dev`, que usa el mismo motor que Cloudflare): Inicio, Nosotros, Eventos, una actividad, Artículos, un artículo, Galería y el mapa del sitio responden 200; `/admin` redirige a «Ingresar» y «Ingresar» carga. Solo se comprobó que respondan; no se corrieron las pruebas de Playwright contra el Worker.
 - **Tamaño del Worker: 1,9 MB comprimido** (límite gratuito: 3 MB). Medido con `wrangler deploy --dry-run`, que no despliega nada.
 - `.dev.vars`, `.open-next/` y `.wrangler/` están en `.gitignore`: las claves locales no llegan al repositorio.
 
-## Dónde se detuvo
+### Cómo probarlo en local
 
-**El Worker arranca en local (`wrangler dev`), pero el sitio no funciona dentro de él:** las páginas públicas responden 500 («Faltan SUPABASE_URL y SUPABASE_ANON_KEY») y el panel, 503 («Panel sin configurar»).
+Con Supabase local arriba, crear `app/.dev.vars` (no se sube al repositorio) con `SUPABASE_URL`, `SUPABASE_ANON_KEY` y `SUPABASE_SERVICE_ROLE_KEY` de `npx supabase status`, y luego:
 
-Lo que se comprobó, con una ruta y una página de diagnóstico temporales (ya retiradas):
+```bash
+npm run cf:preview
+```
 
-- `wrangler dev` carga las variables de `.dev.vars`, y OpenNext las copia a `process.env` al iniciar.
-- **Dentro de una ruta y de una página normales, las variables sí están.**
-- **Dentro de `src/proxy.ts` no están.** Ese archivo protege el panel, pone la política de contenido y resuelve el modo mantenimiento y las redirecciones. El 503 del panel sale de ahí.
-- El error 500 de las páginas sale de una parte del Worker donde el cliente de Supabase quedó empaquetado junto al proxy (`handler.mjs`, línea 762), no del código normal de las páginas.
-- Pasa igual con Turbopack y con webpack, y con la opción `nodejs_compat_populate_process_env`.
+Dos tropiezos que costaron tiempo y conviene conocer:
 
-**Causa: no encontrada.** Dos hipótesis que se probaron y no lo explican:
+- Si `.dev.vars` trae una variable vacía, el sitio responde 500 («Faltan SUPABASE_URL…») aunque la variable figure como cargada. Eso fue lo que pasó en esta sesión: Docker estaba apagado y el archivo se generó vacío.
+- Si existe la variable `HTTPS_PROXY`, `wrangler dev` envía por ese proxy también las consultas a Supabase local, y se cancelan. Hay que lanzarlo sin esas variables.
 
-- *Que el adaptador no admita `proxy.ts` (entorno Node de Next.js 16).* Se compiló con el formato anterior, `middleware.ts`, que el adaptador sí admite: falla exactamente igual.
-- *Que fuera el empaquetador.* Falla igual con Turbopack y con webpack.
+## Medición del procesador (antes de cualquier cambio)
 
-Lo que queda por explicar es por qué una página de diagnóstico sí ve las variables y las páginas del sitio no, dentro del mismo Worker. Siguiente paso: reproducirlo en un proyecto mínimo (Next.js 16.4 + OpenNext 1.20 + un proxy que lea `process.env`) y revisar las incidencias del adaptador. No se pudo consultar su documentación desde este entorno (`opennext.js.org` está fuera de la red permitida).
+El Worker local no informa el tiempo de procesador por solicitud. Como aproximación se midió el servidor Node (`next start`) en esta máquina: tiempo de procesador del proceso, promedio de 40 solicitudes seguidas por página.
 
-**Nota para probar en este tipo de entorno:** si existe la variable `HTTPS_PROXY`, `wrangler dev` envía por ese proxy también las consultas a Supabase local, y se cancelan. Hay que lanzarlo sin esas variables.
+| Página | Procesador por solicitud |
+|---|---|
+| Inicio | 31 ms |
+| Actividad (Convención 2026) | 26 ms |
+| Galería | 26 ms |
+| Nosotros | 20 ms |
+| Artículos | 20 ms |
+| Artículo | 20 ms |
+| Eventos | 18 ms |
+| Panel · Ingresar | 13 ms |
+| `robots.txt` | 2 ms |
 
-Hasta resolver esto no se puede medir el procesador ni probar la subida de fotos dentro del Worker.
+**Conclusión: tal como está, el sitio no cabe en los 10 ms del plan gratuito.** Las páginas públicas gastan entre 2 y 3 veces el límite. La medición real en Cloudflare puede diferir (otro motor, otra máquina), pero no por tanto.
+
+Dos consecuencias:
+
+- **Guardar las páginas públicas ya armadas es obligatorio**, no una mejora. Una página guardada se sirve sin armarla y gasta muy poco.
+- **El panel no se puede guardar armado**, y su página más simple ya mide 13 ms. Es muy probable que el panel no quepa en el plan gratuito aunque el sitio público sí. Opciones: el plan de US$5 al mes (necesita a la directiva), o reducir el trabajo del proxy en cada solicitud del panel (hoy valida la sesión y consulta los roles en cada una). **No hay que dar por hecho que el plan gratuito alcanza.**
 
 ## Falta, en orden
 
-1. **Hacer que `proxy.ts` funcione dentro del Worker** (punto anterior).
-2. **Medir el procesador por página** en el Worker local, antes de cualquier cambio. Es el dato que decide todo lo demás.
-3. **Guardar las páginas públicas ya armadas.** Hoy cada página se arma en cada visita. Hay tres cosas del sitio actual que lo impiden y hay que rediseñar:
+1. **Medir en el Worker real**, cuando exista la cuenta, para confirmar estas cifras.
+2. **Guardar las páginas públicas ya armadas.** Hoy cada página se arma en cada visita. Hay tres cosas del sitio actual que lo impiden y hay que rediseñar:
    - **La política de contenido (CSP) usa un valor distinto en cada visita** (PR #8). Una página guardada no puede llevar un valor nuevo cada vez. Alternativa: una política basada en la huella (hash) de los scripts, o `'self'` sin valor por visita. Es una decisión de seguridad y necesita sus pruebas.
    - **Las direcciones firmadas de las fotos vencen a las 2 horas** (PR #11). Una página guardada más tiempo mostraría fotos rotas. Alternativas: firmar por más tiempo y renovar la página antes de que venzan, o servir las fotos públicas por una ruta propia del sitio.
-   - **Modo mantenimiento, redirecciones y páginas retiradas** se consultan en cada visita. Tendrían que avisar al guardado cuando cambian.
-4. **Actualizar al instante al publicar, editar o retirar** desde el panel: cada acción del panel que cambia contenido público debe invalidar las páginas afectadas (`revalidateTag`). Son unas 40 acciones en `app/src/lib/admin/acciones-*.ts`. El guardado de OpenNext en Cloudflare necesita un almacén (KV o R2, ambos con capa gratuita): hay que confirmar que cabe en el plan gratuito.
-5. **El panel nunca se guarda armado:** ya responde `private, no-store`; hay que añadir una prueba que lo confirme dentro del Worker.
-6. **Subida de fotos dentro del Worker.** Quitar los metadatos de una foto de 10 MB en JavaScript puede pasar los 10 ms de procesador. Si no cabe, hay que mover esa limpieza al navegador (donde ya se crean las versiones) y dejar en el servidor solo la verificación.
-7. **Medir de nuevo** y confirmar que cada página queda bajo 10 ms.
-8. Pruebas del Worker en el workflow (levantar `wrangler dev` y correr una parte de Playwright contra él).
+   - **Modo mantenimiento, redirecciones y páginas retiradas** se consultan en cada visita, en el proxy. Tendrían que avisar al guardado cuando cambian, y el proxy tendría que dejar de consultar la base en cada visita pública.
+3. **Actualizar al instante al publicar, editar o retirar** desde el panel: cada acción del panel que cambia contenido público debe invalidar las páginas afectadas (`revalidateTag`). Son unas 40 acciones en `app/src/lib/admin/acciones-*.ts`. El guardado de OpenNext en Cloudflare necesita un almacén (KV o R2, ambos con capa gratuita): hay que confirmar que cabe en el plan gratuito.
+4. **El panel nunca se guarda armado:** ya responde `private, no-store`; hay que añadir una prueba que lo confirme dentro del Worker.
+5. **Subida de fotos dentro del Worker: sin probar.** Quitar los metadatos de una foto de 10 MB en JavaScript puede pasar los 10 ms de procesador. Si no cabe, hay que mover esa limpieza al navegador (donde ya se crean las versiones) y dejar en el servidor solo la verificación.
+6. **Medir de nuevo** y confirmar que cada página queda bajo 10 ms.
+7. Pruebas del Worker en el workflow (levantar `wrangler dev` y correr una parte de Playwright contra él).
 
 ## Aviso sobre el build
 

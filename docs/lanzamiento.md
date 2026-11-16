@@ -44,7 +44,7 @@ npx supabase db push
 
 **Antes de crear la cuenta:** la preparación técnica del sitio para Cloudflare **no está terminada**. El estado exacto y lo que falta está en `docs/cloudflare.md`. No tiene sentido desplegar hasta completarla.
 
-Límites del plan gratuito: 10 ms de procesador por solicitud, 100.000 solicitudes al día y un Worker de hasta 3 MB comprimido (el del sitio pesa 1,9 MB). Si al medir no se logra bajar de 10 ms, la alternativa es el plan Workers Paid (US$5 al mes), que **necesita autorización de la directiva**.
+Límites del plan gratuito: 10 ms de procesador por solicitud, 100.000 solicitudes al día y un Worker de hasta 3 MB comprimido (el del sitio pesa 1,9 MB). **Hoy el sitio no cabe en los 10 ms:** medidas en local, las páginas públicas gastan entre 18 y 31 ms y la página más simple del panel, 13 ms. Guardar las páginas públicas ya armadas debería resolver el sitio; el panel probablemente no quepa. La alternativa es el plan Workers Paid (US$5 al mes), que **necesita autorización de la directiva**.
 
 ### Crear la cuenta
 
