@@ -13,22 +13,25 @@ Límites del plan gratuito que hay que cumplir: 10 ms de procesador por solicitu
 
 ## Dónde se detuvo
 
-**El Worker arranca en local (`wrangler dev`), pero la aplicación no ve las variables de entorno.** Todas las páginas responden 500 con «Faltan SUPABASE_URL y SUPABASE_ANON_KEY», y el panel, 503.
+**El Worker arranca en local (`wrangler dev`), pero el sitio no funciona dentro de él:** las páginas públicas responden 500 («Faltan SUPABASE_URL y SUPABASE_ANON_KEY») y el panel, 503 («Panel sin configurar»).
 
-Lo que se comprobó:
+Lo que se comprobó, con una ruta y una página de diagnóstico temporales (ya retiradas):
 
-- `wrangler dev` sí carga las variables de `.dev.vars` (aparecen como enlaces del Worker).
-- OpenNext sí las copia a `process.env` al iniciar (`.open-next/cloudflare/init.js`).
-- El código compilado las lee en cada solicitud con `process.env.SUPABASE_URL`, y aun así llegan vacías.
+- `wrangler dev` carga las variables de `.dev.vars`, y OpenNext las copia a `process.env` al iniciar.
+- **Dentro de una ruta y de una página normales, las variables sí están.**
+- **Dentro de `src/proxy.ts` no están.** Ese archivo protege el panel, pone la política de contenido y resuelve el modo mantenimiento y las redirecciones. El 503 del panel sale de ahí.
+- El error 500 de las páginas sale de una parte del Worker donde el cliente de Supabase quedó empaquetado junto al proxy (`handler.mjs`, línea 762), no del código normal de las páginas.
 - Pasa igual con Turbopack y con webpack, y con la opción `nodejs_compat_populate_process_env`.
 
-No se encontró la causa. Sospecha, sin confirmar: una incompatibilidad entre Next.js 16.4 y esta versión del adaptador (1.20) en cómo se comparte `process.env` con el servidor empaquetado. Siguiente paso: reproducirlo en un proyecto mínimo de Next 16 con OpenNext y revisar las incidencias abiertas del adaptador.
+**Sospecha, sin confirmar:** en Next.js 16, `proxy.ts` corre en el entorno Node, y el adaptador OpenNext para Cloudflare todavía no admite ese tipo de proxy; lo empaqueta como si fuera del entorno «edge», que toma una copia de las variables antes de que existan. Siguiente paso: confirmarlo en la documentación y las incidencias del adaptador. Si es así, las opciones son esperar la versión que lo admita o mover la lógica del proxy a otro lugar, lo que es un cambio grande y de seguridad.
+
+**Nota para probar en este tipo de entorno:** si existe la variable `HTTPS_PROXY`, `wrangler dev` envía por ese proxy también las consultas a Supabase local, y se cancelan. Hay que lanzarlo sin esas variables.
 
 Hasta resolver esto no se puede medir el procesador ni probar la subida de fotos dentro del Worker.
 
 ## Falta, en orden
 
-1. **Resolver las variables de entorno** (punto anterior).
+1. **Hacer que `proxy.ts` funcione dentro del Worker** (punto anterior).
 2. **Medir el procesador por página** en el Worker local, antes de cualquier cambio. Es el dato que decide todo lo demás.
 3. **Guardar las páginas públicas ya armadas.** Hoy cada página se arma en cada visita. Hay tres cosas del sitio actual que lo impiden y hay que rediseñar:
    - **La política de contenido (CSP) usa un valor distinto en cada visita** (PR #8). Una página guardada no puede llevar un valor nuevo cada vez. Alternativa: una política basada en la huella (hash) de los scripts, o `'self'` sin valor por visita. Es una decisión de seguridad y necesita sus pruebas.
