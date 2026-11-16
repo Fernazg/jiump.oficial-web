@@ -9,8 +9,6 @@ import { crearUsuario, ingresar, type Usuario } from './apoyo-admin';
  * redirecciones desde Wix.
  */
 const MAILPIT = 'http://127.0.0.1:54324';
-// Cada prueba vuelve a ingresar con doble factor: el código TOTP no se repite y puede esperar hasta 30 s.
-test.describe.configure({ timeout: 120_000 });
 const marca = Date.now().toString(36);
 const u: Record<string, Usuario> = {};
 const invitado = { nombre: `Inés Invitada ${marca}`, correo: `ines-${marca}@prueba.test` };
