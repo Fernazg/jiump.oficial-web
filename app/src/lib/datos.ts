@@ -19,12 +19,13 @@ import type {
  */
 
 /** Para listados y tarjetas: sin el cuerpo, que es lo más pesado de un artículo. */
-const COLUMNAS_RESUMEN = 'id, titulo, slug, bajada, autor, serie_id, parte, portada_foto_id, estado, publicado_en, minutos_lectura';
+const COLUMNAS_TARJETA = 'id, titulo, slug, bajada, autor, serie_id, parte, portada_foto_id, estado, publicado_en, minutos_lectura';
+const COLUMNAS_RESUMEN = `${COLUMNAS_TARJETA}, actualizado_en`;
 /** Para la página del artículo: con el cuerpo completo. */
 const COLUMNAS_ARTICULO = `${COLUMNAS_RESUMEN}, cuerpo`;
 const COLUMNAS_ACTIVIDAD =
-  'id, titulo, slug, tipo, anio, fecha_inicio, fecha_precision, fecha_fin, lugar, zona, introduccion, portada_foto_id, destacar_inicio, orden_inicio, es_proximo, lema, cita_texto, cita_referencia, abreviatura';
-const COLUMNAS_ALBUM = 'id, titulo, slug, descripcion, anio, pais, ciudad, actividad_id, portada_foto_id, orden';
+  'id, titulo, slug, tipo, anio, fecha_inicio, fecha_precision, fecha_fin, lugar, zona, introduccion, portada_foto_id, destacar_inicio, orden_inicio, es_proximo, lema, cita_texto, cita_referencia, abreviatura, actualizado_en';
+const COLUMNAS_ALBUM = 'id, titulo, slug, descripcion, anio, pais, ciudad, actividad_id, portada_foto_id, orden, actualizado_en';
 
 /**
  * URL firmadas de las fotos públicas.
@@ -108,11 +109,11 @@ export async function firmarFotos(
     const anchos = [...(f.anchos ?? [])].sort((a, b) => a - b).filter((a) => porRuta.has(version(f.archivo, a, 'webp')) && porRuta.has(version(f.archivo, a, 'avif')));
     if (anchos.length) {
       const srcset = (formato: string) => anchos.map((a) => `${porRuta.get(version(f.archivo, a, formato))} ${a}w`).join(', ');
-      mapa.set(f.id, { ...f, url: porRuta.get(version(f.archivo, anchos[anchos.length - 1], 'webp'))!, fuentes: { avif: srcset('avif'), webp: srcset('webp') } });
+      mapa.set(f.id, { ...f, url: porRuta.get(version(f.archivo, anchos[anchos.length - 1], 'webp'))!, fuentes: { avif: srcset('avif'), webp: srcset('webp') }, original: porRuta.get(f.archivo) });
       continue;
     }
     const url = porRuta.get(f.archivo);
-    if (url) mapa.set(f.id, { ...f, url });
+    if (url) mapa.set(f.id, { ...f, url, original: url });
   }
   return mapa;
 }
@@ -123,11 +124,11 @@ export async function firmarFotos(
 export const configuracion = cache(async (): Promise<Configuracion> => {
   const r = await supabase()
     .from('configuracion')
-    .select('modo_mantenimiento, instagram_url, mostrar_barra_proximo_evento, seo_titulo, seo_descripcion, mantenimiento_foto_id')
+    .select('modo_mantenimiento, instagram_url, mostrar_barra_proximo_evento, seo_titulo, seo_descripcion, seo_foto_id, mantenimiento_foto_id')
     .maybeSingle();
   if (r.error) throw new Error(`No se pudo leer la configuración: ${r.error.message}`);
   return (r.data as Configuracion | null) ?? {
-    modo_mantenimiento: false, instagram_url: null, mostrar_barra_proximo_evento: false, seo_titulo: null, seo_descripcion: null, mantenimiento_foto_id: null,
+    modo_mantenimiento: false, instagram_url: null, mostrar_barra_proximo_evento: false, seo_titulo: null, seo_descripcion: null, seo_foto_id: null, mantenimiento_foto_id: null,
   };
 });
 
@@ -193,7 +194,7 @@ export async function articulosDeTema(temaId: string): Promise<Articulo[]> {
 }
 
 export async function buscarArticulos(q: string): Promise<Articulo[]> {
-  return filas<Articulo>(await supabase().rpc('buscar_articulos', { q }).select(COLUMNAS_RESUMEN), 'la búsqueda');
+  return filas<Articulo>(await supabase().rpc('buscar_articulos', { q }).select(COLUMNAS_TARJETA), 'la búsqueda');
 }
 
 export const articuloPorSlug = cache(async (slug: string): Promise<Articulo | null> => {

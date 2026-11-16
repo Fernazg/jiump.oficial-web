@@ -11,7 +11,11 @@ import { fechaLarga, nombreMes } from '@/lib/formato';
 import type { Articulo, FotoFirmada, Serie } from '@/lib/tipos';
 
 export const dynamic = 'force-dynamic';
-export const generateMetadata = (): Promise<Metadata> => metadataDePagina('articulos', 'Artículos');
+/** La página canónica es /articulos: las búsquedas y los filtros (?q, ?serie, ?tema) no se indexan. */
+export async function generateMetadata({ searchParams }: { searchParams: Promise<Record<string, unknown>> }): Promise<Metadata> {
+  const filtrada = Object.keys(await searchParams).some((k) => ['q', 'serie', 'tema'].includes(k));
+  return { ...(await metadataDePagina('articulos', 'Artículos')), ...(filtrada ? { robots: { index: false, follow: true } } : {}) };
+}
 
 type Busqueda = { q?: string; serie?: string; tema?: string };
 

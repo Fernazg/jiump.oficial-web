@@ -77,6 +77,15 @@ Solo funciona con las tres condiciones juntas: `next dev`, la variable y un Supa
 - **Consultas:** las lecturas compartidas van envueltas en `cache()` de React y se hacen una vez por visita. Los listados no piden el cuerpo de los artículos. No se guarda nada entre visitas: publicar o retirar se nota al instante.
 - `tests/rendimiento.spec.ts` lo comprueba.
 
+## SEO
+
+- **`SITIO_URL`** (variable de entorno, obligatoria en producción): la dirección pública, por ejemplo `https://jiump.cl`. De ahí salen las direcciones canónicas, Open Graph, `/sitemap.xml` y `/robots.txt`.
+- **Por página** (`src/lib/seo.ts`, función `metadatos()`): título, descripción, dirección canónica y cómo se ve el enlace al compartirlo (con la foto de portada, o la foto por defecto de Configuración). El idioma es `es-CL`.
+- **Datos estructurados** (`DatosEstructurados`): `Organization` en Inicio, `Article` en cada artículo y `Event` en las actividades que tienen fecha. Solo con datos de la base: si falta el autor, la fecha o el lugar, se omite.
+- **`/sitemap.xml`** lista solo lo publicado; **`/robots.txt`** excluye el panel. Las búsquedas y filtros de Artículos no se indexan.
+- **Direcciones de Wix:** `/post/<nombre>` redirige al artículo del mismo nombre si existe. Para cualquier otra dirección antigua, se agrega una redirección en Configuración.
+- **Al crear una página nueva:** usa `metadatos()` en su `generateMetadata` y agrégala a `src/app/sitemap.ts`. `tests/seo.spec.ts` lo comprueba.
+
 ## Cómo decide qué mostrar
 
 - **Textos institucionales** (presentación, cifras, «Quiénes somos», «Qué creemos»): vienen de la tabla `institucional`. Las secciones editables de Inicio y Nosotros vienen de `secciones` (página publicada + sección visible). Si no existen, la sección no se muestra, o se muestra el estado vacío del diseño. El sitio nunca completa con textos propios.
