@@ -46,6 +46,7 @@ Qué cubren:
 - Las fotos usan URL firmadas, cargan y tienen texto alternativo. El HTML no expone claves.
 - El cuerpo del artículo: negritas, referencias bíblicas resaltadas, índice, barra de lectura y tamaño de texto.
 - Modo mantenimiento (503) y su foto configurable, redirecciones 301 y la 404.
+- Errores (`tests/errores.spec.ts`): las direcciones mal formadas no dan error 500, y con la base de datos caída se ve un aviso claro en español con «Reintentar». Para eso Playwright levanta un segundo servidor (puerto 3101) apuntando a una base que no responde.
 - Páginas en borrador (404, fuera del menú, aun con la vista previa activada en producción), lema/cita/abreviatura y la Galería con sus álbumes.
 - En celular: sin desborde horizontal y menú ☰ con enlaces de 52 px.
 
@@ -74,6 +75,12 @@ Solo funciona con las tres condiciones juntas: `next dev`, la variable y un Supa
 - **Actividades:** el lema, la cita y la abreviatura se muestran solo si tienen valor (ver `docs/modelo-datos.md`).
 - **Galería:** las fotos de cada álbum se ven dentro de `/galeria`; `/galeria/<slug>` es la misma vista, para compartir.
 - **Sin sección «Realizados»:** Eventos muestra el próximo evento y las actividades del año más reciente.
+
+## Si algo falla
+
+- **Páginas de error propias** (`src/components/ErrorGeneral.tsx` y los `error.tsx`): si una página no se puede armar, el visitante ve «No pudimos cargar esta página» con «Reintentar», sin detalles técnicos. El «Código para soporte» permite encontrar el detalle en el registro del servidor.
+- **Base de datos caída:** el sitio responde en menos de un segundo con ese aviso (cada consulta tiene un tope de 8 s y no se reintenta). «Ingresar» avisa que no hay conexión en vez de culpar a la contraseña.
+- **Parámetros de la URL:** pasan por `parametros()` (`src/lib/parametros.ts`), que deja textos cortos y sin caracteres de control. Úsalo en cada página nueva que lea `searchParams`.
 
 ## Panel /admin
 

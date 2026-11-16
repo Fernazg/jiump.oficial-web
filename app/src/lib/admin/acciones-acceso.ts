@@ -24,6 +24,8 @@ export async function ingresar(_: EstadoFormulario, datos: FormData): Promise<Es
       return { error: 'Tu acceso al panel está desactivado. Habla con un superadministrador.' };
     }
     if (error.status === 429) return { error: 'Demasiados intentos. Espera unos minutos y vuelve a probar.' };
+    // Sin respuesta del servidor de acceso (caído o sin red): no es culpa de la contraseña.
+    if (!error.status || error.status >= 500) return { error: 'No pudimos conectar con el servidor. Inténtalo de nuevo en unos minutos.' };
     return { error: 'El correo o la contraseña no son correctos.' };
   }
   redirect(await pasoSiguiente(destinoSeguro(datos.get('siguiente'))));

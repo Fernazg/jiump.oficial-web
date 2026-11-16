@@ -7,6 +7,7 @@ import { TarjetaAlbum } from '@/components/Tarjetas';
 import { VistaAlbum } from '@/components/VistaAlbum';
 import { actividades, albumes, firmarFotos } from '@/lib/datos';
 import { exigirPagina, metadataDePagina } from '@/lib/paginas';
+import { parametros } from '@/lib/parametros';
 
 export const dynamic = 'force-dynamic';
 export const generateMetadata = (): Promise<Metadata> => metadataDePagina('galeria', 'Galería');
@@ -19,7 +20,7 @@ type Busqueda = { filtro?: string };
  */
 export default async function Galeria({ searchParams }: { searchParams: Promise<Busqueda> }) {
   const { vistaPrevia } = await exigirPagina('galeria');
-  const { filtro } = await searchParams;
+  const { filtro } = await parametros(searchParams);
   const [todos, acts] = await Promise.all([albumes(), actividades()]);
 
   // Filtros según los datos: años y países que existen en los álbumes publicados

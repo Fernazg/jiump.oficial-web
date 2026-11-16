@@ -11,6 +11,7 @@ import { firmarMiniaturas, listarFotos } from '@/lib/admin/fotos';
 import { fechaChile } from '@/lib/admin/hora-chile';
 import { puedeEntrar } from '@/lib/admin/secciones';
 import { clientePanel } from '@/lib/admin/supabase-panel';
+import { parametros } from '@/lib/parametros';
 
 export const metadata: Metadata = { title: 'Biblioteca de fotos' };
 
@@ -25,7 +26,7 @@ const FILTROS = [
 
 export default async function Fotos({ searchParams }: Props) {
   const acceso = await exigirSeccion('fotos');
-  const f = await searchParams;
+  const f = await parametros(searchParams);
   const filtro = FILTROS.some((x) => x.clave === f.filtro) ? f.filtro : undefined;
   const fotos = await listarFotos(acceso, { q: f.q, filtro, album: f.album });
   const supabase = await clientePanel();

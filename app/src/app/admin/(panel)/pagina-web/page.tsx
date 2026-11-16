@@ -7,6 +7,7 @@ import { catalogoFotos } from '@/lib/admin/galerias';
 import { seccion } from '@/lib/admin/secciones';
 import { listarPaginas, paginaParaEditar } from '@/lib/admin/sitio';
 import { CATALOGO, PAGINAS_WEB, type ClavePaginaWeb } from '@/lib/catalogo-secciones';
+import { parametros } from '@/lib/parametros';
 
 export const metadata: Metadata = { title: seccion('pagina-web').nombre };
 
@@ -15,7 +16,7 @@ type Props = { searchParams: Promise<{ pagina?: string; aviso?: string }> };
 /** Administrar página web (solo Superadmin): secciones, SEO y publicar o retirar cada página. */
 export default async function PaginaWeb({ searchParams }: Props) {
   await exigirSeccion('pagina-web');
-  const { pagina = 'inicio', aviso } = await searchParams;
+  const { pagina = 'inicio', aviso } = await parametros(searchParams);
   if (!(pagina in CATALOGO)) notFound();
   const clave = pagina as ClavePaginaWeb;
   const [e, paginas, catalogo] = await Promise.all([paginaParaEditar(clave), listarPaginas(), catalogoFotos()]);
