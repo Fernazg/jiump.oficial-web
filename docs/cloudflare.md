@@ -12,6 +12,16 @@ Límites del plan gratuito que hay que cumplir: 10 ms de procesador por solicitu
 - **Tamaño del Worker: 1,9 MB comprimido** (límite gratuito: 3 MB). Medido con `wrangler deploy --dry-run`, que no despliega nada.
 - `.dev.vars`, `.open-next/` y `.wrangler/` están en `.gitignore`: las claves locales no llegan al repositorio.
 
+### Pruebas de Playwright contra el Worker local
+
+Se corrió la suite completa con el Worker en el puerto de las pruebas: **174 pasan y 2 fallan** (de 176).
+
+- Pasan, entre otras, las 6 de la biblioteca de fotos: subir, optimizar a WebP y AVIF, permisos por rol y quitar el GPS. En local no se aplica el límite de 10 ms, así que esto confirma que **funciona**, no que **quepa** en el plan gratuito.
+- **Falla real: los archivos estáticos no llevan las cabeceras de seguridad.** `/marca/logo-jiump.png` sale sin `X-Content-Type-Options` ni las demás. En Cloudflare los archivos estáticos se sirven directo, sin pasar por Next.js, así que las cabeceras de `next.config.ts` no les llegan. Solución pendiente: un archivo `public/_headers` con las mismas cabeceras, y su prueba.
+- La otra falla es del entorno de prueba, no del Worker: la base local no tenía aplicada la migración 12 al correr.
+
+Esa corrida fue manual. Falta dejarla en el workflow.
+
 ### Cómo probarlo en local
 
 Con Supabase local arriba, crear `app/.dev.vars` (no se sube al repositorio) con `SUPABASE_URL`, `SUPABASE_ANON_KEY` y `SUPABASE_SERVICE_ROLE_KEY` de `npx supabase status`, y luego:
