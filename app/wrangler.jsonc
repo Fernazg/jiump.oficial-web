@@ -1,0 +1,12 @@
+// Configuración del Worker de Cloudflare (ver docs/lanzamiento.md).
+// No contiene claves: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
+// y SITIO_URL se cargan como variables y secretos en la cuenta de Cloudflare.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "jiump-sitio",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  "observability": { "enabled": true }
+}

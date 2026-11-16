@@ -9,8 +9,8 @@ Nada de este plan se ha ejecutado: no se creó ninguna cuenta, no se desplegó n
 
 - [ ] Mezclar los PR de la revisión profesional, en el orden de `docs/revision-profesional.md`.
 - [ ] 🔒 **Directiva:** validar el modelo de datos y los permisos (`docs/modelo-datos.md`, `docs/roles-permisos.md`), que siguen como propuesta.
-- [ ] 🔒 **Directiva:** decidir el alojamiento (paso 2) y quiénes serán los dos primeros Superadministradores (paso 4).
-- [ ] Crear una **cuenta de Gmail dedicada a JIUMP** (paso 3). Todas las demás cuentas se crean con ese correo, nunca con el correo personal de alguien, para que el sitio no dependa de una sola persona. Activarle la verificación en dos pasos y guardar el acceso entre dos personas de la directiva.
+- [ ] 🔒 **Directiva:** decidir quiénes serán los dos primeros Superadministradores (paso 4). El alojamiento ya está decidido: Cloudflare (paso 2).
+- [ ] La **cuenta de Gmail dedicada a JIUMP** es `jiump.soporte@gmail.com` (paso 3). Todas las demás cuentas se crean con ese correo, nunca con el correo personal de alguien, para que el sitio no dependa de una sola persona. Activarle la verificación en dos pasos y guardar el acceso entre dos personas de la directiva.
 
 ## 1. Supabase gratuito con la cuenta de JIUMP
 
@@ -36,41 +36,54 @@ npx supabase db push
 
 **Límites del plan gratuito que importan:** 500 MB de base de datos, 1 GB de archivos y 5 GB de tráfico al mes; el proyecto se pausa tras una semana sin uso. **Atención con el espacio de las fotos.** El panel guarda la foto original además de sus versiones livianas. Una foto directa de cámara o celular pesa entre 3 y 8 MB: con 1 GB caben solo unas 150 a 300. Reducidas antes de subirlas (unos 2.000 px de ancho, menos de 1 MB) caben más de 1.000. Recomendación para Multimedia: **subir las fotos ya reducidas** y guardar los originales en el Drive de JIUMP. Cuando el espacio se acerque al límite, la directiva decide entre el plan pagado (US$25 al mes) o retirar fotos antiguas.
 
-## 2. Alojamiento: Cloudflare o Vercel
+## 2. Alojamiento: Cloudflare Workers, plan gratuito
 
-🔒 **Directiva** (decisión pendiente desde el README; una de las opciones es pagada).
+**Alojamiento elegido: Cloudflare Workers, plan gratuito.** Se descartó Vercel: su plan gratuito es para uso personal y limita cada envío a 4,5 MB, lo que haría fallar la subida de fotos grandes del panel.
 
-| | Cloudflare Workers | Vercel |
+🔒 **Directiva** (crea la cuenta a nombre de JIUMP). Sin costo.
+
+**Antes de crear la cuenta:** la preparación técnica del sitio para Cloudflare **no está terminada**. El estado exacto y lo que falta está en `docs/cloudflare.md`. No tiene sentido desplegar hasta completarla.
+
+Límites del plan gratuito: 10 ms de procesador por solicitud, 100.000 solicitudes al día y un Worker de hasta 3 MB comprimido (el del sitio pesa 1,9 MB). Si al medir no se logra bajar de 10 ms, la alternativa es el plan Workers Paid (US$5 al mes), que **necesita autorización de la directiva**.
+
+### Crear la cuenta
+
+1. Entrar a https://dash.cloudflare.com/sign-up y registrarse con **`jiump.soporte@gmail.com`** y una contraseña larga y única. Guardarla entre dos personas de la directiva.
+2. Confirmar el correo desde la bandeja de `jiump.soporte@gmail.com`.
+3. Activar la **verificación en dos pasos** de la cuenta de Cloudflare (My Profile → Authentication) y guardar los códigos de recuperación junto con la contraseña.
+4. Elegir el plan **Free** cuando lo pregunte. No ingresar medios de pago.
+5. No agregar todavía el dominio `jiump.cl`: eso es parte del paso 7.
+
+### Desplegar en la dirección temporal
+
+Lo hace el equipo técnico, cuando `docs/cloudflare.md` esté completo:
+
+1. Compilar para Cloudflare, **sin archivos `.env` con claves en la carpeta** (el build los copia dentro del Worker):
+
+```bash
+npm run cf:build
+```
+
+2. Iniciar sesión con la cuenta de JIUMP y desplegar. Queda en una dirección temporal `*.workers.dev`, **sin tocar el dominio**:
+
+```bash
+npx wrangler login
+```
+
+```bash
+npx wrangler deploy
+```
+
+3. Cargar las variables en Cloudflare (Workers → jiump-sitio → Settings → Variables and Secrets), nunca en el repositorio:
+
+| Variable | Tipo | Valor |
 |---|---|---|
-| Costo | Gratis, o US$5 al mes (plan Workers Paid) | Gratis solo para uso personal; para una organización, US$20 al mes (Pro) |
-| ¿Puede usarlo JIUMP gratis? | Sí, el plan gratuito no restringe el tipo de uso | Dudoso: el plan gratuito es para «uso personal, no comercial», y JIUMP es una organización. Habría que consultarlo con Vercel |
-| Next.js | Mediante el adaptador OpenNext, que mantiene Cloudflare | Nativo (Vercel hace Next.js) |
-| Límite que afecta al sitio | Plan gratuito: 10 ms de procesador por visita. Armar una página puede pasarlo | Ninguno conocido |
-| Límite que afecta al panel | Plan gratuito: el mismo, al subir fotos | **Sube como máximo 4,5 MB por envío.** El panel envía la foto original (hasta 10 MB) más sus versiones: las fotos grandes fallarían |
-| Visitas incluidas | 100.000 al día | 100 GB de tráfico al mes |
-| DNS de `jiump.cl` | En la misma cuenta, gratis | Se puede, pero es más simple dejarlo en Cloudflare |
+| `SUPABASE_URL` | Texto | Dirección del proyecto de Supabase |
+| `SUPABASE_ANON_KEY` | Texto | Clave pública (anon). El sitio se niega a arrancar si aquí va una clave secreta |
+| `SUPABASE_SERVICE_ROLE_KEY` | **Secreto** | Clave de servicio. Solo la usa «Invitar usuario» |
+| `SITIO_URL` | Texto | `https://jiump.cl` (mientras dure el ensayo, la dirección temporal) |
 
-**Recomendación: Cloudflare Workers.**
-
-- Es la única opción que JIUMP puede usar gratis sin dudas sobre las condiciones.
-- Subir fotos funciona tal como está el panel. En Vercel habría que rehacer la subida.
-- El riesgo es el límite de 10 ms del plan gratuito. Si el ensayo del paso 6 muestra errores «1102», el plan de US$5 al mes lo resuelve. **Ese gasto necesita autorización de la directiva.**
-
-**Esto no está probado.** No se podía desplegar nada durante la revisión, así que la comparación sale de la documentación de cada servicio. El paso 6 incluye un ensayo real antes de decidir en firme.
-
-Pasos:
-
-1. Crear la cuenta de Cloudflare con el Gmail de JIUMP.
-2. Agregar el adaptador OpenNext al proyecto, en un PR con sus pruebas (trabajo del equipo técnico; no se hizo en esta revisión porque depende de la decisión).
-3. Desplegar en la dirección temporal (`*.workers.dev`), **sin tocar el dominio**.
-4. Variables de entorno del servidor (nunca en el repositorio):
-
-| Variable | Valor |
-|---|---|
-| `SUPABASE_URL` | Dirección del proyecto de Supabase |
-| `SUPABASE_ANON_KEY` | Clave pública (anon). El sitio se niega a arrancar si aquí va una clave secreta |
-| `SUPABASE_SERVICE_ROLE_KEY` | Clave de servicio, como **secreto cifrado**. Solo la usa «Invitar usuario» |
-| `SITIO_URL` | `https://jiump.cl` (mientras dure el ensayo, la dirección temporal) |
+4. Agregar la dirección temporal a las Redirect URLs de Supabase (paso 1).
 
 ## 3. Correo con la cuenta de Gmail de JIUMP
 
@@ -162,7 +175,7 @@ Después:
 |---|---|---|
 | Cuenta de Gmail de JIUMP | Sí (acceso compartido) | Gratis |
 | 1. Supabase | Sí | Gratis |
-| 2. Alojamiento | Sí (decisión) | Gratis, o US$5 al mes si hace falta |
+| 2. Alojamiento (Cloudflare) | Sí (crea la cuenta) | Gratis; US$5 al mes solo si no se logra bajar de 10 ms |
 | 3. Correo | No (usa la cuenta ya creada) | Gratis |
 | 4. Superadministradores | Sí (quiénes) | Gratis |
 | 5. Contenido y redirecciones | Sí (entrega el contenido) | Gratis |
