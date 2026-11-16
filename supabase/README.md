@@ -128,6 +128,7 @@ npx supabase db push
 
 - **Authentication → Sign In / Providers:** desactivar «Allow new users to sign up». `config.toml` solo lo desactiva en local, y con el registro abierto cualquiera crearía una cuenta (sin roles, pero con perfil).
 - **Authentication → Multi-Factor:** habilitar TOTP.
+- **Authentication → Sign In / Providers → Email:** largo mínimo de contraseña **10** (igual que exige el panel; `config.toml` solo lo fija en local).
 - **Authentication → URL Configuration:** agregar `https://<dominio>/admin/auth/confirmar**` (enlace de «Recuperar contraseña») y `https://<dominio>/admin/bienvenida` (enlace de invitación) a las Redirect URLs.
 - **Servidor del sitio (variables de entorno):** `SUPABASE_SERVICE_ROLE_KEY` solo para «Invitar usuario» (ver `app/README.md`). Nunca en el repositorio ni en el navegador.
 - **Authentication → Emails / SMTP:** el correo de Supabase gratuito tiene un límite muy bajo de envíos por hora; para recuperar contraseñas con tranquilidad conviene un SMTP propio (decisión pendiente).
@@ -174,4 +175,11 @@ Hallazgos corregidos en `migrations/…0600_seguridad.sql`; cada uno tiene prueb
 | H8 | Baja | Series y temas sin artículos publicados eran visibles para el público. |
 | H10 | Baja | Toda tabla o función nueva nacía con escritura/ejecución para el visitante anónimo (privilegios por defecto de Supabase). |
 
-Riesgos aceptados (sin cambio): el visitante ve los UUID de `creado_por`/`actualizado_por` en el contenido publicado (no dan acceso a nada); `redirecciones` es pública, porque el sitio la necesita para redirigir.
+Revisión profesional (migración 12, pruebas en `tests/database/privacidad.test.sql`):
+
+| # | Gravedad | Hallazgo |
+|---|---|---|
+| P1 | Baja | Con la clave pública se podían pedir todas las columnas del contenido publicado, incluidas las internas (`creado_por`, `actualizado_por`, datos de la papelera). Ahora el visitante tiene permiso columna por columna. **Una columna nueva nace cerrada para el visitante**: si el sitio debe mostrarla, su migración debe incluir `grant select (columna) on public.tabla to anon;`. |
+| P2 | Baja | Una redirección con destino `//otro-sitio` pasaba por ruta interna y llevaba a otro dominio. |
+
+Riesgos aceptados (sin cambio): `redirecciones` es pública, porque el sitio la necesita para redirigir.

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { protegerAdmin } from '@/lib/admin/proxy-admin';
+import { nuevoNonce, politicaContenido } from '@/lib/seguridad/cabeceras';
 
 /**
  * Antes de cada página:
@@ -10,14 +11,29 @@ import { protegerAdmin } from '@/lib/admin/proxy-admin';
  *     de mantenimiento con estado 503 en todo el sitio.
  *  2. Redirecciones 301 desde las URL antiguas de Wix (tabla redirecciones).
  * Lee con la clave anónima. Si Supabase no responde, el sitio sigue normal.
+ *
+ * Además, toda respuesta lleva la política de seguridad de contenido (CSP) con
+ * un valor único por visita (ver lib/seguridad/cabeceras.ts). Next.js lee ese
+ * valor de la cabecera de la petición y lo pone en sus propios scripts.
  */
 export async function proxy(request: NextRequest) {
   const ruta = request.nextUrl.pathname;
-  if (ruta === '/admin' || ruta.startsWith('/admin/')) return protegerAdmin(request);
+  const panel = ruta === '/admin' || ruta.startsWith('/admin/');
+  const csp = politicaContenido({
+    nonce: nuevoNonce(), panel, supabaseUrl: process.env.SUPABASE_URL, desarrollo: process.env.NODE_ENV === 'development',
+  });
+  request.headers.set('Content-Security-Policy', csp);
+  const respuesta = panel ? await protegerAdmin(request) : await sitioPublico(request);
+  respuesta.headers.set('Content-Security-Policy', csp);
+  return respuesta;
+}
 
+async function sitioPublico(request: NextRequest): Promise<NextResponse> {
+  const ruta = request.nextUrl.pathname;
+  const seguir = () => NextResponse.next({ request });
   const url = process.env.SUPABASE_URL;
   const clave = process.env.SUPABASE_ANON_KEY;
-  if (!url || !clave) return NextResponse.next();
+  if (!url || !clave) return seguir();
 
   const cabeceras = { apikey: clave, Authorization: `Bearer ${clave}` };
   const leer = async (consulta: string) => {
@@ -39,15 +55,15 @@ export async function proxy(request: NextRequest) {
   ]);
 
   if (conf[0]?.modo_mantenimiento === true) {
-    if (ruta === '/mantenimiento') return NextResponse.next();
-    return NextResponse.rewrite(new URL('/mantenimiento', request.url), { status: 503, headers: { 'Retry-After': '3600' } });
+    if (ruta === '/mantenimiento') return seguir();
+    return NextResponse.rewrite(new URL('/mantenimiento', request.url), { request, status: 503, headers: { 'Retry-After': '3600' } });
   }
 
   const destino = redir[0]?.destino;
   if (typeof destino === 'string') {
     return NextResponse.redirect(new URL(destino, request.url), Number(redir[0].codigo) || 301);
   }
-  return NextResponse.next();
+  return seguir();
 }
 
 export const config = {
