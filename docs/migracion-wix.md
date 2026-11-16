@@ -15,6 +15,9 @@
 - Excluido: directorio de personas, podcast, recursos, contacto, ofrendas/donaciones.
 
 ## Plan de lanzamiento
+
+El plan detallado y actualizado está en `docs/lanzamiento.md`. Resumen original:
+
 1. Sitio nuevo terminado y probado en una dirección temporal (ej.: `*.pages.dev`).
 2. Respaldo completo del contenido de Wix.
 3. Copiar todos los registros DNS de Wix (sobre todo MX/TXT si existieran) al nuevo proveedor.

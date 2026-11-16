@@ -12,6 +12,7 @@ Nuevo sitio web de **JIUMP — Jóvenes Unidos para Adorar a Cristo**, movimient
 | Backend (base de datos, acceso, archivos) | 🚧 migraciones, RLS, fotos y pruebas listas en `supabase/` (falta validar con la directiva) |
 | Sitio público (`app/`) | 🚧 Inicio, Artículos, artículo, Nosotros, Eventos, actividad, Galería, álbum, 404 y Mantenimiento, con pruebas |
 | Panel /admin | ✅ etapas 1, 2 y 3: acceso con doble factor, roles, escritorio, artículos, fotos (sin GPS ni metadatos personales), eventos, galerías, videos, página web, menú y pie, información institucional (vacía hasta que JIUMP entregue los textos), usuarios y roles, registro de actividad y configuración |
+| Revisión profesional (seguridad, accesibilidad, rendimiento, SEO, operación) | ✅ en PRs por mezclar: ver `docs/revision-profesional.md` |
 | Migración de contenido desde Wix | ⏳ |
 | Pruebas y lanzamiento (cambio de DNS) | ⏳ |
 
@@ -24,6 +25,9 @@ docs/                 Documentación del proyecto (leer primero)
   roles-permisos.md   Roles del panel y qué puede hacer cada uno
   migracion-wix.md    Contenido a migrar, dominio y plan de lanzamiento
   pendientes.md       Contenido que aún debe entregar JIUMP
+  revision-profesional.md  Qué se revisó, qué se corrigió, decisiones y pendientes
+  lanzamiento.md      Pasos en orden para pasar a producción, con lo que debe autorizar la directiva
+  operacion.md        Qué hacer si algo falla, respaldos y guía para quien continúe el proyecto
 design/
   capturas/           Capturas de cada página (escritorio 1440 px y celular 390 px)
   prototipos/         Prototipos HTML fuente (formato del lienzo de diseño)
