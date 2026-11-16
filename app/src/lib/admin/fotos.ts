@@ -1,5 +1,6 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { leerTodo } from '../leer-todo';
 import type { Acceso } from './acceso';
 import { clientePanel } from './supabase-panel';
 
@@ -43,23 +44,26 @@ export async function firmarMiniaturas(supabase: SupabaseClient, fotos: { archiv
   return mapa;
 }
 
-export type FiltrosFotos = { q?: string; filtro?: string; album?: string };
+export type FiltrosFotos = { q?: string; filtro?: string; album?: string; pagina?: string; foto?: string };
 
-export async function listarFotos(acceso: Acceso, f: FiltrosFotos = {}): Promise<FotoPanel[]> {
+/** Fotos por página en la biblioteca: se firman y se dibujan solo las de la página. */
+export const FOTOS_POR_PAGINA = 60;
+
+export type PaginaFotos = { fotos: FotoPanel[]; total: number; pagina: number; paginas: number };
+
+export async function listarFotos(acceso: Acceso, f: FiltrosFotos = {}): Promise<PaginaFotos> {
   const supabase = await clientePanel();
-  const [{ data, error }, { data: enAlbum }, { data: enActividad }] = await Promise.all([
-    supabase.from('fotos').select('id, archivo, ancho, alto, texto_alternativo, credito, anchos, creado_por, creado_en').order('creado_en', { ascending: false }),
-    supabase.from('album_fotos').select('foto_id, albumes(id, titulo)'),
-    supabase.from('actividad_fotos').select('foto_id, actividades(id, titulo)'),
-  ]);
-  if (error) throw new Error(`No se pudo leer la biblioteca: ${error.message}`);
   type Fila = Omit<FotoPanel, 'url' | 'usos' | 'propia' | 'gestionable' | 'album' | 'actividad'>;
-  let fotos = (data ?? []) as Fila[];
+  const [todas, enAlbum, enActividad] = await Promise.all([
+    leerTodo<Fila>((d, h) => supabase.from('fotos').select('id, archivo, ancho, alto, texto_alternativo, credito, anchos, creado_por, creado_en')
+      .order('creado_en', { ascending: false }).order('id').range(d, h), 'la biblioteca'),
+    leerTodo<{ foto_id: string; albumes: { id: string; titulo: string } | null }>((d, h) => supabase.from('album_fotos').select('foto_id, albumes(id, titulo)').order('album_id').order('foto_id').range(d, h), 'los álbumes de las fotos'),
+    leerTodo<{ foto_id: string; actividades: { id: string; titulo: string } | null }>((d, h) => supabase.from('actividad_fotos').select('foto_id, actividades(id, titulo)').order('actividad_id').order('foto_id').range(d, h), 'las actividades de las fotos'),
+  ]);
+  let fotos = todas;
 
-  const albumDe = new Map(((enAlbum ?? []) as unknown as { foto_id: string; albumes: { id: string; titulo: string } | null }[])
-    .filter((x) => x.albumes).map((x) => [x.foto_id, x.albumes!]));
-  const actividadDe = new Map(((enActividad ?? []) as unknown as { foto_id: string; actividades: { id: string; titulo: string } | null }[])
-    .filter((x) => x.actividades).map((x) => [x.foto_id, x.actividades!]));
+  const albumDe = new Map(enAlbum.filter((x) => x.albumes).map((x) => [x.foto_id, x.albumes!]));
+  const actividadDe = new Map(enActividad.filter((x) => x.actividades).map((x) => [x.foto_id, x.actividades!]));
 
   const n = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   if (f.q?.trim()) {
@@ -78,17 +82,28 @@ export async function listarFotos(acceso: Acceso, f: FiltrosFotos = {}): Promise
   if (f.filtro === 'sin-uso') fotos = fotos.filter((x) => !usosDe.get(x.id)?.length);
   if (f.filtro === 'en-uso') fotos = fotos.filter((x) => usosDe.get(x.id)?.length);
 
+  // Solo se firman y se devuelven las fotos de la página pedida (o la página donde está la foto elegida).
+  const total = fotos.length;
+  const paginas = Math.max(1, Math.ceil(total / FOTOS_POR_PAGINA));
+  const indiceElegida = f.foto ? fotos.findIndex((x) => x.id === f.foto) : -1;
+  const pedida = indiceElegida >= 0 && !f.pagina ? Math.floor(indiceElegida / FOTOS_POR_PAGINA) + 1 : Math.floor(Number(f.pagina)) || 1;
+  const pagina = Math.min(paginas, Math.max(1, pedida));
+  fotos = fotos.slice((pagina - 1) * FOTOS_POR_PAGINA, pagina * FOTOS_POR_PAGINA);
+
   const urls = await firmarMiniaturas(supabase, fotos);
-  const todas = gestionaTodas(acceso);
-  return fotos.map((x) => ({
-    ...x,
-    url: urls.get(x.archivo) ?? '',
-    usos: usosDe.get(x.id) ?? [],
-    propia: x.creado_por === acceso.userId,
-    gestionable: todas || x.creado_por === acceso.userId,
-    album: albumDe.get(x.id) ?? null,
-    actividad: actividadDe.get(x.id) ?? null,
-  }));
+  const gestionaTodo = gestionaTodas(acceso);
+  return {
+    total, pagina, paginas,
+    fotos: fotos.map((x) => ({
+      ...x,
+      url: urls.get(x.archivo) ?? '',
+      usos: usosDe.get(x.id) ?? [],
+      propia: x.creado_por === acceso.userId,
+      gestionable: gestionaTodo || x.creado_por === acceso.userId,
+      album: albumDe.get(x.id) ?? null,
+      actividad: actividadDe.get(x.id) ?? null,
+    })),
+  };
 }
 
 /** Foto lista para los selectores del panel (miniatura firmada). */

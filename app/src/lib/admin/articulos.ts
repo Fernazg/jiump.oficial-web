@@ -1,6 +1,8 @@
 import 'server-only';
 import type { Bloque, Serie, Tema } from '@/lib/tipos';
 import { clientePanel } from './supabase-panel';
+import { leerTodo } from '../leer-todo';
+import { firmarMiniaturas } from './fotos';
 
 /**
  * Consultas de artículos del panel. Usan la sesión de la persona: RLS deja
@@ -171,11 +173,12 @@ export async function vistaPreviaAlDia(articuloId: string): Promise<boolean> {
 /** Fotos de la biblioteca (todo el equipo las ve) con URL firmada, para elegir portada o imagen. */
 export async function bibliotecaFotos(): Promise<{ id: string; url: string; texto_alternativo: string; ancho: number | null; alto: number | null }[]> {
   const supabase = await clientePanel();
-  const { data, error } = await supabase.from('fotos').select('id, archivo, texto_alternativo, ancho, alto').order('creado_en', { ascending: false });
-  if (error) throw new Error(`No se pudo leer la biblioteca de fotos: ${error.message}`);
-  const fotos = (data ?? []) as { id: string; archivo: string; texto_alternativo: string; ancho: number | null; alto: number | null }[];
+  const fotos = await leerTodo<{ id: string; archivo: string; anchos: number[]; texto_alternativo: string; ancho: number | null; alto: number | null }>(
+    (d, h) => supabase.from('fotos').select('id, archivo, anchos, texto_alternativo, ancho, alto').order('creado_en', { ascending: false }).order('id').range(d, h),
+    'la biblioteca de fotos',
+  );
   if (!fotos.length) return [];
-  const { data: firmas } = await supabase.storage.from('fotos').createSignedUrls(fotos.map((f) => f.archivo), 60 * 60);
-  const porRuta = new Map((firmas ?? []).filter((x) => x.signedUrl).map((x) => [x.path, x.signedUrl]));
-  return fotos.flatMap(({ archivo, ...f }) => (porRuta.get(archivo) ? [{ ...f, url: porRuta.get(archivo)! }] : []));
+  // Miniaturas (480 px) en vez de los originales: el selector carga mucho más rápido.
+  const urls = await firmarMiniaturas(supabase, fotos);
+  return fotos.flatMap(({ archivo, anchos: _anchos, ...f }) => (urls.get(archivo) ? [{ ...f, url: urls.get(archivo)! }] : []));
 }

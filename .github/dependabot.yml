@@ -1,0 +1,24 @@
+# Dependabot (gratuito, de GitHub): una vez al mes propone actualizar las
+# dependencias en un solo PR por grupo. El workflow «Pruebas» corre sobre ese
+# PR: si queda en verde, se puede mezclar. Los avisos de seguridad llegan aparte
+# y de inmediato.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /app
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3
+    groups:
+      # React y Next.js se actualizan juntos (dependen entre sí).
+      framework:
+        patterns: ['next', 'react', 'react-dom', '@types/react', '@types/react-dom']
+      supabase:
+        patterns: ['@supabase/*']
+      herramientas:
+        dependency-type: development
+        exclude-patterns: ['@types/react', '@types/react-dom']
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

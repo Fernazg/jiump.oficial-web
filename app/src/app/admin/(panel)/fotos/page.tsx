@@ -15,7 +15,7 @@ import { parametros } from '@/lib/parametros';
 
 export const metadata: Metadata = { title: 'Biblioteca de fotos' };
 
-type Props = { searchParams: Promise<{ q?: string; filtro?: string; album?: string; foto?: string; aviso?: string }> };
+type Props = { searchParams: Promise<{ q?: string; filtro?: string; album?: string; foto?: string; pagina?: string; aviso?: string }> };
 
 const FILTROS = [
   { clave: '', nombre: 'Todas' },
@@ -28,7 +28,7 @@ export default async function Fotos({ searchParams }: Props) {
   const acceso = await exigirSeccion('fotos');
   const f = await parametros(searchParams);
   const filtro = FILTROS.some((x) => x.clave === f.filtro) ? f.filtro : undefined;
-  const fotos = await listarFotos(acceso, { q: f.q, filtro, album: f.album });
+  const { fotos, total, pagina, paginas } = await listarFotos(acceso, { q: f.q, filtro, album: f.album, pagina: f.pagina, foto: f.foto });
   const supabase = await clientePanel();
   const { data: albumes } = await supabase.from('albumes').select('id, titulo').order('orden');
   const elegida = fotos.find((x) => x.id === f.foto) ?? null;
@@ -36,7 +36,7 @@ export default async function Fotos({ searchParams }: Props) {
 
   const enlace = (c: Record<string, string | undefined>) => {
     const p = new URLSearchParams();
-    for (const [k, v] of Object.entries({ q: f.q, filtro, album: f.album, ...c })) if (v) p.set(k, v);
+    for (const [k, v] of Object.entries({ q: f.q, filtro, album: f.album, pagina: pagina > 1 ? String(pagina) : undefined, ...c })) if (v) p.set(k, v);
     return `/admin/fotos${p.size ? `?${p}` : ''}`;
   };
   const volver = enlace({});
@@ -62,7 +62,7 @@ export default async function Fotos({ searchParams }: Props) {
         {filtro && <input type="hidden" name="filtro" value={filtro} />}
         <nav aria-label="Filtrar fotos" className="flex flex-wrap gap-2">
           {FILTROS.map((x) => (
-            <Link key={x.clave} href={enlace({ filtro: x.clave || undefined, foto: undefined })} aria-current={(filtro ?? '') === x.clave ? 'true' : undefined} className="adm-filtro">
+            <Link key={x.clave} href={enlace({ filtro: x.clave || undefined, foto: undefined, pagina: undefined })} aria-current={(filtro ?? '') === x.clave ? 'true' : undefined} className="adm-filtro">
               {x.nombre}
             </Link>
           ))}
@@ -80,7 +80,7 @@ export default async function Fotos({ searchParams }: Props) {
 
       <div className="flex flex-wrap items-start gap-6">
         <section aria-label="Fotos" className="min-w-0 flex-[3_1_480px]">
-          <p className="mb-3 text-[13px] text-texto-3">{fotos.length} {fotos.length === 1 ? 'foto' : 'fotos'}</p>
+          <p className="mb-3 text-[13px] text-texto-3">{total} {total === 1 ? 'foto' : 'fotos'}{paginas > 1 ? ` · página ${pagina} de ${paginas}` : ''}</p>
           <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,150px),1fr))] gap-3" data-lista-fotos>
             {fotos.map((x, i) => (
               <li key={x.id}>
@@ -98,6 +98,13 @@ export default async function Fotos({ searchParams }: Props) {
             ))}
           </ul>
           {fotos.length === 0 && <p className="adm-caja p-8 text-center text-texto-3">No hay fotos que coincidan.</p>}
+          {paginas > 1 && (
+            <nav aria-label="Páginas de fotos" className="mt-4 flex items-center justify-between gap-3 text-[14px]" data-paginas-fotos>
+              {pagina > 1 ? <Link className="adm-boton adm-secundario" href={enlace({ pagina: pagina > 2 ? String(pagina - 1) : undefined, foto: undefined })}>← Más recientes</Link> : <span />}
+              <span className="text-texto-3">Página {pagina} de {paginas}</span>
+              {pagina < paginas ? <Link className="adm-boton adm-secundario" href={enlace({ pagina: String(pagina + 1), foto: undefined })}>Anteriores →</Link> : <span />}
+            </nav>
+          )}
         </section>
 
         <aside className="adm-caja flex min-w-0 flex-[1_1_300px] flex-col gap-3.5 p-5 lg:sticky lg:top-6" aria-label="Detalle de la foto" data-detalle-foto>

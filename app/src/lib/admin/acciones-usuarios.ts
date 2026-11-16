@@ -1,12 +1,12 @@
 'use server';
 
-import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import type { EstadoFormulario } from '@/components/admin/Formulario';
 import { permisoAccion } from './acceso';
 import { esUuid } from './bloques';
 import { invitarConServicio } from './invitar';
 import type { Rol } from './secciones';
+import { origen } from './origen';
 import { clientePanel } from './supabase-panel';
 import { listarUsuarios, superadminsActivos } from './usuarios';
 
@@ -20,13 +20,6 @@ const SIN_PERMISO = 'No tienes permiso para hacer esto.';
 /** Lo exige también la base de datos (migración 11): el panel avisa antes, la base no deja pasar. */
 const MINIMO_SUPERADMINS = 2;
 const MENSAJE_MINIMO = 'Deben quedar al menos dos Superadministradores activos. Nombra otro antes de quitar este rol o desactivar a esta persona.';
-
-async function origen(): Promise<string> {
-  const h = await headers();
-  const host = h.get('x-forwarded-host') ?? h.get('host') ?? 'localhost:3000';
-  const proto = h.get('x-forwarded-proto') ?? (host.startsWith('localhost') || host.startsWith('127.') ? 'http' : 'https');
-  return `${proto}://${host}`;
-}
 
 export async function invitarUsuario(_: EstadoFormulario, f: FormData): Promise<EstadoFormulario> {
   if (!(await permisoAccion('usuarios'))) return { error: SIN_PERMISO };
