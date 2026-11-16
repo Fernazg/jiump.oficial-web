@@ -1,0 +1,53 @@
+# Aplica las migraciones de supabase/migrations al proyecto de Supabase de
+# PRODUCCIÓN. Solo corre a mano (Actions → Migraciones de producción → Run
+# workflow): nunca por un push ni por un PR. No aplica seed.sql.
+#
+# Secretos del repositorio (Settings → Secrets and variables → Actions):
+#   SUPABASE_ACCESS_TOKEN  token personal de la cuenta de Supabase
+#   SUPABASE_PROJECT_REF   identificador del proyecto
+#   SUPABASE_DB_PASSWORD   contraseña de la base de datos
+name: Migraciones de producción
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: migraciones-produccion
+  cancel-in-progress: false
+
+env:
+  SUPABASE_CLI: supabase@3.1.0 # la misma versión que pruebas.yml
+
+jobs:
+  migrar:
+    name: Aplicar migraciones (sin seed)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Comprobar que están los tres secretos
+        run: |
+          for nombre in SUPABASE_ACCESS_TOKEN SUPABASE_PROJECT_REF SUPABASE_DB_PASSWORD; do
+            if [ -z "${!nombre}" ]; then
+              echo "Falta el secreto $nombre (Settings → Secrets and variables → Actions)." >&2
+              exit 1
+            fi
+          done
+
+      - name: Vincular el proyecto
+        run: npx --yes ${{ env.SUPABASE_CLI }} link --project-ref "$SUPABASE_PROJECT_REF"
+
+      - name: Aplicar las migraciones pendientes
+        run: npx --yes ${{ env.SUPABASE_CLI }} db push
