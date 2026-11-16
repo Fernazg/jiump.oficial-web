@@ -22,7 +22,7 @@ export function VistaAlbum({ album, fotos, actividad, fondo = 'blanco', titulo =
   const Titulo = titulo;
   return (
     <section id={`album-${album.slug}`} data-vista-album={album.slug}
-      className={`scroll-mt-24 border-t border-linea py-16 ${fondo === 'gris' ? 'bg-gris-claro' : 'bg-white'}`}>
+      className={`border-t border-linea py-16 ${fondo === 'gris' ? 'bg-gris-claro' : 'bg-white'}`}>
       <div className="contenedor">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>

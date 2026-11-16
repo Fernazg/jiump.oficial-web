@@ -62,7 +62,7 @@ export default async function Galeria({ searchParams }: { searchParams: Promise<
           </div>
         ) : (
           <ul className="mt-10 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-            {visibles.map((a) => <li key={a.id}><TarjetaAlbum album={a} fotos={fotos} href={`#album-${a.slug}`} /></li>)}
+            {visibles.map((a) => <li key={a.id}><TarjetaAlbum album={a} fotos={fotos} href={`#album-${a.slug}`} titulo="h2" /></li>)}
           </ul>
         )}
       </section>

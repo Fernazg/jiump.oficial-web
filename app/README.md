@@ -49,6 +49,7 @@ Qué cubren:
 - Errores (`tests/errores.spec.ts`): las direcciones mal formadas no dan error 500, y con la base de datos caída se ve un aviso claro en español con «Reintentar». Para eso Playwright levanta un segundo servidor (puerto 3101) apuntando a una base que no responde.
 - Páginas en borrador (404, fuera del menú, aun con la vista previa activada en producción), lema/cita/abreviatura y la Galería con sus álbumes.
 - En celular: sin desborde horizontal y menú ☰ con enlaces de 52 px.
+- Accesibilidad (`tests/accesibilidad.spec.ts`): revisión automática WCAG 2.2 AA con axe-core de todas las páginas del sitio y del panel, en escritorio y celular, más el uso con teclado (saltar al contenido, menú, visor de fotos, foco que no queda tapado) y lectura a 320 px. **Al crear una página nueva, agrégala a la lista de ese archivo.**
 
 El workflow `.github/workflows/pruebas.yml` corre todo esto en cada push y pull request.
 

@@ -237,6 +237,7 @@ export function Editor(p: Props) {
   return (
     <div className="flex min-h-dvh flex-1 flex-col" data-editor-listo={activo || undefined}>
       <header className="sticky top-0 z-30 border-b border-[#e1e3e6] bg-white">
+        <h1 className="sr-only">Editar artículo</h1>
         <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 sm:px-8">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
             <Link href="/admin/articulos" className="text-[14px] font-semibold text-azul">← Artículos</Link>

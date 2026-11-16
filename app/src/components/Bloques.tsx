@@ -63,7 +63,7 @@ export function Bloques({ bloques, fotos, tono = 'azul' }: { bloques: Bloque[]; 
           case 'titulo_seccion': {
             seccion += 1;
             return (
-              <h2 key={i} id={anclaSeccion(seccion)} className="scroll-mt-28 pt-6">
+              <h2 key={i} id={anclaSeccion(seccion)} className="scroll-mt-4 pt-6">
                 <span className={`t-etiqueta flex items-center gap-3 ${acento.texto}`}>
                   {dosDigitos(seccion)} <span aria-hidden className={`h-px w-8 ${acento.fondo}`} />
                 </span>

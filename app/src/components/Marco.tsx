@@ -70,7 +70,7 @@ export async function Pie({ items: previa }: { items?: ItemMenu[] } = {}) {
           <div>
             <p className="t-etiqueta text-azul-oscuro">Síguenos</p>
             <a href={conf.instagram_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-2 hover:text-azul">
-              <IconoInstagram tam={18} /> Instagram{ig ? ` · ${ig}` : ''}
+              <IconoInstagram tam={18} /> Instagram{ig ? ` · ${ig}` : ''}<span className="sr-only"> (se abre en una pestaña nueva)</span>
             </a>
           </div>
         )}

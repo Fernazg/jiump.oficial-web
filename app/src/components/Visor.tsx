@@ -66,7 +66,7 @@ export function GaleriaFotos({ fotos, diseno = 'columnas' }: { fotos: FotoFirmad
         {foto && (
           <div className="flex h-full flex-col">
             <div className="flex items-center justify-between p-4 text-white">
-              <span className="t-meta">{(actual ?? 0) + 1} / {fotos.length}</span>
+              <span className="t-meta" aria-live="polite"><span className="sr-only">Foto </span>{(actual ?? 0) + 1}<span aria-hidden> / </span><span className="sr-only"> de </span>{fotos.length}</span>
               <button type="button" className={btn} onClick={cerrar} aria-label="Cerrar visor"><IconoCerrar /></button>
             </div>
             <div className="relative flex min-h-0 flex-1 items-center justify-center px-4">

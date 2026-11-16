@@ -28,7 +28,7 @@ export default async function Usuarios({ searchParams }: { searchParams: Promise
           Hay {supers.length} Superadministrador{supers.length === 1 ? '' : 'es'} activo{supers.length === 1 ? '' : 's'}. Deben ser al menos dos: si uno pierde su teléfono (su doble factor), el otro puede ayudarle.
         </p>
       )}
-      <section className="adm-caja overflow-x-auto p-2 sm:p-3">
+      <section className="adm-caja overflow-x-auto p-2 sm:p-3" tabIndex={0} aria-label="Lista de personas del equipo">
         <table className="w-full min-w-[720px] text-[14px]" data-lista-usuarios>
           <thead><tr className="border-b border-linea text-left text-texto-3">
             <th className="px-4 py-3 font-semibold">Persona</th><th className="px-4 py-3 font-semibold">Roles</th>
