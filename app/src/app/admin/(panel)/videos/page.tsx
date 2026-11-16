@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { exigirSeccion } from '@/lib/admin/acceso';
 import { listarVideos } from '@/lib/admin/galerias';
+import { Ayuda } from '@/components/admin/Ayuda';
 
 export const metadata: Metadata = { title: 'Videos' };
 
@@ -15,6 +16,13 @@ export default async function Videos({ searchParams }: { searchParams: Promise<{
         <div className="flex flex-col gap-1">
           <h1 className="adm-h1">Videos</h1>
           <span className="text-[15px] text-texto-3">Videos de YouTube que aparecen en el sitio, en un álbum o en una actividad.</span>
+          <Ayuda>
+            <ul>
+              <li>Pega la dirección del video en YouTube y ponle un título.</li>
+              <li>Asígnalo a un álbum o a una actividad: ahí es donde aparecerá en el sitio.</li>
+              <li>Antes de publicar hay que abrir la «Vista previa».</li>
+            </ul>
+          </Ayuda>
         </div>
         <Link href="/admin/videos/nuevo" className="adm-boton adm-primario min-h-[46px] px-[22px] text-[15px]">+ Agregar video</Link>
       </div>

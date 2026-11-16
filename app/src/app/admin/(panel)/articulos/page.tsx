@@ -10,6 +10,7 @@ import {
 import { fechaChile, fechaHoraChile } from '@/lib/admin/hora-chile';
 import { clientePanel } from '@/lib/admin/supabase-panel';
 import { parametros } from '@/lib/parametros';
+import { Ayuda } from '@/components/admin/Ayuda';
 
 export const metadata: Metadata = { title: 'Artículos' };
 
@@ -62,6 +63,15 @@ export default async function Articulos({ searchParams }: Props) {
         <div className="flex flex-col gap-1">
           <h1 className="adm-h1">Artículos</h1>
           <span className="text-[15px] text-texto-3">Escribe, revisa y publica sin tocar código.</span>
+          <Ayuda>
+            <ol>
+              <li>Escribe con «+ Nuevo artículo». Se guarda solo mientras escribes.</li>
+              <li>Cuando esté listo, usa «Enviar a revisión».</li>
+              <li>Abre la «Vista previa»: muestra el artículo tal como se verá en el sitio. Es obligatoria.</li>
+              <li>«Publicar» lo deja visible de inmediato, o elige fecha y hora (de Chile) para programarlo.</li>
+            </ol>
+            <p className="mt-2">Si editas un artículo ya publicado, el sitio no cambia hasta que revises la vista previa y uses «Publicar cambios». Lo que eliminas queda 30 días en la papelera y se puede recuperar.</p>
+          </Ayuda>
         </div>
         <form action={crearArticulo}><button className="adm-boton adm-primario min-h-[46px] px-[22px] text-[15px]">+ Nuevo artículo</button></form>
       </div>

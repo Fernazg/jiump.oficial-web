@@ -4,6 +4,7 @@ import { ListaActividades } from '@/components/admin/eventos/ListaActividades';
 import { exigirSeccion } from '@/lib/admin/acceso';
 import { crearContenido, marcarProximo, moverDestacada } from '@/lib/admin/acciones-contenido';
 import { listarActividades } from '@/lib/admin/eventos';
+import { Ayuda } from '@/components/admin/Ayuda';
 
 export const metadata: Metadata = { title: 'Eventos y actividades' };
 
@@ -70,6 +71,14 @@ function Encabezado() {
       <div className="flex flex-col gap-1">
         <h1 className="adm-h1">Eventos y actividades</h1>
         <span className="text-[15px] text-texto-3">Las publicadas tienen su propia página y pueden aparecer en Inicio.</span>
+        <Ayuda>
+          <ul>
+            <li>Solo el título y el año son obligatorios. La fecha, el lugar y los demás datos se muestran únicamente si los completas.</li>
+            <li>Antes de publicar hay que abrir la «Vista previa».</li>
+            <li>«Destacar en Inicio» la muestra en la portada del sitio. «Próximo evento» es uno solo: al marcar otro, cambia.</li>
+            <li>Quitar una foto de una actividad no la borra de la biblioteca.</li>
+          </ul>
+        </Ayuda>
       </div>
       <form action={crearContenido.bind(null, 'actividad')}>
         <button className="adm-boton adm-primario min-h-[46px] px-[22px] text-[15px]">+ Nuevo evento</button>

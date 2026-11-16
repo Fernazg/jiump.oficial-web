@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { exigirSeccion } from '@/lib/admin/acceso';
 import { crearContenido } from '@/lib/admin/acciones-contenido';
 import { listarAlbumes } from '@/lib/admin/galerias';
+import { Ayuda } from '@/components/admin/Ayuda';
 
 export const metadata: Metadata = { title: 'Galerías y álbumes' };
 
@@ -16,6 +17,13 @@ export default async function Galerias({ searchParams }: { searchParams: Promise
         <div className="flex flex-col gap-1">
           <h1 className="adm-h1">Galerías y álbumes</h1>
           <span className="text-[15px] text-texto-3">Los álbumes publicados aparecen en la Galería. Cada álbum es de un solo evento.</span>
+          <Ayuda>
+            <ul>
+              <li>Cada álbum reúne fotos de un solo evento. Una foto no puede estar en álbumes de eventos distintos.</li>
+              <li>Ordena las fotos, elige la portada y abre la «Vista previa» antes de publicar.</li>
+              <li>Si cambias un álbum ya publicado, el sitio no cambia hasta que uses «Publicar cambios».</li>
+            </ul>
+          </Ayuda>
         </div>
         <form action={crearContenido.bind(null, 'album')}>
           <button className="adm-boton adm-primario min-h-[46px] px-[22px] text-[15px]">+ Nuevo álbum</button>

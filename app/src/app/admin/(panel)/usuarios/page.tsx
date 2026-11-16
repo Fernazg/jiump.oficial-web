@@ -5,6 +5,7 @@ import { MatrizRoles } from '@/components/admin/usuarios/MatrizRoles';
 import { exigirSeccion } from '@/lib/admin/acceso';
 import { fechaHoraChile } from '@/lib/admin/hora-chile';
 import { listarUsuarios, superadminsActivos } from '@/lib/admin/usuarios';
+import { Ayuda } from '@/components/admin/Ayuda';
 
 export const metadata: Metadata = { title: 'Usuarios y roles' };
 
@@ -19,6 +20,14 @@ export default async function Usuarios({ searchParams }: { searchParams: Promise
         <div className="flex flex-col gap-1">
           <h1 className="adm-h1">Usuarios y roles</h1>
           <span className="text-[15px] text-texto-3">Solo el Superadministrador ve esta sección.</span>
+          <Ayuda>
+            <ul>
+              <li>«Invitar» envía un correo. La persona abre el enlace, crea su contraseña y entra con los roles que elegiste.</li>
+              <li>Para nombrar a un Superadministrador: primero la persona activa su doble factor desde «Mi cuenta», y después se le asigna el rol.</li>
+              <li>Siempre deben quedar al menos dos Superadministradores activos.</li>
+              <li>«Desactivar» corta el acceso de la persona al instante. Se puede reactivar.</li>
+            </ul>
+          </Ayuda>
         </div>
         <Link href="/admin/usuarios/invitar" className="adm-boton adm-primario min-h-[46px] px-[22px] text-[15px]">+ Invitar usuario</Link>
       </div>

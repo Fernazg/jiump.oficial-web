@@ -7,6 +7,7 @@ import { exigirSeccion } from '@/lib/admin/acceso';
 import { agregarRedireccion, cambiarMantenimiento, eliminarRedireccion, guardarConfiguracion } from '@/lib/admin/acciones-configuracion';
 import { catalogoFotos } from '@/lib/admin/galerias';
 import { clientePanel } from '@/lib/admin/supabase-panel';
+import { Ayuda } from '@/components/admin/Ayuda';
 
 export const metadata: Metadata = { title: 'Configuración' };
 
@@ -38,6 +39,13 @@ export default async function Configuracion({ searchParams }: { searchParams: Pr
       <div className="flex flex-col gap-1">
         <h1 className="adm-h1">Configuración</h1>
         <span className="text-[15px] text-texto-3">Ajustes generales del sitio. Solo el Superadministrador ve esta sección.</span>
+        <Ayuda>
+          <ul>
+            <li>«Modo mantenimiento» reemplaza todo el sitio por la página de mantenimiento. El panel sigue funcionando para poder desactivarlo.</li>
+            <li>Las redirecciones llevan una dirección antigua (por ejemplo, del sitio anterior en Wix) a su página nueva.</li>
+            <li>El título y la descripción para buscadores se usan en las páginas que no tienen los suyos.</li>
+          </ul>
+        </Ayuda>
       </div>
       {aviso && AVISOS[aviso] && <p role="status" className="adm-ok">{AVISOS[aviso]}</p>}
 
