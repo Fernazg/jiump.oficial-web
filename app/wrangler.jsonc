@@ -3,7 +3,7 @@
 // y SITIO_URL se cargan como variables y secretos en la cuenta de Cloudflare.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "jiump-sitio",
+  "name": "jiump-oficial-web",
   "main": "cloudflare/worker.ts",
   "compatibility_date": "2026-11-01",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
