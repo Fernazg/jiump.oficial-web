@@ -37,15 +37,21 @@ const COLUMNAS_ALBUM = 'id, titulo, slug, descripcion, anio, pais, ciudad, activ
  * reutilizan durante una hora: la misma foto mantiene su dirección y el
  * navegador la toma de su caché.
  *
- * La firma dura dos horas, así que una dirección entregada siempre sirve al
- * menos una hora más. Si una foto se retira, deja de aparecer en el sitio al
- * instante (la consulta a «fotos» pasa por RLS en cada visita); solo quien ya
- * tenía su dirección puede seguir abriéndola hasta que venza.
+ * En Cloudflare, cada página pública se guarda ya armada hasta 24 horas (ver
+ * paginas-guardadas.ts), con las direcciones de sus fotos adentro. Por eso la
+ * firma pública dura 26 horas: una dirección entregada siempre sirve al menos
+ * 25 horas más, más que cualquier página guardada.
+ *
+ * Si una foto se retira, deja de aparecer en el sitio al instante (cambia la
+ * versión del contenido y la página se arma de nuevo, y la consulta a «fotos»
+ * pasa por RLS). Solo quien ya tenía su dirección puede seguir abriéndola
+ * hasta que venza (como máximo 26 horas).
  *
  * Las vistas previas del panel no usan esta memoria: firman con la sesión de
- * la persona, que ve fotos aún no publicadas.
+ * la persona, que ve fotos aún no publicadas, y por solo dos horas.
  */
-const SEGUNDOS_URL_FIRMADA = 2 * 60 * 60;
+const SEGUNDOS_URL_FIRMADA_PUBLICA = 26 * 60 * 60;
+const SEGUNDOS_URL_FIRMADA_PANEL = 2 * 60 * 60;
 const MS_REUTILIZAR_FIRMA = 60 * 60 * 1000;
 const MAX_FIRMAS_EN_MEMORIA = 20_000;
 const firmasPublicas = new Map<string, { url: string; hasta: number }>();
@@ -61,7 +67,7 @@ async function firmarRutas(rutas: string[], cliente: SupabaseClient, publico: bo
   }
   if (pendientes.length === 0) return listas;
 
-  const { data, error } = await cliente.storage.from('fotos').createSignedUrls(pendientes, SEGUNDOS_URL_FIRMADA);
+  const { data, error } = await cliente.storage.from('fotos').createSignedUrls(pendientes, publico ? SEGUNDOS_URL_FIRMADA_PUBLICA : SEGUNDOS_URL_FIRMADA_PANEL);
   if (error) throw new Error(`No se pudieron firmar las fotos: ${error.message}`);
   if (publico && firmasPublicas.size > MAX_FIRMAS_EN_MEMORIA) {
     for (const [ruta, f] of firmasPublicas) if (f.hasta <= ahora) firmasPublicas.delete(ruta);

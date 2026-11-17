@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import Link from 'next/link';
+import Link from '@/components/Enlace';
 import { configuracion, menu } from '@/lib/datos';
 import { paginasPublicadas } from '@/lib/paginas';
 import { vistaPreviaActiva } from '@/lib/vista-previa';

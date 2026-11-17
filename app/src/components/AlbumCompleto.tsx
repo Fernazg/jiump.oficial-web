@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/Enlace';
 import { VistaAlbum } from '@/components/VistaAlbum';
 import { idYoutube } from '@/lib/formato';
 import type { Actividad, Album, FotoFirmada, Video } from '@/lib/tipos';

@@ -88,6 +88,31 @@ jobs:
           eval "$(npx --yes ${{ env.SUPABASE_CLI }} status -o env)"
           SUPABASE_URL="$API_URL" SUPABASE_ANON_KEY="$ANON_KEY" SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY" npx playwright test
 
+      # ---- Worker de Cloudflare (plan gratuito: 10 ms de procesador) ------
+      # Va después de Playwright: `cf:build` vuelve a compilar el sitio.
+      - name: Compilar el Worker de Cloudflare
+        working-directory: app
+        run: npm run cf:build
+
+      - name: Pruebas del Worker y procesador por página (menos de 10 ms)
+        working-directory: app
+        run: |
+          eval "$(npx --yes ${{ env.SUPABASE_CLI }} status -o env)"
+          printf 'SUPABASE_URL=%s\nSUPABASE_ANON_KEY=%s\n' "$API_URL" "$ANON_KEY" > .dev.vars
+          npx wrangler dev --port 8787 > wrangler.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf -o /dev/null http://127.0.0.1:8787/robots.txt && break; sleep 2; done
+          SUPABASE_URL="$API_URL" SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY" node scripts/probar-worker.mjs http://127.0.0.1:8787
+          grande=$(cd .open-next/assets && find _next/static -name '*.js' -size +100k | head -1)
+          MEDIR_N=60 MEDIR_LIMITE=10 MEDIR_PISO="/marca/logo-jiump.png,/$grande" node scripts/medir-procesador.mjs http://127.0.0.1:8787 \
+            / /nosotros /eventos /eventos/convencion-nacional-2026 /articulos /articulos/como-comenzo-la-biblia \
+            "/articulos?serie=mes-de-la-biblia" /galeria "/galeria?filtro=2026" /galeria/convencion-nacional-2026 \
+            /sitemap.xml /robots.txt /mantenimiento | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Registro del Worker si falla
+        if: failure()
+        working-directory: app
+        run: tail -100 wrangler.log || true
+
       - name: Guardar el informe de Playwright si falla
         if: failure()
         uses: actions/upload-artifact@v4

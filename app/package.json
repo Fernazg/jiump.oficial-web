@@ -9,8 +9,9 @@
     "start": "next start -p 3000",
     "typecheck": "tsc --noEmit",
     "test": "playwright test",
-    "cf:build": "opennextjs-cloudflare build",
-    "cf:preview": "opennextjs-cloudflare build && wrangler dev",
+    "cf:build": "opennextjs-cloudflare build && node --experimental-strip-types --no-warnings scripts/cabeceras-estaticas.mjs",
+    "cf:preview": "npm run cf:build && wrangler dev",
+    "cf:deploy": "wrangler deploy",
     "predev": "node scripts/copiar-wasm.mjs",
     "prebuild": "node scripts/copiar-wasm.mjs"
   },

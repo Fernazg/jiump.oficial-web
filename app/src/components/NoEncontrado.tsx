@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/Enlace';
 
 /** Contenido de la página 404 (diseño «Error404»). */
 export function NoEncontrado() {

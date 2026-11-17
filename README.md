@@ -42,7 +42,7 @@ Propuesta inicial, abierta a cambios del equipo de desarrollo:
 
 - **Next.js + TypeScript + Tailwind** para el sitio y el panel /admin.
 - **Supabase** (PostgreSQL, autenticación, almacenamiento de fotos, Row Level Security). Plan gratuito para empezar.
-- **Alojamiento:** Cloudflare (gratuito, recomendado) o Vercel Pro (US$20/mes). **Pendiente de decisión.**
+- **Alojamiento:** Cloudflare Workers, plan gratuito (decidido por la directiva). Las páginas públicas se entregan ya armadas para caber en sus 10 ms de procesador: ver `docs/cloudflare.md`.
 
 ## Reglas del proyecto (acordadas con la directiva)
 

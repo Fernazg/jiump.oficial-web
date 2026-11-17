@@ -42,9 +42,12 @@ npx supabase db push
 
 🔒 **Directiva** (crea la cuenta a nombre de JIUMP). Sin costo.
 
-**Antes de crear la cuenta:** la preparación técnica del sitio para Cloudflare **no está terminada**. El estado exacto y lo que falta está en `docs/cloudflare.md`. No tiene sentido desplegar hasta completarla.
+Límites del plan gratuito: 10 ms de procesador por solicitud, 100.000 solicitudes al día y un Worker de hasta 3 MB comprimido. **El sitio público cabe:** el Worker entrega cada página pública ya armada sin pasar por Next.js, y en el motor de Cloudflare cada página guardada gasta entre 4,6 y 6 ms (medido en local; detalle y método en `docs/cloudflare.md`). El workflow «Pruebas» lo vuelve a medir en cada cambio y falla si una página llega a 10 ms.
 
-Límites del plan gratuito: 10 ms de procesador por solicitud, 100.000 solicitudes al día y un Worker de hasta 3 MB comprimido (el del sitio pesa 1,9 MB). **Hoy el sitio no cabe en los 10 ms:** medidas en local, las páginas públicas gastan entre 18 y 31 ms y la página más simple del panel, 13 ms. Guardar las páginas públicas ya armadas debería resolver el sitio; el panel probablemente no quepa. La alternativa es el plan Workers Paid (US$5 al mes), que **necesita autorización de la directiva**.
+Dos avisos:
+
+- **Primera visita después de un cambio.** Cuando se publica o edita algo, la siguiente visita a cada página la arma de nuevo (20 a 35 ms) y la guarda. Lo mismo pasa con las búsquedas de Artículos y las direcciones que no existen, que no se guardan. Cloudflare tolera pasarse de vez en cuando, pero no está garantizado: en el ensayo del paso 6 hay que revisar que no aparezca el error «1102».
+- **El panel no cabe en 10 ms** (no se puede guardar armado: cada persona ve lo suyo). Su página más simple mide 19 ms en el mismo motor. Se puede ensayar en el plan gratuito; si el ensayo muestra errores «1102» en el panel, la salida es el plan Workers Paid (US$5 al mes), que **necesita autorización de la directiva**.
 
 ### Crear la cuenta
 
@@ -54,36 +57,39 @@ Límites del plan gratuito: 10 ms de procesador por solicitud, 100.000 solicitud
 4. Elegir el plan **Free** cuando lo pregunte. No ingresar medios de pago.
 5. No agregar todavía el dominio `jiump.cl`: eso es parte del paso 7.
 
-### Desplegar en la dirección temporal
+### Antes del primer despliegue: migraciones
 
-Lo hace el equipo técnico, cuando `docs/cloudflare.md` esté completo:
+El Worker usa la función `estado_sitio()` de la migración `20261117000100_version_sitio.sql`. Aplicarla en Supabase de producción con el workflow «Migraciones de producción» (Actions → Run workflow). Sin ella el sitio funciona, pero arma cada página en cada visita (más de 10 ms).
 
-1. Compilar para Cloudflare, **sin archivos `.env` con claves en la carpeta** (el build los copia dentro del Worker):
+### Conectar el repositorio desde el panel de Cloudflare (Workers Builds)
 
-```bash
-npm run cf:build
-```
+Cloudflare compila y despliega solo cada vez que cambia `main`. Sin costo (el plan gratuito incluye minutos de compilación).
 
-2. Iniciar sesión con la cuenta de JIUMP y desplegar. Queda en una dirección temporal `*.workers.dev`, **sin tocar el dominio**:
+1. En https://dash.cloudflare.com: **Workers & Pages → Create → Workers → Import a repository**.
+2. **Connect GitHub**: autorizar la app de Cloudflare **solo** para el repositorio `Fernazg/jiump.oficial-web`.
+3. Configurar la compilación:
 
-```bash
-npx wrangler login
-```
+| Campo | Valor |
+|---|---|
+| Project name | `jiump-sitio` (debe coincidir con `name` en `app/wrangler.jsonc`) |
+| Production branch | `main` |
+| Root directory | `app` |
+| Build command | `npm run cf:build` |
+| Deploy command | `npx wrangler deploy` |
+| Builds for non-production branches | Desactivado |
 
-```bash
-npx wrangler deploy
-```
+4. **Create and deploy.** El primer despliegue crea solo el espacio de KV `PAGINAS` (gratis) y deja el sitio en una dirección temporal `jiump-sitio.<cuenta>.workers.dev`, **sin tocar el dominio**.
+5. Cargar las variables en **Workers → jiump-sitio → Settings → Variables and Secrets**, todas como **Secret** (nunca en el repositorio ni en el chat):
 
-3. Cargar las variables en Cloudflare (Workers → jiump-sitio → Settings → Variables and Secrets), nunca en el repositorio:
+| Variable | Valor |
+|---|---|
+| `SUPABASE_URL` | Dirección del proyecto de Supabase |
+| `SUPABASE_ANON_KEY` | Clave pública (anon). El sitio se niega a arrancar si aquí va una clave secreta |
+| `SUPABASE_SERVICE_ROLE_KEY` | Clave de servicio. Solo la usa «Invitar usuario» |
+| `SITIO_URL` | La dirección temporal mientras dure el ensayo; `https://jiump.cl` en el paso 7 |
 
-| Variable | Tipo | Valor |
-|---|---|---|
-| `SUPABASE_URL` | Texto | Dirección del proyecto de Supabase |
-| `SUPABASE_ANON_KEY` | Texto | Clave pública (anon). El sitio se niega a arrancar si aquí va una clave secreta |
-| `SUPABASE_SERVICE_ROLE_KEY` | **Secreto** | Clave de servicio. Solo la usa «Invitar usuario» |
-| `SITIO_URL` | Texto | `https://jiump.cl` (mientras dure el ensayo, la dirección temporal) |
-
-4. Agregar la dirección temporal a las Redirect URLs de Supabase (paso 1).
+6. **Deployments → Retry build** (o un cambio en `main`) para que el sitio arranque con las variables.
+7. Agregar la dirección temporal a las Redirect URLs de Supabase (paso 1) y abrirla: Inicio debe cargar. En **Workers → jiump-sitio → Observability** se ve el procesador de cada visita.
 
 ## 3. Correo con la cuenta de Gmail de JIUMP
 
@@ -175,7 +181,7 @@ Después:
 |---|---|---|
 | Cuenta de Gmail de JIUMP | Sí (acceso compartido) | Gratis |
 | 1. Supabase | Sí | Gratis |
-| 2. Alojamiento (Cloudflare) | Sí (crea la cuenta) | Gratis; US$5 al mes solo si no se logra bajar de 10 ms |
+| 2. Alojamiento (Cloudflare) | Sí (crea la cuenta) | Gratis; US$5 al mes solo si el panel da errores «1102» en el ensayo |
 | 3. Correo | No (usa la cuenta ya creada) | Gratis |
 | 4. Superadministradores | Sí (quiénes) | Gratis |
 | 5. Contenido y redirecciones | Sí (entrega el contenido) | Gratis |

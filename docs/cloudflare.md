@@ -1,80 +1,87 @@
-# Preparación para Cloudflare Workers (plan gratuito)
+# Cloudflare Workers, plan gratuito
 
-Estado al 16 de noviembre de 2026. **Trabajo a medias:** este documento dice qué quedó hecho, dónde se detuvo y qué falta. No se creó ninguna cuenta ni se desplegó nada.
+Estado al 17 de noviembre de 2026. **El sitio público cabe en el plan gratuito** (medido en local con el motor de Cloudflare). No se creó ninguna cuenta ni se desplegó nada. Los pasos para crear la cuenta y conectar el repositorio están en `docs/lanzamiento.md`, paso 2.
 
-Límites del plan gratuito que hay que cumplir: 10 ms de procesador por solicitud, 100.000 solicitudes al día y un Worker de hasta 3 MB comprimido.
+Límites del plan gratuito: 10 ms de procesador por solicitud, 100.000 solicitudes al día, un Worker de hasta 3 MB comprimido y, en KV, 100.000 lecturas y 1.000 escrituras al día.
 
-## Hecho
+## Cómo funciona
 
-- **Adaptador OpenNext configurado** (`app/open-next.config.ts`, `app/wrangler.jsonc`), sin servicios adicionales (ni KV, ni R2, ni colas).
-- **El sitio compila para Cloudflare** con `npm run cf:build`.
-- **El sitio funciona dentro del Worker en local** (`wrangler dev`, que usa el mismo motor que Cloudflare): Inicio, Nosotros, Eventos, una actividad, Artículos, un artículo, Galería y el mapa del sitio responden 200; `/admin` redirige a «Ingresar» y «Ingresar» carga. Solo se comprobó que respondan; no se corrieron las pruebas de Playwright contra el Worker.
-- **Tamaño del Worker: 1,9 MB comprimido** (límite gratuito: 3 MB). Medido con `wrangler deploy --dry-run`, que no despliega nada.
-- `.dev.vars`, `.open-next/` y `.wrangler/` están en `.gitignore`: las claves locales no llegan al repositorio.
+Armar una página con Next.js cuesta entre 20 y 35 ms de procesador, y solo pasar por Next.js ya cuesta unos 8. Por eso las visitas públicas no pasan por Next.js si la página ya está armada:
 
-### Pruebas de Playwright contra el Worker local
+1. **El Worker** (`app/cloudflare/worker.ts`) recibe cada visita. Si es pública (no `/admin`, no `/_next`, no `/api`, no una acción de formulario), consulta `estado_sitio()` en la base: una sola consulta que dice si hay mantenimiento, si la dirección tiene una redirección y la **versión del contenido**.
+2. Con mantenimiento o redirección, todo sigue como antes: lo resuelve Next.js (`proxy.ts`).
+3. Si no, busca en KV la página guardada **para esa versión**. Si está, la entrega sin armarla. Si no, la arma Next.js, se entrega y se guarda (hasta 24 horas).
+4. **La versión sube sola** con cualquier cambio en el contenido público (triggers en la base, migración `20261117000100_version_sitio.sql`), y también cuando un artículo programado llega a su hora. Por eso publicar, editar, retirar, activar el mantenimiento o agregar una redirección se nota **al instante**, igual que antes. No depende de que el panel avise.
 
-Se corrió la suite completa con el Worker en el puerto de las pruebas: **174 pasan y 2 fallan** (de 176).
+Lógica: `app/src/lib/paginas-guardadas.ts`. El espacio de KV `PAGINAS` se crea solo en el primer despliegue (`app/wrangler.jsonc`, sin `id`).
 
-- Pasan, entre otras, las 6 de la biblioteca de fotos: subir, optimizar a WebP y AVIF, permisos por rol y quitar el GPS. En local no se aplica el límite de 10 ms, así que esto confirma que **funciona**, no que **quepa** en el plan gratuito.
-- **Falla real: los archivos estáticos no llevan las cabeceras de seguridad.** `/marca/logo-jiump.png` sale sin `X-Content-Type-Options` ni las demás. En Cloudflare los archivos estáticos se sirven directo, sin pasar por Next.js, así que las cabeceras de `next.config.ts` no les llegan. Solución pendiente: un archivo `public/_headers` con las mismas cabeceras, y su prueba.
-- La otra falla es del entorno de prueba, no del Worker: la base local no tenía aplicada la migración 12 al correr.
+### Lo que cambió en el sitio para lograrlo (sin cambiar el aspecto)
 
-Esa corrida fue manual. Falta dejarla en el workflow.
+- **Enlaces normales en vez de `<Link>` de Next.js** (`components/Enlace.tsx`). `<Link>` pide a Next.js, al pasar el cursor y al hacer clic, una versión especial de la página que se arma en cada petición y no se puede guardar. Con un enlace normal cada clic carga la página completa, que llega guardada. Se ve igual; el panel sigue usando `<Link>`.
+- **Política de contenido (CSP) con valor nuevo en cada visita**, también en las páginas guardadas: el Worker reemplaza el valor solo en las etiquetas que Next.js marcó (`[nonce]`), con el motor de Cloudflare (`HTMLRewriter`). Un texto del contenido nunca gana permiso para ejecutarse.
+- **Las fotos públicas se firman por 26 horas** (antes 2), para que nunca venzan dentro de una página guardada (máximo 24 horas). Una foto retirada desaparece del sitio al instante; solo quien ya tenía su dirección puede abrirla hasta que venza. Las vistas previas del panel siguen en 2 horas.
+- **Cabeceras de seguridad en los archivos estáticos.** En Cloudflare los estáticos no pasan por Next.js; `npm run cf:build` genera `_headers` desde la misma fuente que usa Next.js (`scripts/cabeceras-estaticas.mjs`). Era la falla que encontró la corrida de Playwright contra el Worker.
 
-### Cómo probarlo en local
+### Qué no se guarda
 
-Con Supabase local arriba, crear `app/.dev.vars` (no se sube al repositorio) con `SUPABASE_URL`, `SUPABASE_ANON_KEY` y `SUPABASE_SERVICE_ROLE_KEY` de `npx supabase status`, y luego:
+- **El panel** (`/admin`): cada persona ve lo suyo.
+- **Las búsquedas** (`/articulos?q=…`): cada texto es distinto y gastaría el límite de 1.000 escrituras diarias de KV.
+- **Las direcciones que no existen** (404), por la misma razón.
+- Los parámetros que no cambian la página (por ejemplo `?utm_source=whatsapp`) se ignoran: usan la misma página guardada. Solo cuentan `serie`, `tema` y `filtro`.
+
+## Medición del procesador
+
+`app/scripts/medir-procesador.mjs` mide el procesador de todos los procesos `workerd` (el motor de Cloudflare) durante N visitas seguidas a cada página. En local eso incluye el proxy de `wrangler dev`, que mueve los bytes de cada respuesta y que en Cloudflare no se cobra: un archivo estático de 112 KB, que en Cloudflare no ejecuta el Worker, marca 6,8 ms en local. Por eso el script da dos columnas: **Total** (todo, cota superior) y **Neto** (el total menos lo que marca `wrangler dev` con un archivo estático del mismo tamaño). El Neto todavía incluye el KV simulado de `wrangler dev` (~1,5 ms) y la consulta a la base.
+
+Promedio de 60 visitas, misma máquina, 17 de noviembre:
+
+| Página | Antes (armada en cada visita) | Ahora, total | Ahora, neto |
+|---|---|---|---|
+| Inicio | 36 ms | 10,0 ms | 5,9 ms |
+| Nosotros | 24,5 ms | 7,5 ms | 5,1 ms |
+| Eventos | 26 ms | 8,7 ms | 5,6 ms |
+| Actividad | 33 ms | 9,2 ms | 4,7 ms |
+| Artículos | 27 ms | 9,0 ms | 5,7 ms |
+| Artículo | 25,5 ms | 8,5 ms | 5,5 ms |
+| Artículos filtrados por serie o tema | 23,5 ms | 8,5–8,7 ms | 5,2–6,0 ms |
+| Galería (y filtrada) | 27,5 ms | 8,3–8,5 ms | 4,6–4,7 ms |
+| Álbum | 28 ms | 8,5 ms | 5,0 ms |
+| Mapa del sitio, robots, mantenimiento | 8–15 ms | 5,8–7,3 ms | 5,7–5,9 ms |
+| Panel · Ingresar (no se guarda) | 19 ms | 19 ms | — |
+
+El workflow «Pruebas» compila el Worker, corre `scripts/probar-worker.mjs` (páginas guardadas, valor nuevo de la CSP en cada visita, cambios al instante, mantenimiento, redirecciones, panel y búsquedas sin guardar, cabeceras de los estáticos) y vuelve a medir: **falla si una página guardada llega a 10 ms neto.** El resultado queda en el resumen de cada ejecución.
+
+**Falta confirmarlo en Cloudflare**, cuando exista la cuenta: Workers → jiump-sitio → Observability muestra el procesador de cada visita.
+
+## Lo que sigue pasando de 10 ms
+
+- **La primera visita a cada página después de un cambio** (20–35 ms): la arma y la guarda. Pasa una vez por página y por cambio. Cloudflare tolera excesos ocasionales, sin garantía.
+- **Búsquedas y direcciones inexistentes** (19–32 ms): se arman siempre.
+- **El panel** (19 ms o más): no se puede guardar. Si en el ensayo da errores «1102», la salida es el plan de US$5 al mes (**necesita a la directiva**) o reducir el trabajo del panel por solicitud.
+- **Subida de fotos dentro del Worker: sin medir.** Quitar los metadatos de una foto de 10 MB puede pasar el límite. Si no cabe, mover esa limpieza al navegador (donde ya se crean las versiones).
+
+## Límite de escrituras de KV
+
+Cada página armada es una escritura. Con 1.000 al día alcanza para unas 20 rondas de cambios con 50 páginas visitadas entre cada una. Si se pasa el límite, el sitio sigue funcionando, pero arma las páginas en cada visita hasta el día siguiente. KV → `PAGINAS` → Metrics muestra el uso.
+
+## Cómo probar en local
+
+Con Supabase local arriba, crear `app/.dev.vars` (no se sube al repositorio) con `SUPABASE_URL` y `SUPABASE_ANON_KEY` de `npx supabase status`, y luego:
 
 ```bash
 npm run cf:preview
 ```
 
-Dos tropiezos que costaron tiempo y conviene conocer:
+```bash
+SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… node scripts/probar-worker.mjs http://127.0.0.1:8787
+```
 
-- Si `.dev.vars` trae una variable vacía, el sitio responde 500 («Faltan SUPABASE_URL…») aunque la variable figure como cargada. Eso fue lo que pasó en esta sesión: Docker estaba apagado y el archivo se generó vacío.
+Tropiezos conocidos:
+
+- Si `.dev.vars` trae una variable vacía, el sitio responde 500 («Faltan SUPABASE_URL…»).
 - Si existe la variable `HTTPS_PROXY`, `wrangler dev` envía por ese proxy también las consultas a Supabase local, y se cancelan. Hay que lanzarlo sin esas variables.
+- OpenNext copia `app/.env.local` dentro del Worker. En Cloudflare (Workers Builds) no existe ese archivo; en local solo tiene claves de desarrollo.
 
-## Medición del procesador (antes de cualquier cambio)
-
-El Worker local no informa el tiempo de procesador por solicitud. Como aproximación se midió el servidor Node (`next start`) en esta máquina: tiempo de procesador del proceso, promedio de 40 solicitudes seguidas por página.
-
-| Página | Procesador por solicitud |
-|---|---|
-| Inicio | 31 ms |
-| Actividad (Convención 2026) | 26 ms |
-| Galería | 26 ms |
-| Nosotros | 20 ms |
-| Artículos | 20 ms |
-| Artículo | 20 ms |
-| Eventos | 18 ms |
-| Panel · Ingresar | 13 ms |
-| `robots.txt` | 2 ms |
-
-**Conclusión: tal como está, el sitio no cabe en los 10 ms del plan gratuito.** Las páginas públicas gastan entre 2 y 3 veces el límite. La medición real en Cloudflare puede diferir (otro motor, otra máquina), pero no por tanto.
-
-Dos consecuencias:
-
-- **Guardar las páginas públicas ya armadas es obligatorio**, no una mejora. Una página guardada se sirve sin armarla y gasta muy poco.
-- **El panel no se puede guardar armado**, y su página más simple ya mide 13 ms. Es muy probable que el panel no quepa en el plan gratuito aunque el sitio público sí. Opciones: el plan de US$5 al mes (necesita a la directiva), o reducir el trabajo del proxy en cada solicitud del panel (hoy valida la sesión y consulta los roles en cada una). **No hay que dar por hecho que el plan gratuito alcanza.**
-
-## Falta, en orden
-
-1. **Medir en el Worker real**, cuando exista la cuenta, para confirmar estas cifras.
-2. **Guardar las páginas públicas ya armadas.** Hoy cada página se arma en cada visita. Hay tres cosas del sitio actual que lo impiden y hay que rediseñar:
-   - **La política de contenido (CSP) usa un valor distinto en cada visita** (PR #8). Una página guardada no puede llevar un valor nuevo cada vez. Alternativa: una política basada en la huella (hash) de los scripts, o `'self'` sin valor por visita. Es una decisión de seguridad y necesita sus pruebas.
-   - **Las direcciones firmadas de las fotos vencen a las 2 horas** (PR #11). Una página guardada más tiempo mostraría fotos rotas. Alternativas: firmar por más tiempo y renovar la página antes de que venzan, o servir las fotos públicas por una ruta propia del sitio.
-   - **Modo mantenimiento, redirecciones y páginas retiradas** se consultan en cada visita, en el proxy. Tendrían que avisar al guardado cuando cambian, y el proxy tendría que dejar de consultar la base en cada visita pública.
-3. **Actualizar al instante al publicar, editar o retirar** desde el panel: cada acción del panel que cambia contenido público debe invalidar las páginas afectadas (`revalidateTag`). Son unas 40 acciones en `app/src/lib/admin/acciones-*.ts`. El guardado de OpenNext en Cloudflare necesita un almacén (KV o R2, ambos con capa gratuita): hay que confirmar que cabe en el plan gratuito.
-4. **El panel nunca se guarda armado:** ya responde `private, no-store`; hay que añadir una prueba que lo confirme dentro del Worker.
-5. **Subida de fotos dentro del Worker: sin probar.** Quitar los metadatos de una foto de 10 MB en JavaScript puede pasar los 10 ms de procesador. Si no cabe, hay que mover esa limpieza al navegador (donde ya se crean las versiones) y dejar en el servidor solo la verificación.
-6. **Medir de nuevo** y confirmar que cada página queda bajo 10 ms.
-7. Pruebas del Worker en el workflow (levantar `wrangler dev` y correr una parte de Playwright contra él).
-
-## Aviso sobre el build
-
-OpenNext copia el contenido de `app/.env.local` dentro del Worker. En local solo hay claves de desarrollo, pero **el build de producción debe hacerse sin archivos `.env` con claves**: las variables se cargan en la cuenta de Cloudflare.
-
-## Dependencias nuevas
+## Dependencias
 
 `@opennextjs/cloudflare` y `wrangler`, solo de desarrollo. `npm audit` marca avisos moderados en dependencias internas de esas herramientas (`glob`, `minimatch`); no forman parte del sitio que se sirve.

@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/Enlace';
 import type { Actividad, Album, FotoFirmada } from '@/lib/tipos';
 import { EstadoVacio, Etiqueta, Flecha } from './Basicos';
 import { IconoImagen } from './Iconos';
