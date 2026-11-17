@@ -2,7 +2,7 @@
 
 Estado al 17 de noviembre de 2026. **El sitio público cabe en el plan gratuito** (medido en local con el motor de Cloudflare). No se creó ninguna cuenta ni se desplegó nada. Los pasos para crear la cuenta y conectar el repositorio están en `docs/lanzamiento.md`, paso 2.
 
-Límites del plan gratuito: 10 ms de procesador por solicitud, 100.000 solicitudes al día, un Worker de hasta 3 MB comprimido y, en KV, 100.000 lecturas y 1.000 escrituras al día.
+Límites del plan gratuito: 10 ms de procesador por solicitud, 100.000 solicitudes al día, un Worker de hasta 3 MB comprimido (el del sitio pesa 1,9 MB) y, en KV, 100.000 lecturas y 1.000 escrituras al día.
 
 ## Cómo funciona
 
@@ -20,6 +20,10 @@ Lógica: `app/src/lib/paginas-guardadas.ts`. El espacio de KV `PAGINAS` se crea 
 - **Enlaces normales en vez de `<Link>` de Next.js** (`components/Enlace.tsx`). `<Link>` pide a Next.js, al pasar el cursor y al hacer clic, una versión especial de la página que se arma en cada petición y no se puede guardar. Con un enlace normal cada clic carga la página completa, que llega guardada. Se ve igual; el panel sigue usando `<Link>`.
 - **Política de contenido (CSP) con valor nuevo en cada visita**, también en las páginas guardadas: el Worker reemplaza el valor solo en las etiquetas que Next.js marcó (`[nonce]`), con el motor de Cloudflare (`HTMLRewriter`). Un texto del contenido nunca gana permiso para ejecutarse.
 - **Las fotos públicas se firman por 26 horas** (antes 2), para que nunca venzan dentro de una página guardada (máximo 24 horas). Una foto retirada desaparece del sitio al instante; solo quien ya tenía su dirección puede abrirla hasta que venza. Las vistas previas del panel siguen en 2 horas.
+- **El logo se entrega como archivo estático** (`unoptimized`). Con la optimización de Next.js, cada visita pedía además `/_next/image`, que en Cloudflare pasa por el Worker (sin el servicio pagado de imágenes entrega el mismo PNG) y gasta del límite de 100.000 solicitudes diarias.
+- **Cada despliegue usa sus propias páginas guardadas** (`version_metadata` en `wrangler.jsonc`). Sin esto, después de publicar código nuevo se entregarían páginas armadas con el código anterior.
+- **Mantenimiento con estado 503 también en Cloudflare.** OpenNext perdía el 503 que pone `proxy.ts` y respondía 200; el Worker lo repone.
+- **El panel no se arma al compilar** (`dynamic = 'force-dynamic'` en `app/admin/layout.tsx`). Cloudflare compila sin las claves de Supabase y `/admin/verificar` hacía fallar la compilación.
 - **Cabeceras de seguridad en los archivos estáticos.** En Cloudflare los estáticos no pasan por Next.js; `npm run cf:build` genera `_headers` desde la misma fuente que usa Next.js (`scripts/cabeceras-estaticas.mjs`). Era la falla que encontró la corrida de Playwright contra el Worker.
 
 ### Qué no se guarda
@@ -33,21 +37,25 @@ Lógica: `app/src/lib/paginas-guardadas.ts`. El espacio de KV `PAGINAS` se crea 
 
 `app/scripts/medir-procesador.mjs` mide el procesador de todos los procesos `workerd` (el motor de Cloudflare) durante N visitas seguidas a cada página. En local eso incluye el proxy de `wrangler dev`, que mueve los bytes de cada respuesta y que en Cloudflare no se cobra: un archivo estático de 112 KB, que en Cloudflare no ejecuta el Worker, marca 6,8 ms en local. Por eso el script da dos columnas: **Total** (todo, cota superior) y **Neto** (el total menos lo que marca `wrangler dev` con un archivo estático del mismo tamaño). El Neto todavía incluye el KV simulado de `wrangler dev` (~1,5 ms) y la consulta a la base.
 
-Promedio de 60 visitas, misma máquina, 17 de noviembre:
+Promedio de 60 visitas, misma máquina, 17 de noviembre (última corrida, con todos los cambios):
 
 | Página | Antes (armada en cada visita) | Ahora, total | Ahora, neto |
 |---|---|---|---|
-| Inicio | 36 ms | 10,0 ms | 5,9 ms |
-| Nosotros | 24,5 ms | 7,5 ms | 5,1 ms |
-| Eventos | 26 ms | 8,7 ms | 5,6 ms |
-| Actividad | 33 ms | 9,2 ms | 4,7 ms |
-| Artículos | 27 ms | 9,0 ms | 5,7 ms |
-| Artículo | 25,5 ms | 8,5 ms | 5,5 ms |
-| Artículos filtrados por serie o tema | 23,5 ms | 8,5–8,7 ms | 5,2–6,0 ms |
-| Galería (y filtrada) | 27,5 ms | 8,3–8,5 ms | 4,6–4,7 ms |
-| Álbum | 28 ms | 8,5 ms | 5,0 ms |
-| Mapa del sitio, robots, mantenimiento | 8–15 ms | 5,8–7,3 ms | 5,7–5,9 ms |
+| Inicio | 36 ms | 10,3 ms | 5,9 ms |
+| Nosotros | 24,5 ms | 9,5 ms | 6,5 ms |
+| Eventos | 26 ms | 9,3 ms | 5,8 ms |
+| Actividad | 33 ms | 10,2 ms | 5,4 ms |
+| Artículos | 27 ms | 9,5 ms | 5,7 ms |
+| Artículo | 25,5 ms | 9,0 ms | 5,5 ms |
+| Artículos de una serie | 23,5 ms | 9,3 ms | 6,1 ms |
+| Galería (y filtrada por año) | 27,5 ms | 9,2–9,3 ms | 5,0–5,1 ms |
+| Álbum | 28 ms | 9,2 ms | 5,2 ms |
+| Mapa del sitio, robots, mantenimiento | 8–15 ms | 6,7–8,2 ms | 5,6–5,9 ms |
 | Panel · Ingresar (no se guarda) | 19 ms | 19 ms | — |
+
+Las cifras varían ±1 ms entre corridas. El «total» de Inicio y Actividad roza los 10 ms solo porque son las páginas más pesadas y `wrangler dev` cobra por mover bytes; en Cloudflare esa parte no existe.
+
+**El aspecto no cambió:** capturas de página completa de 10 páginas (incluida la 404), en escritorio (1440 px) y celular (390 px), son idénticas píxel a píxel entre el Worker y Next.js directo.
 
 El workflow «Pruebas» compila el Worker, corre `scripts/probar-worker.mjs` (páginas guardadas, valor nuevo de la CSP en cada visita, cambios al instante, mantenimiento, redirecciones, panel y búsquedas sin guardar, cabeceras de los estáticos) y vuelve a medir: **falla si una página guardada llega a 10 ms neto.** El resultado queda en el resumen de cada ejecución.
 

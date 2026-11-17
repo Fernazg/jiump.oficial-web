@@ -42,7 +42,7 @@ npx supabase db push
 
 🔒 **Directiva** (crea la cuenta a nombre de JIUMP). Sin costo.
 
-Límites del plan gratuito: 10 ms de procesador por solicitud, 100.000 solicitudes al día y un Worker de hasta 3 MB comprimido. **El sitio público cabe:** el Worker entrega cada página pública ya armada sin pasar por Next.js, y en el motor de Cloudflare cada página guardada gasta entre 4,6 y 6 ms (medido en local; detalle y método en `docs/cloudflare.md`). El workflow «Pruebas» lo vuelve a medir en cada cambio y falla si una página llega a 10 ms.
+Límites del plan gratuito: 10 ms de procesador por solicitud, 100.000 solicitudes al día y un Worker de hasta 3 MB comprimido. **El sitio público cabe:** el Worker entrega cada página pública ya armada sin pasar por Next.js, y en el motor de Cloudflare cada página guardada gasta entre 5 y 6,5 ms (medido en local; detalle y método en `docs/cloudflare.md`). El workflow «Pruebas» lo vuelve a medir en cada cambio y falla si una página llega a 10 ms.
 
 Dos avisos:
 

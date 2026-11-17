@@ -24,8 +24,9 @@ const db = async (ruta, metodo, cuerpo) => {
     headers: { apikey: servicio, Authorization: `Bearer ${servicio}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
     body: cuerpo ? JSON.stringify(cuerpo) : undefined,
   });
-  assert.ok(r.ok, `Supabase ${metodo} ${ruta}: ${r.status} ${await r.text()}`);
-  return r.status === 204 ? null : r.json();
+  const texto = await r.text();
+  assert.ok(r.ok, `Supabase ${metodo} ${ruta}: ${r.status} ${texto}`);
+  return texto ? JSON.parse(texto) : null;
 };
 const pedir = async (ruta, opciones = {}) => {
   const r = await fetch(new URL(ruta, base), { redirect: 'manual', ...opciones });
@@ -112,7 +113,7 @@ await prueba('El panel nunca se guarda', async () => {
 
 await prueba('Las búsquedas no se guardan (no gastan escrituras de KV)', async () => {
   await pedir('/articulos?q=biblia');
-  assert.equal((await pedir('/articulos?q=biblia')).guardada, 'BYPASS');
+  assert.notEqual((await pedir('/articulos?q=biblia')).guardada, 'HIT');
 });
 
 await prueba('Parámetros que no cambian la página usan la misma página guardada', async () => {

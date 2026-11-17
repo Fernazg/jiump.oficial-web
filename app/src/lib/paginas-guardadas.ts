@@ -41,6 +41,8 @@ export const CABECERA_DIAGNOSTICO = 'x-jiump-pagina';
 
 /** Lo mínimo del entorno del Worker que se usa aquí. */
 export type EntornoGuardado = {
+  /** Identifica cada despliegue del Worker (wrangler.jsonc › version_metadata). */
+  CF_VERSION_METADATA?: { id?: string };
   SUPABASE_URL?: string;
   SUPABASE_ANON_KEY?: string;
   PAGINAS?: {
@@ -113,10 +115,15 @@ export function direccionGuardada(url: URL): string {
   return q ? `${url.pathname}?${q}` : url.pathname;
 }
 
-async function claveDe(version: string, url: URL): Promise<string> {
+/**
+ * La clave lleva el despliegue y la versión del contenido. Sin el despliegue,
+ * después de publicar código nuevo se seguirían entregando páginas armadas con
+ * el código anterior, que apuntan a archivos de /_next/static que ya no existen.
+ */
+async function claveDe(despliegue: string, version: string, url: URL): Promise<string> {
   const datos = new TextEncoder().encode(direccionGuardada(url));
   const huella = new Uint8Array(await crypto.subtle.digest('SHA-256', datos));
-  return `${PREFIJO}${version}:${[...huella].map((b) => b.toString(16).padStart(2, '0')).join('')}`;
+  return `${PREFIJO}${despliegue}:${version}:${[...huella].map((b) => b.toString(16).padStart(2, '0')).join('')}`;
 }
 
 /** Cabeceras de una página entregada desde lo guardado: las mismas que pone Next.js. */
@@ -142,6 +149,18 @@ function conNonceNuevo(cuerpo: ReadableStream, nonce: string, tipo: string): Rea
     .transform(new Response(cuerpo));
 }
 
+/**
+ * En mantenimiento, proxy.ts muestra la página de mantenimiento con estado 503,
+ * pero el adaptador OpenNext pierde ese estado y responde 200: los buscadores
+ * guardarían la página de mantenimiento como si fuera el sitio. Se repone aquí.
+ */
+function conEstadoMantenimiento(respuesta: Response, ruta: string): Response {
+  if (ruta === '/mantenimiento' || respuesta.status !== 200 || !(respuesta.headers.get('content-type') ?? '').startsWith('text/html')) return respuesta;
+  const h = new Headers(respuesta.headers);
+  h.set('Retry-After', '3600');
+  return new Response(respuesta.body, { status: 503, headers: h });
+}
+
 type Siguiente = (request: Request) => Promise<Response>;
 type Contexto = { waitUntil(p: Promise<unknown>): void };
 
@@ -158,9 +177,12 @@ export async function atenderConPaginaGuardada(request: Request, entorno: Entorn
   if (!rutas) return siguiente(request);
   const estado = await estadoSitio(entorno, rutas);
   // Sin respuesta de la base, mantenimiento o redirección: lo resuelve Next.js (proxy.ts), como siempre.
-  if (!estado || estado.mantenimiento || estado.redireccion) return siguiente(request);
+  if (estado?.mantenimiento) return conEstadoMantenimiento(await siguiente(request), url.pathname);
+  if (!estado || estado.redireccion) return siguiente(request);
 
-  const clave = await claveDe(estado.version, url);
+  const despliegue = entorno.CF_VERSION_METADATA?.id;
+  if (!despliegue) return siguiente(request);
+  const clave = await claveDe(despliegue, estado.version, url);
   const guardada = await kv.getWithMetadata<Metadatos>(clave, { type: 'stream' }).catch(() => null);
   if (guardada?.value && guardada.metadata && Date.now() - guardada.metadata.creada < SEGUNDOS_PAGINA_GUARDADA * 1000) {
     const { estado: status, tipo } = guardada.metadata;

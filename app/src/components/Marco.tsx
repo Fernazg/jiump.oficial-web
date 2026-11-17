@@ -35,7 +35,8 @@ export async function Encabezado({ acento, items: previa }: { acento?: 'rojo'; i
     <header className={`sticky top-0 z-40 bg-white/95 backdrop-blur ${acento === 'rojo' ? 'border-b-2 border-rojo' : 'border-b border-linea'}`}>
       <div className="contenedor relative flex h-[76px] items-center justify-between">
         <Link href="/" aria-label="JIUMP · Inicio" className="shrink-0">
-          <Image src="/marca/logo-jiump.png" alt="JIUMP" width={64} height={57} priority />
+          {/* unoptimized: se entrega como archivo estático. En Cloudflare, /_next/image pasaría por el Worker en cada visita. */}
+          <Image src="/marca/logo-jiump.png" alt="JIUMP" width={64} height={57} priority unoptimized />
         </Link>
         <Navegacion items={items.map((i) => ({ etiqueta: i.etiqueta, url: i.url }))} />
       </div>
@@ -55,7 +56,7 @@ export async function Pie({ items: previa }: { items?: ItemMenu[] } = {}) {
       <div className="franja" />
       <div className="contenedor grid gap-10 py-16 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr]">
         <div>
-          <Image src="/marca/logo-jiump.png" alt="JIUMP" width={108} height={96} />
+          <Image src="/marca/logo-jiump.png" alt="JIUMP" width={108} height={96} unoptimized />
           <p className="mt-4 max-w-[400px] text-texto-2">{LEMA}</p>
         </div>
         <div>
