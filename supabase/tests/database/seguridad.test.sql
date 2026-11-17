@@ -301,13 +301,13 @@ select is((select count(*)::int from pg_proc p join pg_namespace n on n.oid = p.
 select set_eq(
   $$ select p.proname::text from pg_proc p join pg_namespace n on n.oid = p.pronamespace
      where n.nspname = 'public' and has_function_privilege('anon', p.oid, 'execute') $$,
-  array['articulo_es_visible', 'buscar_articulos', 'es_equipo', 'es_slug_valido', 'foto_es_publica',
+  array['articulo_es_visible', 'buscar_articulos', 'es_equipo', 'es_slug_valido', 'estado_sitio', 'foto_es_publica',
         'objeto_foto_es_publico', 'sin_tildes', 'texto_de_bloques', 'tiene_algun_rol', 'tiene_rol'],
-  '4 · Anónimo solo ejecuta las funciones que necesitan las políticas y la búsqueda');
+  '4 · Anónimo solo ejecuta las funciones que necesitan las políticas, la búsqueda y el Worker (estado_sitio)');
 select is((select array_agg(p.proname::text order by p.proname) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
            where n.nspname = 'public' and p.prosecdef and has_function_privilege('authenticated', p.oid, 'execute')
              and p.proname not in ('es_equipo', 'tiene_rol', 'tiene_algun_rol', 'mis_roles', 'foto_es_publica', 'objeto_foto_es_publico',
-                                 'usos_fotos', 'usuarios_panel')), -- usos_fotos: migración 9, oculta títulos sin permiso (ver fotos_eventos.test.sql)
+                                 'usos_fotos', 'usuarios_panel', 'estado_sitio')), -- estado_sitio: migración version_sitio (ver version_sitio.test.sql); usos_fotos: migración 9, oculta títulos sin permiso (ver fotos_eventos.test.sql)
   null, '4 · Ninguna otra función SECURITY DEFINER (triggers, purga) es ejecutable desde la API');
 select ok(not exists (select 1 from pg_class c join pg_namespace n on n.oid = c.relnamespace
                       where n.nspname = 'public' and c.relkind in ('r', 'p') and not c.relrowsecurity),

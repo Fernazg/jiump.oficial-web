@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Link from '@/components/Enlace';
 import { AvisoVistaPrevia } from '@/components/AvisoVistaPrevia';
 import { EstadoVacio } from '@/components/Basicos';
 import { IconoImagen } from '@/components/Iconos';

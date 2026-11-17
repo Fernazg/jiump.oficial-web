@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/Enlace';
 import type { ReactNode } from 'react';
 import type { FotoFirmada } from '@/lib/tipos';
 

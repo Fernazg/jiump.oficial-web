@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/Enlace';
 import { EstadoVacio, Flecha, Foto } from '@/components/Basicos';
 import { Bloques, indiceDeBloques } from '@/components/Bloques';
 import { IconoAntorcha, IconoLibro, IconoTexto } from '@/components/Iconos';

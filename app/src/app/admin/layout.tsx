@@ -5,6 +5,13 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+/**
+ * El panel se arma siempre en cada petición (depende de la sesión). Explícito
+ * para que `next build` nunca intente armarlo al compilar: en Cloudflare
+ * (Workers Builds) se compila sin las claves de Supabase.
+ */
+export const dynamic = 'force-dynamic';
+
 /** Todo /admin: fondo gris claro del diseño y sin el encabezado del sitio. */
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (

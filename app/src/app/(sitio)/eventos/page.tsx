@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { AvisoVistaPrevia } from '@/components/AvisoVistaPrevia';
 import { exigirPagina, metadataDePagina } from '@/lib/paginas';
-import Link from 'next/link';
+import Link from '@/components/Enlace';
 import { EstadoVacio, Etiqueta, Flecha, Foto, Pastilla } from '@/components/Basicos';
 import { IconoCalendario, IconoUbicacion } from '@/components/Iconos';
 import { TarjetaActividad } from '@/components/Tarjetas';

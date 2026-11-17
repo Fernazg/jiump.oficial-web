@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { AvisoVistaPrevia } from '@/components/AvisoVistaPrevia';
 import { parametros } from '@/lib/parametros';
 import { exigirPagina, metadataDePagina } from '@/lib/paginas';
-import Link from 'next/link';
+import Link from '@/components/Enlace';
 import { EstadoVacio, Flecha, Foto } from '@/components/Basicos';
 import { IconoAntorcha, IconoBuscar, IconoLibro } from '@/components/Iconos';
 import { FilaArticulo, NumeroParte } from '@/components/Tarjetas';

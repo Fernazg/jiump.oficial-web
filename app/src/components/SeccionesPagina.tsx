@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/Enlace';
 import { boton, lista, objeto, texto } from '@/lib/secciones';
 import type { FotoFirmada, Institucional, SeccionPagina } from '@/lib/tipos';
 import { Etiqueta, Flecha, Foto } from './Basicos';

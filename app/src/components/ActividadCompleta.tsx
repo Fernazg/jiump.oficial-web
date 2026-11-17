@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/Enlace';
 import { Flecha, Foto, Pastilla } from '@/components/Basicos';
 import { Bloques } from '@/components/Bloques';
 import { IconoCalendario, IconoUbicacion, IconoVideo } from '@/components/Iconos';

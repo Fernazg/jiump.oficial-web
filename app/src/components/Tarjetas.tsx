@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/Enlace';
 import { dosDigitos, etiquetaActividad, recortar } from '@/lib/formato';
 import type { Actividad, Album, Articulo, FotoFirmada, Serie } from '@/lib/tipos';
 import { Flecha, Foto, Pastilla } from './Basicos';

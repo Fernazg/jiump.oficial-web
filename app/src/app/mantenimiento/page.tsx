@@ -24,7 +24,7 @@ export default async function Mantenimiento() {
       <div className="franja" />
       <main className="contenedor grid flex-1 items-center gap-12 py-16 lg:grid-cols-2">
         <div>
-          <Image src="/marca/logo-jiump.png" alt="JIUMP" width={92} height={82} priority />
+          <Image src="/marca/logo-jiump.png" alt="JIUMP" width={92} height={82} priority unoptimized />
           <p className="mt-7 inline-flex items-center gap-2 rounded-full bg-azul-claro px-3 py-1.5 font-ui text-[14px] font-semibold text-azul-oscuro">
             <IconoHerramienta tam={14} /> Sitio en mantenimiento
           </p>

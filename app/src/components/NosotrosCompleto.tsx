@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/Enlace';
 import { Fragment } from 'react';
 import { EstadoVacio, Etiqueta, Flecha, Foto } from '@/components/Basicos';
 import { IconoLibro } from '@/components/Iconos';
