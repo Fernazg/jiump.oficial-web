@@ -51,4 +51,6 @@ jobs:
 
       - name: Aplicar las migraciones pendientes
         # --remote: sin esto, la CLI apunta a la base local, que aquí no existe.
-        run: npx --yes ${{ env.SUPABASE_CLI }} db push --remote
+        # --yes: la CLI pide confirmación y en un workflow no hay quién responda.
+        # La confirmación real es lanzar este workflow a mano.
+        run: npx --yes ${{ env.SUPABASE_CLI }} db push --remote --yes
