@@ -112,6 +112,13 @@ Las claves locales las entrega `supabase status`; **nunca** se copian al reposit
 - **Migración 11 · mínimo dos superadmins:** `proteger_ultimo_superadmin()` ahora exige dos activos al quitar un rol o desactivar a alguien (agregar nunca se bloquea). Desactivar a quien no es superadmin, o quitar el rol a alguien ya desactivado, no cuenta.
 - Pruebas por rol (`sitio_usuarios.test.sql`): Editor, Eventos y Multimedia no pueden editar páginas, menú, institucional, configuración, redirecciones ni roles, ni leer usuarios o el registro; con un control que verifica que el Superadmin sí puede.
 
+### Permisos explícitos de la API (migración `20261118000100_permisos_explicitos`)
+
+- **Producción no da permisos por defecto.** El proyecto en la nube se creó con «exponer automáticamente nuevas tablas» desactivado: lo que crean las migraciones no recibe ningún GRANT para `anon`, `authenticated` ni `service_role`. El sitio fallaba con «permission denied for table menu».
+- La migración otorga a esos tres roles **exactamente** los permisos efectivos que tenía la base local (tablas, columnas, esquema y EXECUTE de funciones), generados con `scripts/generar-permisos.sql`. Respeta todos los REVOKE anteriores; la RLS no cambia.
+- **La base local ahora parte igual que producción:** `roles.sql` (la CLI lo aplica antes de las migraciones) quita los permisos por defecto en `public`. La prueba `tests/permisos/probar-permisos.sh` (en el workflow) compara los permisos con `tests/permisos/esperados.tsv`.
+- **Cada tabla, vista o función nueva necesita sus GRANT explícitos en su migración.** Si faltan, fallan esa prueba y las del sitio, en local y en el workflow, antes de llegar a producción.
+
 ## Puesta en producción (cuando se autorice)
 
 Solo en el plan gratuito y con autorización de la directiva:
