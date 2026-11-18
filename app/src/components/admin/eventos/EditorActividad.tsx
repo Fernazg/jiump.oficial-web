@@ -3,15 +3,17 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { AccionesPublicacion } from '@/components/admin/AccionesPublicacion';
+import { ConfirmarLocal } from '@/components/admin/ConfirmarLocal';
 import { type BloqueEditable, CamposBloque } from '@/components/admin/editor/CamposBloque';
 import { type FotoBiblioteca, SelectorFoto } from '@/components/admin/editor/SelectorFoto';
 import { guardarActividad, type DatosActividad } from '@/lib/admin/acciones-contenido';
 import { bloqueVacio, nombreBloque, TIPOS_BLOQUE, type TipoBloque } from '@/lib/admin/bloques';
+import { idYoutube } from '@/lib/formato';
 import type { Bloque } from '@/lib/tipos';
 import { ListaFotos } from './ListaFotos';
 
 type Seccion = { k: string; titulo: string; bloques: { k: string; b: BloqueEditable }[] };
-type Enlace = { k: string; titulo: string; url: string };
+type Enlace = { k: string; titulo: string; url: string; portada: string | null };
 
 let n = 0;
 const clave = () => `c${++n}`;
@@ -25,7 +27,7 @@ const AVISOS: Record<string, string> = {
 
 export function EditorActividad(p: {
   id: string;
-  inicial: Omit<DatosActividad, 'secciones' | 'enlaces'> & { secciones: { titulo: string; contenido: Bloque[] }[]; enlaces: { titulo: string; url: string }[] };
+  inicial: Omit<DatosActividad, 'secciones' | 'enlaces'> & { secciones: { titulo: string; contenido: Bloque[] }[]; enlaces: { titulo: string; url: string; portada_foto_id?: string | null }[] };
   version: string;
   estado: 'borrador' | 'publicado' | 'archivado';
   previaAlDia: boolean;
@@ -43,7 +45,7 @@ export function EditorActividad(p: {
       secciones: s0.map((s) => ({
         k: clave(), titulo: s.titulo, bloques: (Array.isArray(s.contenido) ? s.contenido : []).map((b) => ({ k: clave(), b: b as BloqueEditable })),
       })) as Seccion[],
-      enlaces: e0.map((e) => ({ k: clave(), ...e })) as Enlace[],
+      enlaces: e0.map((e) => ({ k: clave(), titulo: e.titulo, url: e.url, portada: e.portada_foto_id ?? null })) as Enlace[],
     };
   };
   const [d, setD] = useState(() => desdeInicial().d);
@@ -53,7 +55,7 @@ export function EditorActividad(p: {
   const [sucio, setSucio] = useState(false);
   const [estadoGuardar, setEstadoGuardar] = useState<'al-dia' | 'guardando' | 'error' | 'conflicto'>('al-dia');
   const [error, setError] = useState<string | null>(null);
-  const [elegir, setElegir] = useState<null | { para: 'actividad' } | { para: 'bloque'; seccion: string; bloque: string }>(null);
+  const [elegir, setElegir] = useState<null | { para: 'actividad' } | { para: 'bloque'; seccion: string; bloque: string } | { para: 'enlace'; enlace: string }>(null);
   const [listo, setListo] = useState(false);
   const version = useRef(p.version);
   // Si lo guardado cambia (publicar, descartar, guardar), el formulario vuelve a lo guardado.
@@ -82,7 +84,7 @@ export function EditorActividad(p: {
     const r = await guardarActividad(p.id, {
       ...d,
       secciones: secciones.map((s) => ({ titulo: s.titulo, contenido: s.bloques.map((x) => x.b) })),
-      enlaces: enlaces.map(({ titulo, url }) => ({ titulo, url })),
+      enlaces: enlaces.map(({ titulo, url, portada }) => ({ titulo, url, portada_foto_id: portada })),
     }, version.current);
     if (r.ok) {
       version.current = r.version;
@@ -238,17 +240,52 @@ export function EditorActividad(p: {
       <div className="flex flex-col gap-3" data-enlaces>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-[15px] font-semibold">Videos y transmisiones ({enlaces.length})</h3>
-          <button type="button" className="adm-mini adm-mini-azul" onClick={() => cambiarEnlaces((e) => [...e, { k: clave(), titulo: '', url: '' }])}>+ Agregar enlace</button>
+          <button type="button" className="adm-mini adm-mini-azul" onClick={() => cambiarEnlaces((e) => [...e, { k: clave(), titulo: '', url: '', portada: null }])}>+ Agregar enlace</button>
         </div>
-        {enlaces.map((e, i) => (
-          <div key={e.k} className="grid gap-2 sm:grid-cols-[1fr_1.4fr_auto]" data-enlace>
-            <input className="adm-campo" aria-label={`Título del enlace ${i + 1}`} placeholder="Ej.: Transmisión Día 1" value={e.titulo}
-              onChange={(ev) => cambiarEnlaces((xs) => xs.map((x) => (x.k === e.k ? { ...x, titulo: ev.target.value } : x)))} />
-            <input className="adm-campo" aria-label={`Dirección del enlace ${i + 1}`} placeholder="https://youtube.com/…" value={e.url}
-              onChange={(ev) => cambiarEnlaces((xs) => xs.map((x) => (x.k === e.k ? { ...x, url: ev.target.value } : x)))} />
-            <button type="button" className="adm-mini adm-mini-rojo" aria-label={`Quitar enlace ${i + 1}`} onClick={() => cambiarEnlaces((xs) => xs.filter((x) => x.k !== e.k))}>✕</button>
-          </div>
-        ))}
+        {enlaces.map((e, i) => {
+          const foto = e.portada ? catalogo.find((f) => f.id === e.portada) : undefined;
+          const yt = idYoutube(e.url.trim());
+          const cambiarEste = (c: Partial<Enlace>) => cambiarEnlaces((xs) => xs.map((x) => (x.k === e.k ? { ...x, ...c } : x)));
+          return (
+            <div key={e.k} className="flex flex-col gap-2.5 rounded-[14px] border border-linea p-3.5" data-enlace>
+              <div className="flex items-center gap-2">
+                <input className="adm-campo min-w-0 flex-1" aria-label={`Título del enlace ${i + 1}`} placeholder="Ej.: Transmisión Día 1" value={e.titulo}
+                  onChange={(ev) => cambiarEste({ titulo: ev.target.value })} />
+                <ConfirmarLocal boton="Quitar" claseBoton="adm-mini adm-mini-rojo shrink-0" etiqueta={`Quitar enlace ${i + 1}`}
+                  titulo={`¿Quitar «${e.titulo.trim() || `enlace ${i + 1}`}»?`}
+                  alConfirmar={() => cambiarEnlaces((xs) => xs.filter((x) => x.k !== e.k))}>
+                  Deja de aparecer en la actividad cuando guardes. El video sigue en YouTube.
+                </ConfirmarLocal>
+              </div>
+              <input className="adm-campo" aria-label={`Dirección del enlace ${i + 1}`} placeholder="https://youtube.com/…" value={e.url}
+                onChange={(ev) => cambiarEste({ url: ev.target.value })} />
+              <div className="flex flex-wrap items-center gap-3" data-portada-enlace={e.portada ? 'propia' : yt ? 'youtube' : 'ninguna'}>
+                {foto ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- URL firmada (bucket privado)
+                  <img src={foto.url} alt={foto.texto_alternativo} className="aspect-video w-[128px] rounded-[10px] object-cover" />
+                ) : e.portada ? (
+                  <span className="grid aspect-video w-[128px] place-items-center rounded-[10px] bg-gris-claro text-[12px] text-texto-3">Foto elegida</span>
+                ) : yt ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- miniatura pública de YouTube
+                  <img src={`https://i.ytimg.com/vi/${yt}/hqdefault.jpg`} alt="Miniatura de YouTube" className="aspect-video w-[128px] rounded-[10px] object-cover" />
+                ) : (
+                  <span className="grid aspect-video w-[128px] place-items-center rounded-[10px] bg-gris-claro text-[12px] text-texto-3">Sin portada</span>
+                )}
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[13px] text-texto-2">{e.portada ? 'Portada elegida' : yt ? 'Portada: miniatura de YouTube' : 'Portada (opcional)'}</span>
+                  <div className="flex flex-wrap gap-2">
+                    <button type="button" className="adm-mini adm-mini-azul" aria-label={`${e.portada ? 'Cambiar' : 'Elegir'} portada del enlace ${i + 1}`}
+                      onClick={() => setElegir({ para: 'enlace', enlace: e.k })}>{e.portada ? 'Cambiar portada' : 'Elegir portada'}</button>
+                    {e.portada && (
+                      <button type="button" className="adm-mini adm-mini-gris" aria-label={`Quitar portada del enlace ${i + 1}`}
+                        onClick={() => cambiarEste({ portada: null })}>Quitar portada</button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       <div className="sticky bottom-0 -mx-5 flex flex-wrap items-center gap-3 border-t border-linea bg-white/95 px-5 py-3 backdrop-blur sm:-mx-7 sm:px-7">
@@ -262,12 +299,15 @@ export function EditorActividad(p: {
       </div>
 
       <SelectorFoto fotos={elegir?.para === 'actividad' ? catalogo.filter((f) => !d.fotos.includes(f.id)) : catalogo} abierto={elegir !== null}
-        titulo={elegir?.para === 'actividad' ? 'Agregar fotos a la actividad' : 'Elegir foto'}
+        titulo={elegir?.para === 'actividad' ? 'Agregar fotos a la actividad' : elegir?.para === 'enlace' ? 'Portada del video' : 'Elegir foto'}
         alSubir={(f) => setCatalogo((c) => [f, ...c])}
         onCerrar={() => setElegir(null)}
         onElegir={(fotoId) => {
           if (elegir?.para === 'actividad') {
             if (!d.fotos.includes(fotoId)) cambiar({ fotos: [...d.fotos, fotoId], portada_foto_id: d.portada_foto_id ?? fotoId });
+          } else if (elegir?.para === 'enlace') {
+            const { enlace } = elegir;
+            cambiarEnlaces((xs) => xs.map((x) => (x.k === enlace ? { ...x, portada: fotoId } : x)));
           } else if (elegir?.para === 'bloque') {
             const { seccion, bloque } = elegir;
             cambiarSecciones((xs) => xs.map((y) => (y.k === seccion ? { ...y, bloques: y.bloques.map((z) => (z.k === bloque ? { ...z, b: { ...z.b, foto_id: fotoId } } : z)) } : y)));

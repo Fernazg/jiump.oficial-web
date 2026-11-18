@@ -42,14 +42,14 @@ export default async function VistaPreviaActividad({ params }: { params: Promise
   const d = pendiente
     ? {
         secciones: pendiente.secciones.map((x, i) => ({ id: `s${i}`, titulo: x.titulo, contenido: x.contenido, orden: i })),
-        enlaces: pendiente.enlaces.map((x, i) => ({ id: `e${i}`, titulo: x.titulo, url: x.url, orden: i })),
+        enlaces: pendiente.enlaces.map((x, i) => ({ id: `e${i}`, titulo: x.titulo, url: x.url, orden: i, portada_foto_id: x.portada_foto_id || null })),
         fotoIds: pendiente.fotos, videos: dSitio.videos, albumes: dSitio.albumes,
       }
     : { ...dPanel, videos: dSitio.videos, albumes: dSitio.albumes };
   const otras = todas.filter((a) => a.anio === actividad.anio && a.id !== id).slice(0, 3);
   const fotos = await firmarFotos([
     actividad.portada_foto_id, ...d.fotoIds, ...d.secciones.flatMap((s) => fotosDeBloques(s.contenido)), ...otras.map((a) => a.portada_foto_id),
-    ...d.videos.map((v) => v.portada_foto_id),
+    ...d.videos.map((v) => v.portada_foto_id), ...d.enlaces.map((e) => e.portada_foto_id),
   ], supabase);
 
   return (

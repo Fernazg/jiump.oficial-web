@@ -42,14 +42,14 @@ export async function listarActividades(): Promise<FilaActividad[]> {
 }
 
 export type SeccionEditable = { titulo: string; contenido: Bloque[] };
-export type EnlaceEditable = { titulo: string; url: string };
+export type EnlaceEditable = { titulo: string; url: string; portada_foto_id?: string | null };
 
 export async function actividadParaEditar(id: string) {
   const supabase = await clientePanel();
   const [a, s, e, f] = await Promise.all([
     supabase.from('actividades').select(COLUMNAS).eq('id', id).maybeSingle(),
     supabase.from('actividad_secciones').select('titulo, contenido').eq('actividad_id', id).order('orden'),
-    supabase.from('actividad_enlaces').select('titulo, url').eq('actividad_id', id).order('orden'),
+    supabase.from('actividad_enlaces').select('titulo, url, portada_foto_id').eq('actividad_id', id).order('orden'),
     supabase.from('actividad_fotos').select('foto_id').eq('actividad_id', id).order('orden'),
   ]);
   if (!a.data) return null;

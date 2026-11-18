@@ -87,7 +87,7 @@ export type DatosActividad = {
   lema: string; cita_texto: string; cita_referencia: string; abreviatura: string; destacar_inicio: boolean;
   portada_foto_id: string | null; fotos: string[];
   secciones: { titulo: string; contenido: unknown }[];
-  enlaces: { titulo: string; url: string }[];
+  enlaces: { titulo: string; url: string; portada_foto_id?: string | null }[];
 };
 
 export async function guardarActividad(id: string, d: DatosActividad, version: string): Promise<ResultadoGuardar> {
@@ -113,7 +113,8 @@ export async function guardarActividad(id: string, d: DatosActividad, version: s
     .filter((s) => s.titulo || s.contenido.length);
   if (secciones.some((s) => !s.titulo)) return { ok: false, error: 'Cada sección necesita un título (ej.: Día 1).' };
   const enlaces = (Array.isArray(d.enlaces) ? d.enlaces : []).slice(0, 30)
-    .map((e) => ({ titulo: t(e?.titulo, 200), url: t(e?.url, 500) })).filter((e) => e.titulo || e.url);
+    .map((e) => ({ titulo: t(e?.titulo, 200), url: t(e?.url, 500), portada_foto_id: esUuid(e?.portada_foto_id) ? e.portada_foto_id! : '' }))
+    .filter((e) => e.titulo || e.url);
   if (enlaces.some((e) => !/^https:\/\//.test(e.url))) return { ok: false, error: 'Los enlaces deben empezar con https://' };
   if (enlaces.some((e) => !e.titulo)) return { ok: false, error: 'Cada enlace necesita un título (ej.: Transmisión Día 1).' };
   const fotos = [...new Set((d.fotos ?? []).filter(esUuid))].slice(0, 300);

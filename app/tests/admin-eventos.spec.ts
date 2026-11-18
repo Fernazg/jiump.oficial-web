@@ -123,6 +123,76 @@ test('Eventos crea una actividad completa; no se ve hasta publicarla con vista p
   expect(guardada).toEqual({ abreviatura: 'PRB', lema: 'Lema de prueba', lugar: 'Lugar de prueba', zona: 'Zona de prueba', cita_referencia: 'Juan 3:16' });
 });
 
+test('videos de la actividad: portada desde la biblioteca, «Quitar» con confirmación y reproductor solo al tocar', async ({ page }) => {
+  await page.route(/youtube-nocookie\.com|ytimg\.com/, (r) => r.abort()); // sin depender de YouTube
+  await ingresar(page, u.eventos);
+  const titulo = `Actividad con videos ${marca}`;
+  await nueva(page, titulo);
+  await page.getByLabel('Año (obligatorio)').fill('2027');
+
+  await page.getByRole('button', { name: '+ Agregar enlace' }).click();
+  await page.getByLabel('Título del enlace 1').fill('Transmisión Día 1');
+  await page.getByLabel('Dirección del enlace 1').fill('https://www.youtube.com/watch?v=XIn6jmUKxH0');
+  await page.getByRole('button', { name: '+ Agregar enlace' }).click();
+  await page.getByLabel('Título del enlace 2').fill('Transmisión Día 2');
+  await page.getByLabel('Dirección del enlace 2').fill('https://youtu.be/dQw4w9WgXcQ');
+  const enlace1 = page.locator('[data-enlace]').first();
+
+  // Sin portada: el formulario muestra la miniatura de YouTube
+  await expect(enlace1.locator('[data-portada-enlace]')).toHaveAttribute('data-portada-enlace', 'youtube');
+  await expect(enlace1.locator('[data-portada-enlace] img')).toHaveAttribute('src', 'https://i.ytimg.com/vi/XIn6jmUKxH0/hqdefault.jpg');
+
+  // Portada: se sube una foto nueva desde el selector (queda en la biblioteca y elegida)
+  await enlace1.getByRole('button', { name: 'Elegir portada del enlace 1' }).click();
+  await expect(page.getByRole('dialog', { name: 'Portada del video' })).toBeVisible();
+  await subirAlSelector(page, FOTO_A, `Portada de transmisión ${marca}`);
+  await expect(enlace1.locator('[data-portada-enlace]')).toHaveAttribute('data-portada-enlace', 'propia', { timeout: 60_000 });
+  await expect(enlace1.locator('[data-portada-enlace] img')).toHaveAttribute('alt', `Portada de transmisión ${marca}`);
+
+  // «Quitar» es un botón pequeño junto al título, y pide confirmación
+  const quitar = page.getByRole('button', { name: 'Quitar enlace 2' });
+  const [boton, campo] = [await quitar.boundingBox(), await page.getByLabel('Título del enlace 2').boundingBox()];
+  expect(boton!.width).toBeLessThan(120);
+  expect(Math.abs(boton!.y + boton!.height / 2 - (campo!.y + campo!.height / 2))).toBeLessThan(6); // misma fila que el título
+  await expect(quitar).toHaveText('Quitar');
+  await quitar.click();
+  const dialogo = page.getByRole('dialog', { name: '¿Quitar «Transmisión Día 2»?' });
+  await expect(dialogo).toContainText('El video sigue en YouTube');
+  await dialogo.getByRole('button', { name: 'Cancelar' }).click();
+  await expect(page.locator('[data-enlace]')).toHaveCount(2);
+  await quitar.click();
+  await dialogo.getByRole('button', { name: 'Sí, quitar' }).click();
+  await expect(page.locator('[data-enlace]')).toHaveCount(1);
+  await guardar(page);
+
+  const a = await leer(titulo);
+  const enlaces = await admin<{ titulo: string; portada_foto_id: string | null }[]>(`actividad_enlaces?actividad_id=eq.${a.id}&select=titulo,portada_foto_id`);
+  expect(enlaces).toHaveLength(1);
+  expect(enlaces[0].titulo).toBe('Transmisión Día 1');
+  expect(enlaces[0].portada_foto_id).toBeTruthy();
+  await expect(page.locator('[data-enlace] [data-portada-enlace]')).toHaveAttribute('data-portada-enlace', 'propia'); // sigue elegida tras guardar
+
+  // Vista previa y publicación
+  await page.getByRole('button', { name: 'Vista previa' }).click();
+  await expect(page.locator('[data-vista-previa-contenido] [data-video="XIn6jmUKxH0"]')).toHaveAttribute('data-video-portada', 'propia');
+  await page.getByRole('button', { name: 'Publicar ahora' }).click();
+  await expect(page).toHaveURL(/aviso=publicado/);
+
+  // En el sitio (sin sesión): portada con botón; el reproductor se carga solo al tocarla
+  const visitante = await page.context().browser()!.newPage();
+  await visitante.route(/youtube-nocookie\.com|ytimg\.com/, (r) => r.abort());
+  await visitante.goto(`/eventos/${a.slug}`);
+  const video = visitante.locator('[data-seccion="videos"] [data-video="XIn6jmUKxH0"]');
+  await expect(video).toHaveAttribute('data-video-portada', 'propia');
+  await expect(video).toHaveAccessibleName('Reproducir el video: Transmisión Día 1');
+  await expect(video.locator('img')).toHaveJSProperty('complete', true);
+  expect(await video.locator('img').evaluate((e: HTMLImageElement) => e.naturalWidth)).toBeGreaterThan(0);
+  await expect(visitante.locator('main iframe')).toHaveCount(0);
+  await video.click();
+  await expect(visitante.locator('[data-video-reproductor] iframe')).toHaveAttribute('src', 'https://www.youtube-nocookie.com/embed/XIn6jmUKxH0?autoplay=1');
+  await visitante.close();
+});
+
 test('validaciones: año obligatorio y coherente, cita con referencia', async ({ page }) => {
   await ingresar(page, u.eventos);
   await nueva(page, `Actividad validaciones ${marca}`);

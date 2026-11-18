@@ -3,6 +3,7 @@ columna	actividad_enlaces.actualizado_en	anon	SELECT
 columna	actividad_enlaces.creado_en	anon	SELECT
 columna	actividad_enlaces.id	anon	SELECT
 columna	actividad_enlaces.orden	anon	SELECT
+columna	actividad_enlaces.portada_foto_id	anon	SELECT
 columna	actividad_enlaces.titulo	anon	SELECT
 columna	actividad_enlaces.url	anon	SELECT
 columna	actividad_fotos.actividad_id	anon	SELECT
