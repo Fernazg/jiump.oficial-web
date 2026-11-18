@@ -96,7 +96,7 @@ export type Album = {
 
 export type Video = { id: string; url: string; titulo: string; descripcion: string | null; album_id: string | null; actividad_id: string | null; portada_foto_id: string | null };
 
-export type Enlace = { id: string; url: string; titulo: string; orden: number };
+export type Enlace = { id: string; url: string; titulo: string; orden: number; portada_foto_id?: string | null };
 
 export type SeccionActividad = { id: string; titulo: string; contenido: Bloque[]; orden: number };
 

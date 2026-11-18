@@ -33,7 +33,7 @@ export default async function PaginaActividad({ params }: Props) {
   const otras = todas.filter((a) => a.anio === actividad.anio && a.id !== actividad.id).slice(0, 3);
   const fotos = await firmarFotos([
     actividad.portada_foto_id, ...d.fotoIds, ...d.secciones.flatMap((s) => fotosDeBloques(s.contenido)), ...otras.map((a) => a.portada_foto_id),
-    ...d.videos.map((v) => v.portada_foto_id),
+    ...d.videos.map((v) => v.portada_foto_id), ...d.enlaces.map((e) => e.portada_foto_id),
   ]);
 
   const portada = fotos.get(actividad.portada_foto_id ?? '');

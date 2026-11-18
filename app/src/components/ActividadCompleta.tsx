@@ -30,7 +30,7 @@ export function ActividadCompleta({ actividad, d, otras, fotos }: {
   const galeria = d.fotoIds.map((id) => fotos.get(id)).filter((f): f is FotoFirmada => Boolean(f));
   const videos = [
     ...d.videos.map((v) => ({ id: v.id, titulo: v.titulo, url: v.url, portada: fotos.get(v.portada_foto_id ?? '') })),
-    ...d.enlaces.map((e) => ({ id: e.id, titulo: e.titulo, url: e.url, portada: undefined })),
+    ...d.enlaces.map((e) => ({ id: e.id, titulo: e.titulo, url: e.url, portada: fotos.get(e.portada_foto_id ?? '') })),
   ];
   const fecha = fechaActividad(actividad);
   const album = d.albumes[0];
