@@ -130,6 +130,93 @@ test('videos: solo YouTube, quedan ocultos hasta la vista previa y se ven en su 
   await expect(page.getByText('Video eliminado del sitio.')).toBeVisible();
 });
 
+test('videos con portada: se elige de la biblioteca; el sitio muestra la portada (o la miniatura de YouTube) y carga el reproductor solo al tocarla', async ({ page }) => {
+  // Sin depender de YouTube: no se descarga nada de ahí durante la prueba.
+  await page.route(/youtube-nocookie\.com|ytimg\.com/, (r) => r.abort());
+  await ingresar(page, u.multimedia);
+
+  // Video del álbum, con portada elegida desde la biblioteca
+  const conPortada = `Video con portada ${marca}`;
+  await page.goto('/admin/videos/nuevo');
+  await page.locator('form[data-listo]').waitFor();
+  await page.getByLabel('Enlace de YouTube').fill('https://www.youtube.com/watch?v=XIn6jmUKxH0');
+  await page.getByLabel(/^Título/).fill(conPortada);
+  await page.getByLabel('Dónde aparece').selectOption({ label: 'Galería › Convención Nacional 2026' });
+  const campo = page.locator('[data-campo-foto="portada_foto_id"]');
+  await expect(campo).toContainText('Sin foto');
+  await campo.getByRole('button', { name: 'Elegir de la biblioteca' }).click();
+  const elegida = page.getByRole('dialog').locator('[data-biblioteca] button[data-foto]').first();
+  const fotoId = await elegida.getAttribute('data-foto');
+  await elegida.click();
+  await expect(campo.locator(':scope > img')).toBeVisible();
+  await page.getByRole('button', { name: 'Agregar video' }).click();
+  await expect(page.getByText('Video agregado. Está oculto')).toBeVisible();
+  const [v1] = await admin<{ id: string; portada_foto_id: string | null }[]>(`videos?titulo=eq.${encodeURIComponent(conPortada)}&select=id,portada_foto_id`);
+  expect(v1.portada_foto_id).toBe(fotoId);
+  await expect(page.locator('[data-campo-foto="portada_foto_id"] > img')).toBeVisible(); // al volver a editar sigue elegida
+
+  // La vista previa ya muestra la portada, sin reproductor
+  await page.getByRole('link', { name: 'Vista previa' }).click();
+  await expect(page.locator('[data-vista-previa-contenido] [data-video-portada="propia"]')).toBeVisible();
+  await expect(page.locator('[data-vista-previa-contenido] iframe')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Publicar ahora' }).click();
+  await expect(page.getByText('Video publicado en el sitio.')).toBeVisible();
+
+  // Video de una actividad, sin portada: se usa la miniatura de YouTube
+  const sinPortada = `Video sin portada ${marca}`;
+  await page.goto('/admin/videos/nuevo');
+  await page.locator('form[data-listo]').waitFor();
+  await page.getByLabel('Enlace de YouTube').fill('https://youtu.be/dQw4w9WgXcQ');
+  await page.getByLabel(/^Título/).fill(sinPortada);
+  await page.getByLabel('Dónde aparece').selectOption({ label: 'Eventos › Convención Nacional JIUMP 2026' });
+  await page.getByRole('button', { name: 'Agregar video' }).click();
+  await expect(page.getByText('Video agregado. Está oculto')).toBeVisible();
+  await page.getByRole('link', { name: 'Vista previa' }).click();
+  await page.getByRole('button', { name: 'Publicar ahora' }).click();
+  await expect(page.getByText('Video publicado en el sitio.')).toBeVisible();
+
+  // En el sitio (sin sesión): portada propia, firmada y visible para el visitante
+  const visitante = await page.context().browser()!.newPage();
+  await visitante.route(/youtube-nocookie\.com|ytimg\.com/, (r) => r.abort());
+  await visitante.goto('/galeria/convencion-nacional-2026');
+  const video = visitante.locator('[data-video="XIn6jmUKxH0"]');
+  await expect(video).toHaveAttribute('data-video-portada', 'propia');
+  await expect(video).toHaveAttribute('href', 'https://www.youtube.com/watch?v=XIn6jmUKxH0'); // sin JavaScript abre YouTube
+  await expect(video).toHaveAccessibleName(`Reproducir el video: ${conPortada}`);
+  const img = video.locator('img');
+  await expect(img).toHaveJSProperty('complete', true);
+  expect(await img.evaluate((e: HTMLImageElement) => e.naturalWidth)).toBeGreaterThan(0);
+  await expect(visitante.locator('main iframe')).toHaveCount(0); // el reproductor no se carga hasta tocar
+  await video.click();
+  const reproductor = visitante.locator('[data-video-reproductor] iframe');
+  await expect(reproductor).toHaveAttribute('src', 'https://www.youtube-nocookie.com/embed/XIn6jmUKxH0?autoplay=1');
+  await expect(reproductor).toHaveAttribute('title', conPortada);
+
+  // Actividad: miniatura de YouTube; el teclado también lo inicia
+  await visitante.goto('/eventos/convencion-nacional-2026');
+  const otro = visitante.locator('[data-video="dQw4w9WgXcQ"]');
+  await expect(otro).toHaveAttribute('data-video-portada', 'youtube');
+  await expect(otro.locator('img')).toHaveAttribute('src', 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg');
+  await expect(visitante.locator('main iframe')).toHaveCount(0);
+  await otro.focus();
+  await visitante.keyboard.press('Enter');
+  await expect(visitante.locator('[data-video-reproductor] iframe')).toHaveAttribute('src', /youtube-nocookie\.com\/embed\/dQw4w9WgXcQ\?autoplay=1$/);
+  await visitante.close();
+
+  // Quitar la portada de un video publicado queda pendiente hasta publicar los cambios
+  await page.goto(`/admin/videos/${v1.id}`);
+  await page.locator('form[data-listo]').waitFor();
+  await page.locator('[data-campo-foto="portada_foto_id"]').getByRole('button', { name: 'Quitar' }).click();
+  await page.getByRole('button', { name: 'Guardar cambios' }).click();
+  await expect(page.locator('[data-cambios-pendientes]')).toBeVisible();
+  expect((await admin<{ portada_foto_id: string | null }[]>(`videos?id=eq.${v1.id}&select=portada_foto_id`))[0].portada_foto_id).toBe(fotoId);
+  await page.getByRole('link', { name: 'Vista previa' }).click();
+  await expect(page.locator('[data-vista-previa-contenido] [data-video-portada="youtube"]')).toBeVisible();
+  await page.getByRole('button', { name: 'Publicar los cambios' }).click();
+  await expect(page.getByText('Cambios publicados en el sitio.')).toBeVisible();
+  expect((await admin<{ portada_foto_id: string | null }[]>(`videos?id=eq.${v1.id}&select=portada_foto_id`))[0].portada_foto_id).toBeNull();
+});
+
 test('Eventos y Editor no entran a Galerías ni Videos (ni por URL)', async ({ page }) => {
   const [al] = await admin<{ id: string }[]>('albumes?select=id&limit=1');
   for (const x of [u.eventos, u.editor]) {

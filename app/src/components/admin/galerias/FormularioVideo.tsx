@@ -1,14 +1,17 @@
 'use client';
 
 import { useState } from 'react';
+import type { FotoBiblioteca } from '@/components/admin/editor/SelectorFoto';
 import { BotonEnviar, Formulario } from '@/components/admin/Formulario';
+import { FotoConfiguracion } from '@/components/admin/sitio/FotoConfiguracion';
 import { guardarVideo } from '@/lib/admin/acciones-contenido';
 import { idYoutube } from '@/lib/formato';
 
-/** Alta y edición de un video de YouTube, con la miniatura como referencia. */
-export function FormularioVideo({ video, destinos }: {
-  video: { id: string; url: string; titulo: string; descripcion: string; destino: string; version: string } | null;
+/** Alta y edición de un video de YouTube, con portada opcional de la biblioteca y la miniatura de YouTube como referencia. */
+export function FormularioVideo({ video, destinos, catalogo }: {
+  video: { id: string; url: string; titulo: string; descripcion: string; destino: string; version: string; portada: string | null } | null;
   destinos: { valor: string; nombre: string }[];
+  catalogo: FotoBiblioteca[];
 }) {
   const [url, setUrl] = useState(video?.url ?? '');
   const [titulo, setTitulo] = useState(video?.titulo ?? '');
@@ -34,6 +37,8 @@ export function FormularioVideo({ video, destinos }: {
           {destinos.map((d) => <option key={d.valor} value={d.valor}>{d.nombre}</option>)}
         </select>
       </label>
+      <FotoConfiguracion nombre="portada_foto_id" titulo="Portada del video" catalogo={catalogo} inicial={video?.portada ?? null}
+        ayuda="Opcional. Se muestra en el sitio con un botón de reproducir. Sin portada se usa la miniatura de YouTube (abajo)." />
       {valida && (
         // eslint-disable-next-line @next/next/no-img-element -- miniatura pública de YouTube
         <img src={`https://i.ytimg.com/vi/${id}/hqdefault.jpg`} alt="Miniatura del video en YouTube" className="w-full max-w-[360px] rounded-xl" />

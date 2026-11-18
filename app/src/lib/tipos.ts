@@ -94,7 +94,7 @@ export type Album = {
   orden: number;
 };
 
-export type Video = { id: string; url: string; titulo: string; descripcion: string | null; album_id: string | null; actividad_id: string | null };
+export type Video = { id: string; url: string; titulo: string; descripcion: string | null; album_id: string | null; actividad_id: string | null; portada_foto_id: string | null };
 
 export type Enlace = { id: string; url: string; titulo: string; orden: number };
 

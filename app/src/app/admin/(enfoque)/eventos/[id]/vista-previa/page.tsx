@@ -49,6 +49,7 @@ export default async function VistaPreviaActividad({ params }: { params: Promise
   const otras = todas.filter((a) => a.anio === actividad.anio && a.id !== id).slice(0, 3);
   const fotos = await firmarFotos([
     actividad.portada_foto_id, ...d.fotoIds, ...d.secciones.flatMap((s) => fotosDeBloques(s.contenido)), ...otras.map((a) => a.portada_foto_id),
+    ...d.videos.map((v) => v.portada_foto_id),
   ], supabase);
 
   return (

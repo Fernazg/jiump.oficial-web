@@ -33,7 +33,8 @@ export function nuevoNonce(): string {
  * Política de seguridad de contenido (CSP).
  *  · Scripts: solo los del propio sitio marcados con el valor de esta visita.
  *    Un script inyectado (por ejemplo, en un texto) no se ejecuta.
- *  · Fotos: del propio sitio y del almacenamiento de Supabase (URL firmadas).
+ *  · Fotos: del propio sitio, del almacenamiento de Supabase (URL firmadas) y
+ *    las miniaturas de YouTube (i.ytimg.com).
  *  · Videos: solo YouTube en su versión sin cookies.
  *  · Nadie puede enmarcar el sitio, y los formularios solo envían al propio sitio.
  * El panel además necesita WebAssembly (optimiza las fotos en el navegador) y
@@ -49,7 +50,8 @@ export function politicaContenido({ nonce, panel, supabaseUrl, desarrollo = fals
     'script-src': ["'self'", `'nonce-${nonce}'`, "'strict-dynamic'", ...(panel ? ["'wasm-unsafe-eval'"] : []), ...(desarrollo ? ["'unsafe-eval'"] : [])],
     // React escribe estilos en atributos (style="…"); no hay forma de marcarlos uno a uno.
     'style-src': ["'self'", "'unsafe-inline'"],
-    'img-src': ["'self'", ...(almacenamiento ? [almacenamiento] : []), ...(panel ? ['blob:', 'data:'] : [])],
+    // i.ytimg.com: miniatura de YouTube de los videos sin portada propia (el reproductor se carga solo al tocarla).
+    'img-src': ["'self'", ...(almacenamiento ? [almacenamiento] : []), 'https://i.ytimg.com', ...(panel ? ['blob:', 'data:'] : [])],
     'font-src': ["'self'"],
     'connect-src': ["'self'", ...(desarrollo ? ['ws:'] : [])],
     'frame-src': ['https://www.youtube-nocookie.com'],
