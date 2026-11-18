@@ -35,7 +35,8 @@ export default async function VistaPreviaAlbum({ params }: { params: Promise<{ i
   const { data: huella } = await supabase.rpc('huella_contenido', { p_tipo: 'album', p_id: id });
   const registro = huella ? await supabase.from('vistas_previas_contenido').insert({ tipo: 'album', registro_id: id, huella }) : { error: true };
 
-  const [fotos, videos, acts] = await Promise.all([firmarFotos(fotoIds, supabase), videosDeAlbum(id), actividades()]);
+  const [videos, acts] = await Promise.all([videosDeAlbum(id), actividades()]);
+  const fotos = await firmarFotos([...fotoIds, ...videos.map((v) => v.portada_foto_id)], supabase);
   return (
     <>
       <BarraVistaPrevia volver={`/admin/galerias/${id}`} publicado={estado === 'publicado'} cambios={Boolean(cambios)} error={Boolean(registro.error)}>

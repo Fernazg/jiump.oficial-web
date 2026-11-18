@@ -8,6 +8,7 @@ import { exigirSeccion } from '@/lib/admin/acceso';
 import { descartarCambios, despublicar, eliminar, publicar } from '@/lib/admin/acciones-contenido';
 import { esUuid } from '@/lib/admin/bloques';
 import { destinosVideo } from '@/lib/admin/destinos-video';
+import { catalogoFotos } from '@/lib/admin/galerias';
 import { cambiosPendientes, vistaPreviaContenidoAlDia } from '@/lib/admin/eventos';
 import { clientePanel } from '@/lib/admin/supabase-panel';
 
@@ -29,17 +30,17 @@ export default async function EditarVideo({ params, searchParams }: Props) {
   const { id } = await params;
   if (!esUuid(id)) notFound();
   const supabase = await clientePanel();
-  const { data: v } = await supabase.from('videos').select('id, url, titulo, descripcion, album_id, actividad_id, estado, actualizado_en').eq('id', id).maybeSingle();
+  const { data: v } = await supabase.from('videos').select('id, url, titulo, descripcion, album_id, actividad_id, portada_foto_id, estado, actualizado_en').eq('id', id).maybeSingle();
   if (!v) notFound();
   const { aviso } = await searchParams;
-  const [destinos, previaAlDia] = await Promise.all([destinosVideo(), vistaPreviaContenidoAlDia('video', id)]);
+  const [destinos, previaAlDia, catalogo] = await Promise.all([destinosVideo(), vistaPreviaContenidoAlDia('video', id), catalogoFotos()]);
   const publicado = v.estado === 'publicado';
   // Publicado: lo editado queda pendiente hasta revisar la vista previa y publicarlo.
   const cambios = publicado ? await cambiosPendientes('video', id) : null;
-  const c = (cambios?.datos ?? {}) as { url?: string; titulo?: string; descripcion?: string; album_id?: string; actividad_id?: string };
+  const c = (cambios?.datos ?? {}) as { url?: string; titulo?: string; descripcion?: string; album_id?: string; actividad_id?: string; portada_foto_id?: string };
   const actual = cambios
-    ? { url: c.url ?? v.url, titulo: c.titulo ?? v.titulo, descripcion: c.descripcion ?? '', album_id: c.album_id || null, actividad_id: c.actividad_id || null }
-    : { url: v.url, titulo: v.titulo, descripcion: v.descripcion ?? '', album_id: v.album_id, actividad_id: v.actividad_id };
+    ? { url: c.url ?? v.url, titulo: c.titulo ?? v.titulo, descripcion: c.descripcion ?? '', album_id: c.album_id || null, actividad_id: c.actividad_id || null, portada: c.portada_foto_id || null }
+    : { url: v.url, titulo: v.titulo, descripcion: v.descripcion ?? '', album_id: v.album_id, actividad_id: v.actividad_id, portada: v.portada_foto_id as string | null };
   return (
     <>
       <div className="flex flex-col gap-1">
@@ -84,8 +85,8 @@ export default async function EditarVideo({ params, searchParams }: Props) {
                 accion={descartarCambios.bind(null, 'video', id)}>Vuelve a quedar como está publicado.</Confirmar>
             </div>
           )}
-          <FormularioVideo key={cambios?.actualizado_en ?? v.actualizado_en} destinos={destinos} video={{
-            id, url: actual.url, titulo: actual.titulo, descripcion: actual.descripcion, version: cambios?.actualizado_en ?? v.actualizado_en,
+          <FormularioVideo key={cambios?.actualizado_en ?? v.actualizado_en} destinos={destinos} catalogo={catalogo} video={{
+            id, url: actual.url, titulo: actual.titulo, descripcion: actual.descripcion, version: cambios?.actualizado_en ?? v.actualizado_en, portada: actual.portada,
             destino: actual.album_id ? `album:${actual.album_id}` : actual.actividad_id ? `actividad:${actual.actividad_id}` : '',
           }} />
         </section>

@@ -236,7 +236,7 @@ export async function detalleActividad(id: string, cliente: SupabaseClient = sup
     cliente.from('actividad_secciones').select('id, titulo, contenido, orden').eq('actividad_id', id).order('orden'),
     cliente.from('actividad_enlaces').select('id, url, titulo, orden').eq('actividad_id', id).order('orden'),
     cliente.from('actividad_fotos').select('foto_id, orden, es_portada').eq('actividad_id', id).order('orden'),
-    cliente.from('videos').select('id, url, titulo, descripcion, album_id, actividad_id').eq('actividad_id', id).order('orden'),
+    cliente.from('videos').select('id, url, titulo, descripcion, album_id, actividad_id, portada_foto_id').eq('actividad_id', id).order('orden'),
     cliente.from('albumes').select(COLUMNAS_ALBUM).eq('actividad_id', id).order('orden'),
   ]);
   return {
@@ -267,7 +267,7 @@ export const albumes = cache(async (): Promise<(Album & { fotoIds: string[] })[]
 
 export async function videosDeAlbum(albumId: string, cliente: SupabaseClient = supabase()): Promise<Video[]> {
   return filas<Video>(
-    await cliente.from('videos').select('id, url, titulo, descripcion, album_id, actividad_id').eq('album_id', albumId).order('orden'),
+    await cliente.from('videos').select('id, url, titulo, descripcion, album_id, actividad_id, portada_foto_id').eq('album_id', albumId).order('orden'),
     'los videos del álbum',
   );
 }

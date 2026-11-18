@@ -5,6 +5,7 @@ import { IconoCalendario, IconoUbicacion, IconoVideo } from '@/components/Iconos
 import { TarjetaActividad } from '@/components/Tarjetas';
 import { GaleriaFotos } from '@/components/Visor';
 import { etiquetaActividad, fechaActividad, idYoutube } from '@/lib/formato';
+import { VideoDiferido } from '@/components/VideoDiferido';
 import type { Actividad, Album, Enlace, FotoFirmada, SeccionActividad, Video } from '@/lib/tipos';
 
 export type DetalleActividad = {
@@ -28,8 +29,8 @@ export function ActividadCompleta({ actividad, d, otras, fotos }: {
   const portada = fotos.get(actividad.portada_foto_id ?? '');
   const galeria = d.fotoIds.map((id) => fotos.get(id)).filter((f): f is FotoFirmada => Boolean(f));
   const videos = [
-    ...d.videos.map((v) => ({ id: v.id, titulo: v.titulo, url: v.url })),
-    ...d.enlaces.map((e) => ({ id: e.id, titulo: e.titulo, url: e.url })),
+    ...d.videos.map((v) => ({ id: v.id, titulo: v.titulo, url: v.url, portada: fotos.get(v.portada_foto_id ?? '') })),
+    ...d.enlaces.map((e) => ({ id: e.id, titulo: e.titulo, url: e.url, portada: undefined })),
   ];
   const fecha = fechaActividad(actividad);
   const album = d.albumes[0];
@@ -114,10 +115,7 @@ export function ActividadCompleta({ actividad, d, otras, fotos }: {
               return (
                 <li key={v.id}>
                   {id ? (
-                    <div className="aspect-video overflow-hidden rounded-[18px] bg-azul-profundo">
-                      <iframe className="size-full" src={`https://www.youtube-nocookie.com/embed/${id}`} title={v.titulo} loading="lazy"
-                        allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
-                    </div>
+                    <VideoDiferido youtubeId={id} titulo={v.titulo} portada={v.portada} />
                   ) : (
                     <a href={v.url} target="_blank" rel="noopener noreferrer" className="tarjeta flex items-center gap-3 p-5 text-azul">
                       <IconoVideo /> <span className="font-semibold">{v.titulo}</span>

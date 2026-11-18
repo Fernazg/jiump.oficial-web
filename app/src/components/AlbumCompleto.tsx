@@ -1,6 +1,7 @@
 import Link from '@/components/Enlace';
 import { VistaAlbum } from '@/components/VistaAlbum';
 import { idYoutube } from '@/lib/formato';
+import { VideoDiferido } from '@/components/VideoDiferido';
 import type { Actividad, Album, FotoFirmada, Video } from '@/lib/tipos';
 
 /**
@@ -29,10 +30,7 @@ export function AlbumCompleto({ album, fotos, videos, actividad }: {
               const id = idYoutube(v.url);
               return id ? (
                 <li key={v.id}>
-                  <div className="aspect-video overflow-hidden rounded-[18px] bg-azul-profundo">
-                    <iframe className="size-full" src={`https://www.youtube-nocookie.com/embed/${id}`} title={v.titulo} loading="lazy"
-                      allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
-                  </div>
+                  <VideoDiferido youtubeId={id} titulo={v.titulo} portada={fotos.get(v.portada_foto_id ?? '')} />
                   <p className="t-meta mt-3">{v.titulo}</p>
                 </li>
               ) : null;

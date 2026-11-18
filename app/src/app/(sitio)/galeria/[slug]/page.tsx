@@ -29,7 +29,8 @@ export default async function PaginaAlbum({ params }: Props) {
   const album = (await albumes()).find((a) => a.slug === slug);
   if (!album) notFound();
 
-  const [fotos, videos, acts] = await Promise.all([firmarFotos(album.fotoIds), videosDeAlbum(album.id), actividades()]);
+  const [videos, acts] = await Promise.all([videosDeAlbum(album.id), actividades()]);
+  const fotos = await firmarFotos([...album.fotoIds, ...videos.map((v) => v.portada_foto_id)]);
   const actividad = acts.find((a) => a.id === album.actividad_id);
 
   return (

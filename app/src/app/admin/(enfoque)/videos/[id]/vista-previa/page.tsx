@@ -8,6 +8,8 @@ import { publicar } from '@/lib/admin/acciones-contenido';
 import { esUuid } from '@/lib/admin/bloques';
 import { cambiosPendientes } from '@/lib/admin/eventos';
 import { clientePanel } from '@/lib/admin/supabase-panel';
+import { VideoDiferido } from '@/components/VideoDiferido';
+import { firmarFotos } from '@/lib/datos';
 import { idYoutube } from '@/lib/formato';
 
 export const metadata: Metadata = { title: 'Vista previa de video' };
@@ -18,15 +20,17 @@ export default async function VistaPreviaVideo({ params }: { params: Promise<{ i
   const { id } = await params;
   if (!esUuid(id)) notFound();
   const supabase = await clientePanel();
-  const { data: v } = await supabase.from('videos').select('id, url, titulo, estado, albumes(titulo), actividades(titulo)').eq('id', id).maybeSingle();
+  const { data: v } = await supabase.from('videos').select('id, url, titulo, estado, portada_foto_id, albumes(titulo), actividades(titulo)').eq('id', id).maybeSingle();
   if (!v) notFound();
   const { data: huella } = await supabase.rpc('huella_contenido', { p_tipo: 'video', p_id: id });
   const registro = huella ? await supabase.from('vistas_previas_contenido').insert({ tipo: 'video', registro_id: id, huella }) : { error: true };
   const cambios = v.estado === 'publicado' ? await cambiosPendientes('video', id) : null;
-  const c = (cambios?.datos ?? null) as { url: string; titulo: string; album_id?: string; actividad_id?: string } | null;
+  const c = (cambios?.datos ?? null) as { url: string; titulo: string; album_id?: string; actividad_id?: string; portada_foto_id?: string } | null;
   const url = c?.url ?? v.url;
   const titulo = c?.titulo ?? v.titulo;
   const yt = idYoutube(url);
+  const portadaId = c ? c.portada_foto_id || null : v.portada_foto_id;
+  const portada = portadaId ? (await firmarFotos([portadaId], supabase)).get(portadaId) : undefined;
   let donde: string | null;
   if (c) {
     const [{ data: al }, { data: ac }] = await Promise.all([
@@ -53,10 +57,7 @@ export default async function VistaPreviaVideo({ params }: { params: Promise<{ i
           <ul className="grid gap-6 lg:grid-cols-2">
             <li>
               {yt ? (
-                <div className="aspect-video overflow-hidden rounded-[18px] bg-azul-profundo">
-                  <iframe className="size-full" src={`https://www.youtube-nocookie.com/embed/${yt}`} title={titulo} loading="lazy"
-                    allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
-                </div>
+                <VideoDiferido youtubeId={yt} titulo={titulo} portada={portada} />
               ) : null}
               <p className="t-meta mt-3">{titulo}</p>
             </li>

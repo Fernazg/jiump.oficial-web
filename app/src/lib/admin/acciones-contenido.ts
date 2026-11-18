@@ -177,13 +177,14 @@ export async function guardarVideo(_: EstadoFormulario, f: FormData): Promise<Es
     url, titulo, descripcion: t(f.get('descripcion'), 200) || null,
     album_id: clase === 'album' && esUuid(destinoId) ? destinoId : null,
     actividad_id: clase === 'actividad' && esUuid(destinoId) ? destinoId : null,
+    portada_foto_id: esUuid(t(f.get('portada_foto_id'), 40)) ? t(f.get('portada_foto_id'), 40) : null,
   };
   if (esUuid(id)) {
     const version = t(f.get('version'), 40);
     // Si el video está publicado, los cambios quedan pendientes hasta revisarlos y publicarlos.
     const { error } = await supabase.rpc('guardar_contenido', {
       p_tipo: 'video', p_id: id, p_version: version,
-      p_datos: { ...fila, album_id: fila.album_id ?? '', actividad_id: fila.actividad_id ?? '', descripcion: fila.descripcion ?? '' },
+      p_datos: { ...fila, album_id: fila.album_id ?? '', actividad_id: fila.actividad_id ?? '', descripcion: fila.descripcion ?? '', portada_foto_id: fila.portada_foto_id ?? '' },
     });
     if (error) return { error: mensaje(error, 'No se pudo guardar el video.') };
     redirect(`/admin/videos/${id}?aviso=guardado`);

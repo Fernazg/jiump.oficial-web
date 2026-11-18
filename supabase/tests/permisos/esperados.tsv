@@ -154,6 +154,7 @@ columna	videos.descripcion	anon	SELECT
 columna	videos.estado	anon	SELECT
 columna	videos.id	anon	SELECT
 columna	videos.orden	anon	SELECT
+columna	videos.portada_foto_id	anon	SELECT
 columna	videos.titulo	anon	SELECT
 columna	videos.url	anon	SELECT
 esquema	public	anon	USAGE
